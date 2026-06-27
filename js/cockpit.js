@@ -170,6 +170,38 @@ const Cockpit = (() => {
     };
   }
 
+  /* ---------------------- comm / radio callout button ------------------- */
+  function commButton(parent, { x, y, w, h }) {
+    const g = el("g", { class: "control", "data-id": "comm", transform: `translate(${x} ${y})` }, parent);
+    el("rect", { x: 0, y: 0, width: w, height: h, rx: 9, class: "comm-rect" }, g);
+    el("circle", { cx: 20, cy: h / 2, r: 6, class: "comm-light" }, g);
+    el("text", { x: w / 2 + 8, y: h / 2 + 5, class: "comm-label" }, g).textContent = "COMM · CALLOUT";
+    g.addEventListener("click", () => clickCb("comm"));
+    groups.comm = { g };
+  }
+
+  /* ----------------------- rotary knob (fuel / mixture) ----------------- */
+  function knob(parent, { id, cx, cy, r, title, accent }) {
+    const g = el("g", { class: "control", "data-id": id, transform: `translate(${cx} ${cy})` }, parent);
+    el("circle", { r: r + 5, class: "knob-bezel" }, g);
+    el("circle", { r: r, class: "knob-face", style: accent ? `fill:${accent}` : "" }, g);
+    el("line", { x1: 0, y1: 0, x2: 0, y2: -r + 4, class: "knob-pointer" }, g);
+    el("circle", { r: 3, class: "hub" }, g);
+    el("text", { y: r + 16, class: "control-caption" }, g).textContent = title;
+    g.addEventListener("click", () => clickCb(id));
+    groups[id] = { g };
+  }
+
+  /* --------------------------- toggle switch ---------------------------- */
+  function toggleSwitch(parent, { id, x, y, title }) {
+    const g = el("g", { class: "control", "data-id": id, transform: `translate(${x} ${y})` }, parent);
+    el("rect", { x: -11, y: 0, width: 22, height: 40, rx: 11, class: "switch-track" }, g);
+    el("circle", { cx: 0, cy: 11, r: 8, class: "switch-knob" }, g);
+    el("text", { x: 0, y: 56, class: "control-caption" }, g).textContent = title;
+    g.addEventListener("click", () => clickCb(id));
+    groups[id] = { g };
+  }
+
   /* --------------------- yoke & rudder (symbolic) ----------------------- */
   function yoke(parent, { x, y }) {
     const g = el("g", { class: "control", "data-id": "yoke", transform: `translate(${x} ${y})` }, parent);
@@ -193,11 +225,11 @@ const Cockpit = (() => {
 
   /* ------------------------------ render -------------------------------- */
   function render(container) {
-    svg = el("svg", { viewBox: "0 0 1000 600", class: "panel", preserveAspectRatio: "xMidYMid meet" });
+    svg = el("svg", { viewBox: "0 0 1000 640", class: "panel", preserveAspectRatio: "xMidYMid meet" });
     // glare shield / panel body
-    el("rect", { x: 0, y: 0, width: 1000, height: 600, class: "panel-bg" }, svg);
+    el("rect", { x: 0, y: 0, width: 1000, height: 640, class: "panel-bg" }, svg);
     el("rect", { x: 30, y: 70, width: 600, height: 360, rx: 18, class: "panel-metal" }, svg);
-    el("rect", { x: 660, y: 70, width: 310, height: 360, rx: 18, class: "panel-metal" }, svg);
+    el("rect", { x: 660, y: 70, width: 310, height: 470, rx: 18, class: "panel-metal" }, svg);
     el("text", { x: 500, y: 40, class: "panel-title" }, svg).textContent = "CESSNA 172 — TRAFFIC PATTERN TRAINER";
 
     // six-pack
@@ -216,6 +248,13 @@ const Cockpit = (() => {
     rudder(svg, { x: 300, y: 480 });
     throttle(svg, { x: 470, y: 470 });
     flaps(svg, { x: 620, y: 470 });
+
+    // right cluster: radio + fuel/mixture + switches
+    commButton(svg, { x: 688, y: 286, w: 254, h: 44 });
+    knob(svg, { id: "fuel", cx: 730, cy: 400, r: 30, title: "FUEL" });
+    knob(svg, { id: "mixture", cx: 828, cy: 400, r: 24, title: "MIXTURE", accent: "#b23b3b" });
+    toggleSwitch(svg, { id: "seatbelt", x: 900, y: 366, title: "BELTS" });
+    toggleSwitch(svg, { id: "autopilot", x: 948, y: 366, title: "A/P" });
 
     container.appendChild(svg);
     applyValues(false);

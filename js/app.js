@@ -1,84 +1,41 @@
 /* ============================================================================
-   app.js  —  Decision-based trainer.
+   app.js  —  Click-the-cockpit trainer (no multiple choice).
 
-   Instead of being told exactly what to click, each step presents the
-   SITUATION ("what's happening / about to happen") and asks the pilot to
-   choose the correct action from a shuffled list. A "Show hint" button
-   reveals the explanation and points at the relevant control(s).
+   At each pattern point the card shows ONLY the current conditions. The pilot:
+     1. clicks the instrument/control they'd use            (await-control)
+          - wrong element  -> red shake + "not that one" indicator, no progress
+          - right element  -> a value picker opens for that control
+     2. picks the correct setting from the picker            (await-value)
+          - choices are specific to the control AND the stage (dynamic)
+          - wrong value -> red ✗ on that choice, try again
+          - right value -> the control is set; next action arms, or the step
+                           completes (instruments + airplane animate, advance)
 
-     - Correct choice on a single-action step       -> instruments + airplane
-                                                        animate, next step arms.
-     - Correct choice on a compound step (checklist, -> a perform phase: the
-       Power/Alt/Airspeed flow, GA climb)              pilot then actuates each
-                                                        item IN ORDER (from
-                                                        memory; hint highlights).
-     - Wrong choice  -> red shake, try again.
-     - Cockpit shortcut: clicking the correct control directly also counts.
-     - Branch steps offer GO-AROUND.
+   Compound steps (downwind level-off, Power/Alt/Airspeed scan, Before-Landing,
+   GA clean-up) chain several click-then-pick actions in order.
+
+   There is NO guidance before the pilot acts. "Show hint" reveals the
+   explanation and points at the correct control (or glows the correct value).
+   Branch steps (final / over the threshold) offer GO-AROUND.
    ========================================================================== */
 
 (() => {
+  // display names for the picker heading + hint
   const NAMES = {
-    throttle: "THROTTLE", flaps: "FLAP SELECTOR", yoke: "YOKE", rudder: "RUDDER PEDALS",
-    asi: "AIRSPEED", ai: "ATTITUDE", alt: "ALTIMETER", ti: "TURN COORD",
-    hi: "HEADING", vsi: "VERT SPEED", tach: "TACHOMETER",
-    "call-instruments": 'Say "Instruments green"', "call-airspeed": 'Say "Airspeed alive"',
-    "call-goaround": 'Say "Going around"',
-    seatbelt: "Seatbelts — secure", fuel: "Fuel selector — BOTH",
-    mixture: "Mixture — RICH", autopilot: "Autopilot — OFF",
-    "confirm-glidepath": "Confirm aim point", "confirm-threshold": "Confirm over threshold",
+    throttle: "Throttle", flaps: "Flap selector", yoke: "Yoke / elevator",
+    rudder: "Rudder pedals", asi: "Airspeed indicator", ai: "Attitude indicator",
+    alt: "Altimeter", ti: "Turn coordinator", hi: "Heading indicator",
+    vsi: "Vertical speed", tach: "Tachometer", comm: "Comm · callout",
+    fuel: "Fuel selector", mixture: "Mixture", seatbelt: "Seatbelt sign",
+    autopilot: "Autopilot",
   };
-
-  // ---- distractor generation: pick wrong answers that are plausible *now* --
-  const PHASE_ORDER = ["TAKEOFF", "UPWIND", "CROSSWIND", "DOWNWIND", "BASE", "FINAL", "LANDING", "GOAROUND"];
-
-  function categorize(label) {
-    const l = label.toLowerCase();
-    if (/flap/.test(l)) return "flaps";
-    if (/rpm|power|throttle|idle/.test(l)) return "power";
-    if (/verbal|instruments green|airspeed alive|going around/.test(l)) return "call";
-    if (/seatbelt|fuel|mixture|autopilot|before landing|check/.test(l)) return "checklist";
-    if (/turn|track|level|align|abeam/.test(l)) return "nav";
-    return "energy"; // speeds, rotate, flare, hold, climb, aim, threshold, etc.
-  }
-
-  // unique label metadata across the whole flow
-  const META = (() => {
-    const seen = new Set(), out = [];
-    for (const s of [...SEQUENCE, ...GOAROUND]) {
-      if (seen.has(s.label)) continue;
-      seen.add(s.label);
-      out.push({ label: s.label, phase: s.phase, cat: categorize(s.label) });
-    }
-    return out;
-  })();
-
-  // score candidates by similarity to the current step, then sample for variety
-  function pickDistractors(step) {
-    const selfCat = categorize(step.label);
-    const selfPh = PHASE_ORDER.indexOf(step.phase);
-    const scored = META
-      .filter((m) => m.label !== step.label)
-      .map((m) => {
-        let sc = 0;
-        if (m.cat === selfCat) sc += 4;                       // same kind of action
-        if (m.phase === step.phase) sc += 3;                  // same leg
-        const pd = Math.abs(PHASE_ORDER.indexOf(m.phase) - selfPh);
-        if (pd === 1) sc += 2; else if (pd === 2) sc += 1;    // neighbouring leg
-        sc += Math.random() * 2;                              // jitter
-        return { label: m.label, sc };
-      })
-      .sort((a, b) => b.sc - a.sc);
-    // take a plausible top band, then randomly choose 3 from it
-    return shuffle(scored.slice(0, 7).map((x) => x.label)).slice(0, 3);
-  }
 
   const $ = (id) => document.getElementById(id);
   let steps = SEQUENCE.slice();
   let i = 0, sub = 0;
-  let mode = "select";              // "select" | "perform"
-  let foldOrder = [];               // shuffled target order for foldout flows
-  let running = false, goneAround = false, finished = false;
+  let mode = "idle";                 // idle | await-control | await-value | transit | done
+  let running = false, goneAround = false;
+  let fbTimer = null;
 
   /* ------------------------------- setup -------------------------------- */
   function init() {
@@ -96,24 +53,35 @@
     renderIdle();
   }
 
+  function shuffle(a) {
+    a = a.slice();
+    for (let k = a.length - 1; k > 0; k--) {
+      const j = Math.floor(Math.random() * (k + 1));
+      [a[k], a[j]] = [a[j], a[k]];
+    }
+    return a;
+  }
+
+  /* ------------------------------- idle --------------------------------- */
   function renderIdle() {
+    mode = "idle";
     $("phaseBanner").textContent = "READY";
     $("phaseBanner").style.background = "#222";
     $("situation").textContent =
-      "You'll fly the pattern from takeoff to touchdown. At each point, decide your next action.";
-    $("quizQ").textContent = "Press Start to begin.";
-    $("optionList").innerHTML = "";
-    $("performBox").hidden = true;
+      "Fly the pattern from takeoff to touchdown. At each point, click the instrument or control you'd use — then choose its setting.";
+    $("stepPrompt").textContent = "Press Start to begin.";
+    hidePicker();
+    $("performDots").innerHTML = "";
+    hideFeedback();
     $("hintBtn").hidden = true;
     $("hintBox").hidden = true;
     $("goaroundBtn").hidden = true;
-    $("foldout").classList.remove("open");
     $("progressText").textContent = "";
   }
 
   function start() {
     if (running) return;
-    running = true; finished = false;
+    running = true;
     $("startBtn").hidden = true;
     $("restartBtn").hidden = false;
     i = 0; sub = 0;
@@ -122,8 +90,8 @@
 
   function restart() {
     steps = SEQUENCE.slice();
-    running = false; goneAround = false; finished = false;
-    i = 0; sub = 0; mode = "select";
+    running = false; goneAround = false;
+    i = 0; sub = 0;
     Cockpit.clearHighlight();
     Cockpit.setValues(SEQUENCE[0].values, false);
     Minimap.placeAt(SEQUENCE[0].pos);
@@ -137,7 +105,7 @@
   /* ----------------------------- load a step ---------------------------- */
   function loadStep() {
     const s = steps[i];
-    sub = 0; mode = "select"; finished = false;
+    sub = 0; mode = "await-control";
     Cockpit.clearHighlight();
 
     const ph = PHASES[s.phase];
@@ -145,201 +113,158 @@
     $("phaseBanner").style.background = ph.color;
 
     $("situation").textContent = s.condition || "";
-    $("quizQ").textContent = "What do you do now?";
+    $("stepPrompt").textContent = "Click the instrument or control you'd use.";
 
     $("progressText").textContent =
       `Step ${i + 1} of ${steps.length}` + (goneAround ? " · GO-AROUND" : "");
 
-    // reset hint + perform UI
+    hidePicker();
+    hideFeedback();
+    resetHint();
     $("hintBtn").hidden = false;
-    $("hintBtn").textContent = "Show hint";
-    $("hintBox").hidden = true;
-    $("hintBox").textContent = "";
-    $("performBox").hidden = true;
-    $("foldout").classList.remove("open");
-    $("optionList").hidden = false;
-
     $("goaroundBtn").hidden = !(s.branch && !goneAround);
 
+    renderDots(s);
     Minimap.setLegActive(s.phase);
     Minimap.showCondition(s.condition || "");
-
-    renderOptions(s);
-  }
-
-  function shuffle(a) {
-    a = a.slice();
-    for (let k = a.length - 1; k > 0; k--) {
-      const j = Math.floor(Math.random() * (k + 1));
-      [a[k], a[j]] = [a[j], a[k]];
-    }
-    return a;
-  }
-
-  function renderOptions(s) {
-    const opts = shuffle([s.label, ...pickDistractors(s)]);
-    const list = $("optionList");
-    list.innerHTML = "";
-    opts.forEach((text) => {
-      const b = document.createElement("button");
-      b.className = "opt-btn";
-      b.textContent = text;
-      b.addEventListener("click", () => onOption(b, text));
-      list.appendChild(b);
-    });
-  }
-
-  /* --------------------------- option chosen ---------------------------- */
-  function onOption(btn, text) {
-    if (!running || finished || mode !== "select") return;
-    const s = steps[i];
-    if (text !== s.label) {
-      btn.classList.add("wrong");
-      btn.disabled = true;
-      return;
-    }
-    // correct
-    btn.classList.add("correct");
-    [...$("optionList").children].forEach((b) => (b.disabled = true));
-    Cockpit.clearHighlight();
-
-    if (s.targets.length > 1) beginPerform(s);
-    else completeStep();
-  }
-
-  /* ------------------- compound step: perform in order ------------------ */
-  function beginPerform(s) {
-    mode = "perform"; sub = 0;
-    $("optionList").hidden = true;
-    $("hintBtn").textContent = "Show hint";
-    $("hintBox").hidden = true;
-
-    if (s.kind === "foldout") {
-      foldOrder = shuffle(s.targets);
-      buildFoldout(s);
-      $("foldout").classList.add("open");
-      $("quizQ").textContent = "Run the flow — tap in the correct order:";
-    } else {
-      // control sequence on the panel
-      $("performBox").hidden = false;
-      $("performText").textContent = "Now actuate each item — in order — on the panel.";
-      renderDots(s);
-      $("quizQ").textContent = "Perform the sequence:";
-    }
   }
 
   function renderDots(s) {
     const wrap = $("performDots");
     wrap.innerHTML = "";
-    s.targets.forEach((_, idx) => {
+    if (s.actions.length < 2) return;          // dots only for compound flows
+    s.actions.forEach((_, idx) => {
       const d = document.createElement("span");
       d.className = "dot" + (idx < sub ? " on" : "");
       wrap.appendChild(d);
     });
   }
 
-  function buildFoldout(s) {
-    const wrap = $("foldoutBtns");
-    wrap.innerHTML = "";
-    $("foldoutTitle").textContent = "CHECKLIST FLOW";
-    foldOrder.forEach((t) => {
-      const b = document.createElement("button");
-      b.className = "fold-btn";
-      b.textContent = NAMES[t] || t;
-      const pos = s.targets.indexOf(t);
-      if (pos < sub) { b.classList.add("done"); b.disabled = true; }
-      b.addEventListener("click", () => onFoldout(b, t));
-      wrap.appendChild(b);
-    });
-  }
-
-  /* ------------------------- cockpit interaction ------------------------ */
+  /* --------------------------- cockpit clicks --------------------------- */
   function onCockpitClick(id) {
-    if (!running || finished) return;
+    if (!running || mode !== "await-control") return;   // ignore while picking / in transit
     const s = steps[i];
+    const expected = s.actions[sub].target;
 
-    if (mode === "select") {
-      // shortcut: clicking the correct control IS choosing the right action,
-      // but only for control-type steps.
-      if (s.kind !== "control") { Cockpit.flash(id, false); return; }
-      if (id !== s.targets[0]) { Cockpit.flash(id, false); return; }
-      Cockpit.flash(id, true); Cockpit.markDone(id);
-      // reflect the choice in the option list
-      [...$("optionList").children].forEach((b) => {
-        b.disabled = true;
-        if (b.textContent === s.label) b.classList.add("correct");
-      });
-      if (s.targets.length > 1) { mode = "perform"; sub = 1; afterControlAdvance(s); }
-      else completeStep();
+    if (id !== expected) {                              // wrong instrument/control
+      Cockpit.flash(id, false);
+      flashFeedback("✗ Not that one — try another instrument or control.", false);
       return;
     }
 
-    // perform mode (control sequence)
-    if (s.kind !== "control") return;
-    const expected = s.targets[sub];
-    if (id !== expected) { Cockpit.flash(id, false); return; }
-    Cockpit.flash(id, true); Cockpit.markDone(id);
-    sub++;
-    afterControlAdvance(s);
-  }
-
-  function afterControlAdvance(s) {
+    // correct element — open the value picker for it
+    Cockpit.flash(id, true);
     Cockpit.clearHighlight();
-    if (sub >= s.targets.length) { completeStep(); return; }
-    $("performBox").hidden = false;
-    $("performText").textContent = "Now actuate each item — in order — on the panel.";
-    renderDots(s);
+    hideFeedback();
+    openPicker(s.actions[sub]);
   }
 
-  function onFoldout(btn, id) {
-    if (!running || finished || mode !== "perform") return;
+  /* --------------------- value picker for a control --------------------- */
+  function optionsFor(action) {
+    if (action.opts) return shuffle(action.opts);
+    const pool = VALUE_POOLS[action.target] || [action.answer];
+    const distractors = shuffle(pool.filter((v) => v !== action.answer)).slice(0, 3);
+    return shuffle([action.answer, ...distractors]);
+  }
+
+  function openPicker(action) {
+    mode = "await-value";
+    $("pickerTitle").textContent = `${NAMES[action.target] || action.target} — set to:`;
+    $("stepPrompt").textContent = "Choose the correct setting.";
+
+    const wrap = $("pickerOpts");
+    wrap.innerHTML = "";
+    optionsFor(action).forEach((text) => {
+      const b = document.createElement("button");
+      b.className = "pick-btn";
+      b.textContent = text;
+      b.addEventListener("click", () => onValue(b, action, text));
+      wrap.appendChild(b);
+    });
+    $("picker").hidden = false;
+
+    // if a hint is already open, glow the correct value
+    if (!$("hintBox").hidden) glowCorrectValue(action);
+  }
+
+  function onValue(btn, action, text) {
+    if (mode !== "await-value") return;
+    if (text !== action.answer) {                       // wrong setting
+      btn.classList.add("wrong");
+      btn.disabled = true;
+      return;
+    }
+    // correct setting
+    btn.classList.add("correct");
+    [...$("pickerOpts").children].forEach((b) => (b.disabled = true));
+    Cockpit.markDone(action.target);
+    Cockpit.clearHighlight();
+
     const s = steps[i];
-    if (id !== s.targets[sub]) { shakeFoldout(); return; }
-    btn.classList.add("done");
-    btn.disabled = true;
     sub++;
-    Cockpit.clearHighlight();
-    if (sub >= s.targets.length) completeStep();
-    else if ($("hintBox").hidden === false) buildFoldout(s); // refresh hint target
-  }
-
-  function shakeFoldout() {
-    const f = $("foldout");
-    f.classList.remove("shake"); void f.offsetWidth; f.classList.add("shake");
+    if (sub >= s.actions.length) {
+      completeStep();
+    } else {
+      // next action of a compound step
+      mode = "await-control";
+      hidePicker();
+      resetHint();
+      renderDots(s);
+      $("stepPrompt").textContent = "Good — now the next instrument or control.";
+      flashFeedback("✓ Set.", true);
+    }
   }
 
   /* ------------------------------- hint --------------------------------- */
-  function showHint() {
-    const s = steps[i];
-    const box = $("hintBox");
-    box.hidden = false;
-    box.textContent = s.description;
+  function resetHint() {
+    $("hintBox").hidden = true;
+    $("hintBox").textContent = "";
+    $("hintBtn").textContent = "Show hint";
+  }
 
-    if (mode === "select") {
-      if (s.kind === "control") Cockpit.highlight(s.targets);
-    } else {
-      if (s.kind === "control") Cockpit.highlight([s.targets[sub]]);
-      else {
-        // mark the next correct checklist button
-        [...$("foldoutBtns").children].forEach((b) => b.classList.remove("hint"));
-        const want = NAMES[s.targets[sub]] || s.targets[sub];
-        [...$("foldoutBtns").children].forEach((b) => {
-          if (b.textContent === want) b.classList.add("hint");
-        });
-      }
-    }
+  function showHint() {
+    if (!running || mode === "transit") return;
+    const s = steps[i];
+    $("hintBox").hidden = false;
+    $("hintBox").textContent = s.hint || "";
     $("hintBtn").textContent = "Hint shown";
+
+    if (mode === "await-control") Cockpit.highlight([s.actions[sub].target]);
+    else if (mode === "await-value") glowCorrectValue(s.actions[sub]);
+  }
+
+  function glowCorrectValue(action) {
+    [...$("pickerOpts").children].forEach((b) => {
+      b.classList.toggle("hint-correct", b.textContent === action.answer);
+    });
+  }
+
+  /* --------------------------- feedback toast --------------------------- */
+  function flashFeedback(msg, ok) {
+    const f = $("feedback");
+    f.textContent = msg;
+    f.classList.toggle("ok", !!ok);
+    f.classList.toggle("bad", !ok);
+    f.hidden = false;
+    if (fbTimer) clearTimeout(fbTimer);
+    fbTimer = setTimeout(hideFeedback, ok ? 900 : 1600);
+  }
+  function hideFeedback() {
+    if (fbTimer) { clearTimeout(fbTimer); fbTimer = null; }
+    $("feedback").hidden = true;
   }
 
   /* --------------------------- complete + move -------------------------- */
   function completeStep() {
-    finished = true;
+    mode = "transit";
     const s = steps[i];
     Cockpit.clearHighlight();
-    $("foldout").classList.remove("open");
+    hidePicker();
+    hideFeedback();
     $("goaroundBtn").hidden = true;
     $("hintBtn").hidden = true;
-    $("performBox").hidden = true;
+    $("hintBox").hidden = true;
+    $("stepPrompt").textContent = "Flying to the next point…";
 
     Cockpit.setValues(s.values, true);
     Minimap.moveTo(s.pos, s.dwell, PHASES[s.phase].color, () => {
@@ -350,30 +275,36 @@
   }
 
   function triggerGoAround() {
-    if (!running || goneAround || finished) return;  // ignore mid-transit
+    if (!running || goneAround || mode === "transit") return;
     goneAround = true;
     steps = GOAROUND.slice();
-    i = 0; sub = 0; mode = "select"; finished = false;
+    i = 0; sub = 0;
     $("goaroundBtn").hidden = true;
+    hidePicker();
     loadStep();
   }
 
   function finishRun() {
-    finished = true; running = false;
+    mode = "done"; running = false;
     Cockpit.clearHighlight();
     const banner = $("phaseBanner");
     banner.textContent = goneAround ? "GO-AROUND COMPLETE" : "TOUCHDOWN";
     banner.style.background = goneAround ? PHASES.GOAROUND.color : PHASES.LANDING.color;
     $("situation").textContent = goneAround
-      ? "Going around — climb out and re-enter the pattern."
+      ? "Going around — climbing out to re-enter the pattern."
       : "Nice landing! Pattern complete.";
-    $("quizQ").textContent = "Press Restart to fly it again.";
-    $("optionList").innerHTML = "";
-    $("optionList").hidden = false;
-    $("performBox").hidden = true;
+    $("stepPrompt").textContent = "Press Restart to fly it again.";
+    hidePicker();
+    hideFeedback();
+    $("performDots").innerHTML = "";
     $("hintBtn").hidden = true;
     $("hintBox").hidden = true;
     $("progressText").textContent = "Complete";
+  }
+
+  function hidePicker() {
+    $("picker").hidden = true;
+    $("pickerOpts").innerHTML = "";
   }
 
   document.addEventListener("DOMContentLoaded", init);

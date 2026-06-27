@@ -28,12 +28,13 @@
 
       <div class="action-card">
         <p id="situation" class="situation"></p>
-        <h2 id="quizQ" class="quiz-q"></h2>
-        <div id="optionList" class="options"></div>
+        <p id="stepPrompt" class="step-prompt"></p>
+        <div id="performDots" class="dots"></div>
+        <div id="feedback" class="feedback" hidden></div>
 
-        <div id="performBox" class="perform" hidden>
-          <p id="performText" class="perform-text"></p>
-          <div id="performDots" class="dots"></div>
+        <div id="picker" class="picker" hidden>
+          <h2 id="pickerTitle" class="picker-title"></h2>
+          <div id="pickerOpts" class="picker-opts"></div>
         </div>
 
         <div class="card-actions">
@@ -48,13 +49,6 @@
       </div>
     </aside>
   </main>
-
-  <!-- fold-out kneeboard for non-control actions -->
-  <div id="foldout" class="foldout">
-    <div class="foldout-handle"></div>
-    <h3 id="foldoutTitle" class="foldout-title">CHECKLIST</h3>
-    <div id="foldoutBtns" class="foldout-btns"></div>
-  </div>
 
   <script src="js/sequence.js"></script>
   <script src="js/cockpit.js"></script>

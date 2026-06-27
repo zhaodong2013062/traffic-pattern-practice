@@ -1,23 +1,31 @@
 /* ============================================================================
    sequence.js  —  The single source of truth for the C172 traffic pattern.
 
+   INTERACTION MODEL (no multiple choice):
+     At each pattern point the app shows only the CURRENT CONDITIONS. The pilot
+     must click the correct instrument/control on the cockpit panel. Clicking
+     the right one opens a small VALUE PICKER ("what setting?") whose choices are
+     specific to that control and that stage. There is no up-front guidance —
+     only a wrong-instrument indicator, or a hint if the pilot asks for one.
+
    Each step describes:
-     id            unique key
-     phase         leg of the pattern (drives the phase banner + minimap color)
-     label         short title shown in the action card
-     description   what the pilot does
-     condition     situational context shown as a sub-line ("runway abeam left")
-     callout       optional spoken phrase (verbalization steps)
-     targets       array of cockpit element ids that must be actuated, IN ORDER.
-                   A single-element array is a normal single click. Multi-element
-                   arrays are the "compound" steps (the user clicks each in turn).
-     kind          "control"  -> click a cockpit control/instrument
-                   "foldout"  -> confirm on the fold-out kneeboard panel
-                   "minimap"  -> acknowledge a condition shown on the minimap
-     values        instrument target values to animate to once the step completes
-     pos           {x,y} position of the airplane on the minimap (viewBox units)
-     dwell         ms the airplane spends travelling to `pos` (semi real-time)
-     branch        (landing approach only) true => a go-around is offered here
+     id          unique key
+     phase       leg of the pattern (drives the phase banner + minimap colour)
+     condition   the situation shown to the pilot ("runway abeam left")
+     hint        explanation revealed only when the pilot presses "Show hint"
+     actions     ordered list of {target, answer, opts?} the pilot must perform.
+                   target  cockpit element id to click
+                   answer  the correct value/setting (string)
+                   opts    explicit value choices (must contain answer). If
+                           omitted, choices are generated from VALUE_POOLS[target]
+                           (the answer plus sampled distractors — so the picker
+                           is dynamic between runs).
+                 A single-action array is a normal step. Multi-action arrays are
+                 compound flows: each action is performed IN ORDER.
+     values      instrument target values to animate to once the step completes
+     pos         {x,y} position of the airplane on the minimap (viewBox units)
+     dwell       ms the airplane spends travelling to `pos` (semi real-time)
+     branch      (landing approach only) true => a go-around is offered here
    ========================================================================== */
 
 const PHASES = {
@@ -31,64 +39,73 @@ const PHASES = {
   GOAROUND:  { name: "GO-AROUND", color: "#ff4757" },
 };
 
-/* Instrument value keys: rpm, ias (airspeed kts), alt (ft), flaps (deg),
-   vsi (ft/min). Values carry forward step-to-step unless overridden. */
+/* Value pools for controls with a natural set of settings. The picker shows the
+   correct answer plus a few of these as distractors, so it stays dynamic. The
+   `answer` on each action must match one of these strings exactly. */
+const VALUE_POOLS = {
+  throttle:  ["Full power — ≈2500 RPM", "Cruise — 2150 RPM", "1500 RPM", "1200 RPM", "Idle"],
+  flaps:     ["Flaps UP — 0°", "Flaps 10°", "Flaps 20°", "Flaps 30° — full"],
+  fuel:      ["Selector — BOTH", "Selector — LEFT", "Selector — RIGHT", "Selector — OFF"],
+  mixture:   ["Mixture — RICH", "Mixture — lean", "Mixture — idle cutoff"],
+  seatbelt:  ["Belts & signs — ON", "Belts — off"],
+  autopilot: ["Autopilot — OFF", "Autopilot — ON"],
+  comm:      ["“Instruments green”", "“Airspeed alive”", "“Going around”",
+              "“Traffic in sight”", "“Clear of the active”"],
+};
+
+/* Instrument value keys: rpm, ias (kts), alt (ft), flaps (deg), vsi (ft/min).
+   Values carry forward step-to-step unless overridden. */
 
 const SEQUENCE = [
   /* ---------------------------- TAKEOFF ---------------------------------- */
   {
     id: "lineup", phase: "TAKEOFF",
-    label: "Line up on centerline",
-    description: "Taxi onto the runway and align with the centerline.",
-    condition: "Runway heading, ready for departure.",
-    targets: ["rudder"], kind: "control",
+    condition: "Holding short, cleared for takeoff. Runway heading.",
+    hint: "Taxi onto the runway and use rudder/nosewheel steering to line up on the centerline.",
+    actions: [{ target: "rudder", answer: "Center on the centerline",
+      opts: ["Center on the centerline", "Hold the brakes", "Full left rudder"] }],
     values: { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0 },
     pos: { x: 190, y: 258 }, dwell: 600,
   },
   {
     id: "full-throttle", phase: "TAKEOFF",
-    label: "Full throttle",
-    description: "Smoothly advance throttle to full power (~2500 RPM).",
-    condition: "Begin the takeoff roll.",
-    targets: ["throttle"], kind: "control",
+    condition: "Lined up on the centerline. Begin the takeoff roll.",
+    hint: "Smoothly advance the throttle to full power (~2500 RPM) for the takeoff roll.",
+    actions: [{ target: "throttle", answer: "Full power — ≈2500 RPM" }],
     values: { rpm: 2500, ias: 0, alt: 0 },
     pos: { x: 190, y: 252 }, dwell: 800,
   },
   {
     id: "instruments-green", phase: "TAKEOFF",
-    label: 'Verbalize: "Instruments green"',
-    description: "Scan the engine gauges — all in the green arc.",
-    condition: "Power is up, accelerating.",
-    callout: "Instruments green",
-    targets: ["call-instruments"], kind: "foldout",
+    condition: "Power is up, accelerating down the runway.",
+    hint: "Scan the engine gauges — everything in the green arc — and call it out.",
+    actions: [{ target: "comm", answer: "“Instruments green”" }],
     values: { ias: 25, rpm: 2500 },
     pos: { x: 190, y: 244 }, dwell: 900,
   },
   {
     id: "airspeed-alive", phase: "TAKEOFF",
-    label: 'Verbalize: "Airspeed alive"',
-    description: "Airspeed indicator begins to register (~40 kts).",
-    condition: "Accelerating through 40 kts.",
-    callout: "Airspeed alive",
-    targets: ["call-airspeed"], kind: "foldout",
+    condition: "Accelerating through ~40 kts.",
+    hint: "The airspeed needle is now registering — call “airspeed alive”.",
+    actions: [{ target: "comm", answer: "“Airspeed alive”" }],
     values: { ias: 45 },
     pos: { x: 190, y: 232 }, dwell: 900,
   },
   {
     id: "rotate", phase: "TAKEOFF",
-    label: "Rotate at 55 kts",
-    description: "Apply smooth back pressure on the yoke to lift off.",
     condition: "55 KIAS — Vr.",
-    targets: ["yoke"], kind: "control",
+    hint: "At rotation speed, apply smooth back pressure on the yoke to lift off.",
+    actions: [{ target: "yoke", answer: "Smooth back pressure — rotate",
+      opts: ["Smooth back pressure — rotate", "Push the nose forward", "Hold neutral"] }],
     values: { ias: 60, alt: 50, vsi: 600 },
     pos: { x: 190, y: 214 }, dwell: 1000,
   },
   {
     id: "climb-attitude", phase: "UPWIND",
-    label: "Set climb attitude, 74 kts",
-    description: "Pitch for Vy and hold the attitude indicator picture.",
     condition: "Positive rate, climbing.",
-    targets: ["ai"], kind: "control",
+    hint: "Pitch for Vy (74 kts) and hold the attitude-indicator picture.",
+    actions: [{ target: "ai", answer: "Pitch to the Vy climb (74 kts)",
+      opts: ["Pitch to the Vy climb (74 kts)", "Hold a level attitude", "Lower the nose"] }],
     values: { ias: 74, alt: 200, vsi: 700 },
     pos: { x: 190, y: 165 }, dwell: 1400,
   },
@@ -96,19 +113,19 @@ const SEQUENCE = [
   /* ---------------------- UPWIND -> CROSSWIND ---------------------------- */
   {
     id: "track-upwind", phase: "UPWIND",
-    label: "Track runway heading",
-    description: "Maintain extended centerline, climbing at 74 kts.",
-    condition: "Upwind leg.",
-    targets: ["hi"], kind: "control",
+    condition: "Upwind leg, climbing at 74 kts.",
+    hint: "Track the extended runway centerline using the heading indicator.",
+    actions: [{ target: "hi", answer: "Maintain runway heading",
+      opts: ["Maintain runway heading", "Turn left 90°", "Turn right 45°"] }],
     values: { alt: 500, vsi: 700 },
     pos: { x: 190, y: 120 }, dwell: 1400,
   },
   {
     id: "turn-crosswind", phase: "CROSSWIND",
-    label: "Turn crosswind at 700 ft AGL",
-    description: "At 700 AGL, make a left climbing turn to crosswind.",
-    condition: "700 ft AGL — turn left 90°.",
-    targets: ["hi"], kind: "control",
+    condition: "700 ft AGL — time to turn.",
+    hint: "At 700 AGL make a left climbing turn to the crosswind leg.",
+    actions: [{ target: "hi", answer: "Climbing left turn to crosswind",
+      opts: ["Climbing left turn to crosswind", "Continue runway heading", "Turn right to crosswind"] }],
     values: { alt: 800, vsi: 600 },
     pos: { x: 150, y: 88 }, dwell: 1500,
   },
@@ -116,46 +133,57 @@ const SEQUENCE = [
   /* ----------------------------- DOWNWIND ------------------------------- */
   {
     id: "level-downwind", phase: "DOWNWIND",
-    label: "Level at TPA — 2150 RPM, 90 kts",
-    description: "Turn downwind, level at 1000 ft TPA, set cruise power.",
-    condition: "1–1.2 NM from runway, parallel, opposite heading.",
-    targets: ["hi", "throttle"], kind: "control",
+    condition: "1–1.2 NM out, abeam runway, opposite heading.",
+    hint: "Turn downwind, level off at the 1000 ft TPA, and set cruise power (2150 RPM).",
+    actions: [
+      { target: "hi", answer: "Left turn to downwind, level off",
+        opts: ["Left turn to downwind, level off", "Keep climbing straight", "Turn right toward base"] },
+      { target: "throttle", answer: "Cruise — 2150 RPM" },
+    ],
     values: { alt: 1000, ias: 90, rpm: 2150, vsi: 0 },
     pos: { x: 112, y: 100 }, dwell: 1600,
   },
   {
     id: "abeam-power", phase: "DOWNWIND",
-    label: "Abeam — chunk of power to 1500 RPM",
-    description: "Threshold is directly off your wing. Reduce power to 1500 RPM.",
     condition: "Runway threshold abeam — 90° off your left.",
-    targets: ["throttle"], kind: "control",
+    hint: "Threshold off the wing: reduce power to 1500 RPM to begin the descent.",
+    actions: [{ target: "throttle", answer: "1500 RPM" }],
     values: { rpm: 1500, ias: 85, vsi: -300 },
     pos: { x: 112, y: 248 }, dwell: 1700,
   },
   {
     id: "flaps-10", phase: "DOWNWIND",
-    label: "Flaps 10°",
-    description: "Add the first notch of flaps (within the white arc).",
-    condition: "Below 110 kts (Vfe).",
-    targets: ["flaps"], kind: "control",
+    condition: "Below 110 kts (Vfe), descending.",
+    hint: "Add the first notch of flaps — 10° — within the white arc.",
+    actions: [{ target: "flaps", answer: "Flaps 10°" }],
     values: { flaps: 10, ias: 80, vsi: -400 },
     pos: { x: 112, y: 258 }, dwell: 900,
   },
   {
     id: "paa-check", phase: "DOWNWIND",
-    label: "Power / Alt / Airspeed check",
-    description: "Verify each in turn: power 1500, descending from TPA, ~80 kts.",
-    condition: "Confirm the airplane is configured.",
-    targets: ["tach", "alt", "asi"], kind: "control",
+    condition: "Configured — confirm the airplane in a scan.",
+    hint: "Power / Altitude / Airspeed check: tach ~1500, descending out of TPA, ~80 kts. Click each gauge and confirm its reading.",
+    actions: [
+      { target: "tach", answer: "Power ~1500 RPM — checks",
+        opts: ["Power ~1500 RPM — checks", "Power 2150 RPM", "Full power"] },
+      { target: "alt", answer: "Descending out of TPA — checks",
+        opts: ["Descending out of TPA — checks", "Level at TPA", "Still climbing"] },
+      { target: "asi", answer: "Airspeed ~80 kts — checks",
+        opts: ["Airspeed ~80 kts — checks", "~60 kts", "~100 kts"] },
+    ],
     values: { ias: 80 },
     pos: { x: 112, y: 270 }, dwell: 1100,
   },
   {
     id: "before-landing", phase: "DOWNWIND",
-    label: "Before Landing checklist",
-    description: "Run the flow: Seatbelts → Fuel BOTH → Mixture RICH → Autopilot OFF.",
-    condition: "Complete before turning base.",
-    targets: ["seatbelt", "fuel", "mixture", "autopilot"], kind: "foldout",
+    condition: "Complete the Before-Landing flow before turning base.",
+    hint: "Seatbelts/signs ON → Fuel selector BOTH → Mixture RICH → Autopilot OFF.",
+    actions: [
+      { target: "seatbelt",  answer: "Belts & signs — ON" },
+      { target: "fuel",      answer: "Selector — BOTH" },
+      { target: "mixture",   answer: "Mixture — RICH" },
+      { target: "autopilot", answer: "Autopilot — OFF" },
+    ],
     values: {},
     pos: { x: 112, y: 282 }, dwell: 1200,
   },
@@ -163,19 +191,18 @@ const SEQUENCE = [
   /* ------------------------------- BASE --------------------------------- */
   {
     id: "turn-base", phase: "BASE",
-    label: "Turn base — threshold at 45°",
-    description: "When the threshold is 45° behind you, turn left to base.",
-    condition: "45° to the touchdown point.",
-    targets: ["hi"], kind: "control",
+    condition: "Threshold ~45° behind your shoulder.",
+    hint: "When the touchdown point is 45° behind you, turn left onto base.",
+    actions: [{ target: "hi", answer: "Left turn onto base",
+      opts: ["Left turn onto base", "Continue downwind", "Turn straight to final"] }],
     values: { ias: 80, vsi: -500 },
     pos: { x: 150, y: 300 }, dwell: 1500,
   },
   {
     id: "flaps-20", phase: "BASE",
-    label: "Flaps 20°",
-    description: "Second notch of flaps, continue the descent.",
-    condition: "On base, 80 kts.",
-    targets: ["flaps"], kind: "control",
+    condition: "On base, 80 kts, continuing the descent.",
+    hint: "Add the second notch of flaps — 20°.",
+    actions: [{ target: "flaps", answer: "Flaps 20°" }],
     values: { flaps: 20, ias: 75, vsi: -500 },
     pos: { x: 175, y: 303 }, dwell: 1000,
   },
@@ -183,37 +210,36 @@ const SEQUENCE = [
   /* ------------------------------- FINAL -------------------------------- */
   {
     id: "turn-final", phase: "FINAL",
-    label: "Turn final — align centerline",
-    description: "Roll out on the extended centerline, wings level.",
-    condition: "Lined up with the runway.",
-    targets: ["hi"], kind: "control",
+    condition: "Approaching the extended centerline.",
+    hint: "Roll out on final, wings level, lined up with the runway.",
+    actions: [{ target: "hi", answer: "Roll out on final, wings level",
+      opts: ["Roll out on final, wings level", "Overshoot and re-intercept", "Turn back toward base"] }],
     values: { ias: 75, vsi: -500 },
     pos: { x: 190, y: 300 }, dwell: 1400,
   },
   {
     id: "flaps-30", phase: "FINAL",
-    label: "Flaps 30° (full)",
-    description: "Full flaps for landing configuration.",
     condition: "Runway made, on centerline.",
-    targets: ["flaps"], kind: "control",
+    hint: "Select full flaps — 30° — for the landing configuration.",
+    actions: [{ target: "flaps", answer: "Flaps 30° — full" }],
     values: { flaps: 30, ias: 70, vsi: -500 },
     pos: { x: 190, y: 292 }, dwell: 1000,
   },
   {
     id: "stabilized", phase: "FINAL",
-    label: "70 kts — stabilized",
-    description: "Pitch for 70 kts, trim, manage descent with power.",
-    condition: "On speed, on glidepath, on centerline.",
-    targets: ["asi"], kind: "control",
+    condition: "On glidepath, on centerline — stabilize.",
+    hint: "Pitch and trim for 70 kts; manage the descent with power.",
+    actions: [{ target: "asi", answer: "Pitch & trim for 70 kts",
+      opts: ["Pitch & trim for 70 kts", "Hold 90 kts", "Slow to 55 kts"] }],
     values: { ias: 70, vsi: -450 },
     pos: { x: 190, y: 282 }, dwell: 1200,
   },
   {
     id: "aim-point", phase: "FINAL",
-    label: "Aim point stationary in windscreen",
-    description: "The aiming point isn't moving up or down — you're on glidepath.",
-    condition: "Aim point fixed = correct glidepath.",
-    targets: ["confirm-glidepath"], kind: "minimap",
+    condition: "Judge your sight picture on final.",
+    hint: "If the aim point is stationary in the windscreen, you're on the correct glidepath.",
+    actions: [{ target: "ai", answer: "Aim point steady — on glidepath",
+      opts: ["Aim point steady — on glidepath", "Aim point sinking — going low", "Aim point rising — going high"] }],
     values: { vsi: -450 },
     pos: { x: 190, y: 272 }, dwell: 1200, branch: true,
   },
@@ -221,64 +247,63 @@ const SEQUENCE = [
   /* ------------------------------ LANDING ------------------------------- */
   {
     id: "cross-threshold", phase: "LANDING",
-    label: "Cross the threshold (~50 ft)",
-    description: "Crossing the numbers, begin to bleed off the last of the power.",
     condition: "Over the threshold, ~50 ft AGL.",
-    targets: ["confirm-threshold"], kind: "minimap",
+    hint: "Crossing the numbers, begin to ease the last of the power off as you start the round-out.",
+    actions: [{ target: "ai", answer: "Round-out picture — ease power off",
+      opts: ["Round-out picture — ease power off", "Push the nose down", "Add full power"] }],
     values: { ias: 65, alt: 50, vsi: -300 },
     pos: { x: 190, y: 253 }, dwell: 1100, branch: true,
   },
   {
     id: "throttle-idle", phase: "LANDING",
-    label: "Throttle to idle",
-    description: "Smoothly close the throttle as you enter the flare.",
-    condition: "Round-out height.",
-    targets: ["throttle"], kind: "control",
+    condition: "Round-out height — entering the flare.",
+    hint: "Smoothly close the throttle to idle as you enter the flare.",
+    actions: [{ target: "throttle", answer: "Idle" }],
     values: { rpm: 1000, ias: 60, vsi: -150 },
     pos: { x: 190, y: 250 }, dwell: 900,
   },
   {
     id: "flare", phase: "LANDING",
-    label: "Begin flare (~20 ft)",
-    description: "Progressive back pressure to arrest the descent, raise the nose.",
     condition: "~20 ft — round out.",
-    targets: ["yoke"], kind: "control",
+    hint: "Progressive back pressure to arrest the descent and raise the nose.",
+    actions: [{ target: "yoke", answer: "Progressive back pressure — flare",
+      opts: ["Progressive back pressure — flare", "Push the nose forward", "Hold neutral"] }],
     values: { ias: 55, alt: 20, vsi: -60 },
     pos: { x: 190, y: 248 }, dwell: 900,
   },
   {
     id: "hold-off", phase: "LANDING",
-    label: "Hold the nose, let it settle",
-    description: "Hold attitude and let airspeed bleed off as the airplane floats.",
-    condition: "Float — keep the nose up.",
-    targets: ["yoke"], kind: "control",
+    condition: "Floating — airspeed bleeding off.",
+    hint: "Hold the nose off and let the airplane settle as speed decays.",
+    actions: [{ target: "yoke", answer: "Hold it off — let it settle",
+      opts: ["Hold it off — let it settle", "Lower the nose now", "Add power"] }],
     values: { ias: 50, alt: 8, vsi: -30 },
     pos: { x: 190, y: 246 }, dwell: 1000,
   },
   {
     id: "mains-touch", phase: "LANDING",
-    label: "Mains touch — hold back pressure",
-    description: "Main wheels touch first; keep holding the yoke back.",
-    condition: "Touchdown on the mains.",
-    targets: ["yoke"], kind: "control",
+    condition: "Mains touch down first.",
+    hint: "Keep holding the yoke back as the main wheels touch.",
+    actions: [{ target: "yoke", answer: "Keep holding back pressure",
+      opts: ["Keep holding back pressure", "Release the yoke", "Push forward"] }],
     values: { ias: 45, alt: 0, vsi: 0 },
     pos: { x: 190, y: 243 }, dwell: 800,
   },
   {
     id: "lower-nose", phase: "LANDING",
-    label: "Gently lower the nosewheel",
-    description: "As elevator authority fades, ease the nosewheel down.",
-    condition: "Decelerating on the runway.",
-    targets: ["yoke"], kind: "control",
+    condition: "Decelerating on the mains.",
+    hint: "As elevator authority fades, gently lower the nosewheel to the runway.",
+    actions: [{ target: "yoke", answer: "Gently lower the nosewheel",
+      opts: ["Gently lower the nosewheel", "Hold full back pressure", "Pull harder"] }],
     values: { ias: 35 },
     pos: { x: 190, y: 238 }, dwell: 800,
   },
   {
     id: "rollout", phase: "LANDING",
-    label: "Track centerline — brakes to stop",
-    description: "Maintain centerline with rudder, apply brakes as needed.",
-    condition: "Rollout complete. Nice landing!",
-    targets: ["rudder"], kind: "control",
+    condition: "Rollout — stay on the centerline.",
+    hint: "Track the centerline with rudder and apply brakes as needed to stop.",
+    actions: [{ target: "rudder", answer: "Track centerline, brakes as needed",
+      opts: ["Track centerline, brakes as needed", "Full aileron only", "Add power"] }],
     values: { ias: 10, rpm: 1000 },
     pos: { x: 190, y: 218 }, dwell: 1000,
   },
@@ -288,47 +313,48 @@ const SEQUENCE = [
 const GOAROUND = [
   {
     id: "ga-power", phase: "GOAROUND",
-    label: "Full power immediately",
-    description: "Throttle full forward — arrest the descent.",
     condition: "Go-around initiated.",
-    targets: ["throttle"], kind: "control",
+    hint: "Throttle full forward immediately to arrest the descent.",
+    actions: [{ target: "throttle", answer: "Full power — ≈2500 RPM" }],
     values: { rpm: 2500, vsi: 0 },
     pos: { x: 190, y: 240 }, dwell: 900,
   },
   {
     id: "ga-pitch", phase: "GOAROUND",
-    label: "Pitch away from the ground",
-    description: "Establish a positive climb attitude on the attitude indicator.",
-    condition: "Positive rate of climb.",
-    targets: ["ai"], kind: "control",
+    condition: "Power's in — stop the descent.",
+    hint: "Establish a positive climb attitude on the attitude indicator.",
+    actions: [{ target: "ai", answer: "Positive climb attitude",
+      opts: ["Positive climb attitude", "Level off", "Nose-down attitude"] }],
     values: { ias: 60, vsi: 500, alt: 100 },
     pos: { x: 190, y: 210 }, dwell: 1100,
   },
   {
     id: "ga-flaps-20", phase: "GOAROUND",
-    label: "Retract final notch — flaps 20°",
-    description: "Reduce the last notch of flaps to improve climb.",
     condition: "Climbing, positive rate confirmed.",
-    targets: ["flaps"], kind: "control",
+    hint: "Retract the final notch of flaps to 20° to improve the climb.",
+    actions: [{ target: "flaps", answer: "Flaps 20°" }],
     values: { flaps: 20, ias: 65, vsi: 600 },
     pos: { x: 190, y: 175 }, dwell: 1000,
   },
   {
     id: "ga-climb", phase: "GOAROUND",
-    label: "Climb 60 kts, retract to 10°",
-    description: "Pitch for Vx/Vy, verify positive rate, milk flaps to 10°.",
-    condition: "Vy climb established.",
-    targets: ["asi", "vsi", "flaps"], kind: "control",
+    condition: "Establish the Vy climb and clean up.",
+    hint: "Pitch for the climb speed, confirm a positive rate, then milk the flaps up to 10°.",
+    actions: [
+      { target: "asi", answer: "Pitch for the 70 kt climb",
+        opts: ["Pitch for the 70 kt climb", "Hold 55 kts", "Accelerate to 90 kts"] },
+      { target: "vsi", answer: "Confirm a positive rate",
+        opts: ["Confirm a positive rate", "Confirm a descent", "Ignore the VSI"] },
+      { target: "flaps", answer: "Flaps 10°" },
+    ],
     values: { flaps: 10, ias: 70, vsi: 700, alt: 400 },
     pos: { x: 190, y: 140 }, dwell: 1200,
   },
   {
     id: "ga-call", phase: "GOAROUND",
-    label: 'Verbalize: "Going around"',
-    description: "Make the call and re-enter the pattern upwind.",
-    condition: "Going around — climbing out.",
-    callout: "Going around",
-    targets: ["call-goaround"], kind: "foldout",
+    condition: "Climbing out — make the call.",
+    hint: "Announce “going around” and re-enter the pattern on the upwind.",
+    actions: [{ target: "comm", answer: "“Going around”" }],
     values: { alt: 700 },
     pos: { x: 190, y: 118 }, dwell: 1200,
   },

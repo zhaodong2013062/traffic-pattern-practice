@@ -69,30 +69,42 @@ body {
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
   padding: 14px;
 }
-/* situation prompt + quiz question */
-.situation { margin: 0 0 4px; color: var(--muted); font-style: italic; font-size: 13px; line-height: 1.4; }
-.quiz-q { margin: 0 0 12px; font-size: 16px; }
+/* situation (current conditions) + neutral prompt */
+.situation { margin: 0 0 8px; color: var(--ink); font-size: 15px; line-height: 1.45; }
+.step-prompt { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
 
-/* multiple-choice options */
-.options { display: flex; flex-direction: column; gap: 8px; }
-.opt-btn {
+/* progress dots for compound (multi-action) steps */
+.dots { display: flex; gap: 8px; margin-bottom: 10px; }
+.dots:empty { margin: 0; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); }
+.dot.on { background: var(--ok); border-color: var(--ok); }
+
+/* wrong-instrument / confirmation indicator */
+.feedback {
+  margin: 0 0 10px; padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+}
+.feedback.bad { background: #3a161b; border: 1px solid var(--bad); color: #ffb3ba; animation: shake .4s; }
+.feedback.ok  { background: #123322; border: 1px solid var(--ok); color: #9af0c2; }
+
+/* value picker (opens after clicking the correct control) */
+.picker {
+  margin-bottom: 4px; padding: 12px; border: 1px solid var(--accent);
+  border-radius: 10px; background: #0f1a22;
+}
+.picker-title { margin: 0 0 10px; font-size: 14px; color: var(--accent); letter-spacing: .5px; }
+.picker-opts { display: flex; flex-direction: column; gap: 8px; }
+.pick-btn {
   padding: 12px 14px; border-radius: 9px; border: 1px solid var(--line);
   background: var(--panel-2); color: var(--ink); font-size: 14px; cursor: pointer;
   text-align: left; transition: background .12s ease, border-color .12s ease;
 }
-.opt-btn:hover:not(:disabled) { background: #2c3543; }
-.opt-btn:disabled { cursor: default; }
-.opt-btn.correct { border-color: var(--ok); color: var(--ok); box-shadow: 0 0 0 1px var(--ok) inset; }
-.opt-btn.correct::after { content: "  ✓"; }
-.opt-btn.wrong { border-color: var(--bad); color: var(--bad); opacity: .65; animation: shake .4s; }
-.opt-btn.wrong::after { content: "  ✗"; }
-
-/* perform phase (compound control sequence) */
-.perform { margin-top: 12px; padding: 12px; border: 1px dashed var(--accent); border-radius: 9px; background: #0f1a22; }
-.perform-text { margin: 0 0 10px; font-size: 13px; color: var(--ink); }
-.dots { display: flex; gap: 8px; }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--panel-2); border: 1px solid var(--line); }
-.dot.on { background: var(--ok); border-color: var(--ok); }
+.pick-btn:hover:not(:disabled) { background: #2c3543; }
+.pick-btn:disabled { cursor: default; }
+.pick-btn.correct { border-color: var(--ok); color: var(--ok); box-shadow: 0 0 0 1px var(--ok) inset; }
+.pick-btn.correct::after { content: "  ✓"; }
+.pick-btn.wrong { border-color: var(--bad); color: var(--bad); opacity: .65; animation: shake .4s; }
+.pick-btn.wrong::after { content: "  ✗"; }
+.pick-btn.hint-correct { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
 
 /* hint */
 .card-actions { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
@@ -201,27 +213,26 @@ body {
   40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); }
 }
 
-/* ---------------------------- fold-out --------------------------------- */
-.foldout {
-  position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 100%);
-  width: min(520px, 94vw); background: var(--panel-2);
-  border: 1px solid var(--line); border-bottom: none; border-radius: 14px 14px 0 0;
-  padding: 14px 18px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,.5);
-  transition: transform .35s cubic-bezier(.2,.8,.2,1); z-index: 50;
+/* comm / radio button, fuel & mixture knobs, toggle switches */
+.comm-rect { fill: #161b21; stroke: #39444f; stroke-width: 2; }
+.comm-light { fill: #2d3a44; stroke: #4a5663; stroke-width: 1.5; }
+.comm-label { fill: #aeb9c4; font-size: 11px; font-weight: 700; text-anchor: middle; letter-spacing: .5px; }
+.knob-bezel { fill: #0a0d11; stroke: #39444f; stroke-width: 2; }
+.knob-face { fill: #1f2730; }
+.knob-pointer { stroke: #ffe66d; stroke-width: 3; stroke-linecap: round; }
+.switch-track { fill: #161b21; stroke: #4a5663; stroke-width: 2; }
+.switch-knob { fill: #cfd8df; }
+
+/* target/flash states for the new controls */
+.control.target .comm-rect, .control.target .knob-face, .control.target .switch-track {
+  stroke: var(--accent); stroke-width: 3; filter: drop-shadow(0 0 8px var(--accent));
 }
-.foldout.open { transform: translate(-50%, 0); }
-.foldout.shake { animation: shake .4s; }
-.foldout-handle { width: 44px; height: 5px; border-radius: 3px; background: #4a5663; margin: 0 auto 10px; }
-.foldout-title { margin: 0 0 12px; text-align: center; font-size: 13px; letter-spacing: 2px; color: var(--muted); }
-.foldout-btns { display: flex; flex-direction: column; gap: 8px; }
-.fold-btn {
-  padding: 12px; border-radius: 9px; border: 1px solid var(--line);
-  background: var(--panel); color: var(--muted); font-size: 15px; cursor: pointer; text-align: left;
+.flash-ok .comm-rect, .flash-ok .knob-face, .flash-ok .switch-track {
+  stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important;
 }
-.fold-btn.hint { color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-.fold-btn.done { color: var(--ok); border-color: #1d5e3a; }
-.fold-btn.done::after { content: "  ✓"; }
-.fold-btn:disabled { opacity: .5; cursor: not-allowed; }
+.flash-bad .comm-rect, .flash-bad .knob-face, .flash-bad .switch-track {
+  stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important;
+}
 
 /* ---------------------------- responsive ------------------------------- */
 @media (max-width: 880px) {
