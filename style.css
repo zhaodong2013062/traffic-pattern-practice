@@ -1,0 +1,217 @@
+/* ============================================================================
+   C172 Traffic Pattern Trainer — styles
+   ========================================================================== */
+:root {
+  --bg: #0e1116;
+  --panel: #1a1f27;
+  --panel-2: #232a34;
+  --ink: #e8edf2;
+  --muted: #9aa7b4;
+  --accent: #34ace0;
+  --ok: #2ed573;
+  --bad: #ff4757;
+  --line: #313a46;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", Roboto, system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ---------------------------- top bar ---------------------------------- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px; background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.topbar h1 { font-size: 16px; margin: 0; letter-spacing: .5px; }
+.controls { display: flex; align-items: center; gap: 12px; }
+.progress { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+.btn {
+  border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+  padding: 7px 16px; border-radius: 7px; cursor: pointer; font-size: 14px;
+  transition: transform .08s ease, background .15s ease;
+}
+.btn:hover { background: #2c3543; }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #04222e; font-weight: 600; }
+.btn.danger  { background: var(--bad); border-color: var(--bad); color: #fff; width: 100%; margin-top: 8px; }
+.btn.confirm { background: var(--ok); border-color: var(--ok); color: #053c1c; width: 100%; margin-top: 8px; font-weight: 600; }
+
+/* ---------------------------- layout ----------------------------------- */
+.layout {
+  flex: 1; display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
+  gap: 14px; padding: 14px; align-items: start;
+}
+.cockpit-wrap {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px; overflow: hidden;
+}
+.cockpit { width: 100%; }
+.panel { width: 100%; height: auto; display: block; }
+
+.side { display: flex; flex-direction: column; gap: 12px; }
+
+/* -------------------------- phase banner ------------------------------- */
+.phase-banner {
+  text-align: center; font-weight: 800; letter-spacing: 3px; font-size: 18px;
+  padding: 10px; border-radius: 10px; color: #08121a; background: #222;
+  transition: background .3s ease;
+}
+
+/* -------------------------- action card -------------------------------- */
+.action-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px;
+}
+.card-label { margin: 0 0 6px; font-size: 18px; }
+.card-desc { margin: 0 0 6px; color: var(--ink); font-size: 14px; line-height: 1.4; }
+.card-cond { margin: 0; color: var(--muted); font-style: italic; font-size: 13px; }
+.callout {
+  background: #11324a; border: 1px solid var(--accent); color: #cdeafe;
+  border-radius: 8px; padding: 8px 12px; font-size: 17px; font-weight: 600;
+  margin-bottom: 10px; text-align: center;
+}
+
+.todo { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.todo li {
+  padding: 7px 10px; border-radius: 7px; font-size: 13px; background: var(--panel-2);
+  border: 1px solid var(--line); color: var(--muted); display: flex; align-items: center; gap: 8px;
+}
+.todo li::before { content: "○"; }
+.todo li.current { color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.todo li.current::before { content: "▶"; color: var(--accent); }
+.todo li.done { color: var(--ok); }
+.todo li.done::before { content: "✓"; color: var(--ok); }
+
+/* ---------------------------- minimap ---------------------------------- */
+.minimap-box {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px;
+}
+.minimap-holder { width: 100%; }
+.minimap { width: 100%; height: auto; display: block; }
+
+.map-bg { fill: #0c1f17; }
+.map-title { fill: #6fd6a8; font-size: 12px; font-weight: 700; text-anchor: middle; letter-spacing: 1px; }
+.pattern-outline { fill: none; stroke: #2e4a3d; stroke-width: 2; stroke-dasharray: 4 4; }
+.leg { fill: none; stroke: #3c5e4e; stroke-width: 3; stroke-linecap: round; }
+.leg.active { stroke: var(--ok); stroke-width: 5; filter: drop-shadow(0 0 4px var(--ok)); }
+.runway { fill: #cfd8df; }
+.runway-center { stroke: #0c1f17; stroke-width: 1.5; stroke-dasharray: 6 6; }
+.rwy-label { fill: #cfd8df; font-size: 11px; font-weight: 700; text-anchor: middle; }
+.leg-label { fill: #8fb7a4; font-size: 9px; font-weight: 700; letter-spacing: .5px; }
+.map-note { fill: #d9b54a; font-size: 8px; text-anchor: middle; }
+.map-cue { fill: #e08a5b; font-size: 8px; font-weight: 700; }
+.abeam-line { stroke: #e08a5b; stroke-width: 1; stroke-dasharray: 3 3; }
+.map-condition { fill: #cdeafe; font-size: 9px; text-anchor: middle; }
+.map-plane .plane-body { fill: #ffe66d; stroke: #1a1f27; stroke-width: .5; }
+.map-plane { filter: drop-shadow(0 0 3px rgba(255,230,109,.6)); transition: none; }
+
+/* ---------------------- cockpit SVG elements --------------------------- */
+.panel-bg { fill: #11151b; }
+.panel-metal { fill: #20262f; stroke: #2c3540; stroke-width: 2; }
+.panel-title { fill: #6f7d8c; font-size: 15px; font-weight: 700; text-anchor: middle; letter-spacing: 1.5px; }
+
+.bezel { fill: #0a0d11; stroke: #39444f; stroke-width: 2; }
+.face { fill: #12171d; }
+.tick { stroke: #56636f; stroke-width: 1.5; }
+.gauge-title { fill: #7c8a98; font-size: 9px; font-weight: 700; text-anchor: middle; letter-spacing: .5px; }
+.needle { stroke: #ffe66d; stroke-width: 3; stroke-linecap: round; }
+.hub { fill: #cfd8df; }
+.readout { fill: #fff; font-size: 16px; font-weight: 700; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.unit { fill: #6f7d8c; font-size: 8px; text-anchor: middle; }
+
+.instrument, .control { cursor: pointer; }
+.instrument .face, .control .lever-track { transition: filter .15s ease; }
+
+/* needle animation only when stepping (not on every reflow) */
+.instrument.animating .needle { transition: transform 1s cubic-bezier(.5,0,.2,1); }
+
+/* attitude indicator */
+.ai-sky { fill: #2a86c4; }
+.ai-ground { fill: #7a5230; }
+.ai-horizon-line { stroke: #fff; stroke-width: 1.5; }
+.ai-pitch { stroke: #d9e6f0; stroke-width: 1; }
+.ai-symbol { stroke: #ffd32a; stroke-width: 2.5; fill: #ffd32a; }
+.instrument.animating .ai-sky ~ *, .instrument.animating g { transition: transform 1s ease; }
+.ai-sky, .ai-ground { transition: none; }
+#aiClip ~ * { }
+.instrument [class^="ai-"] { }
+.instrument g[clip-path] g { transition: transform 1s cubic-bezier(.5,0,.2,1); }
+
+/* heading / turn coordinator */
+.compass { fill: #cfd8df; font-size: 10px; font-weight: 700; text-anchor: middle; }
+.plane-glyph { fill: #ffe66d; }
+.tc-wing { stroke: #ffe66d; stroke-width: 3; stroke-linecap: round; }
+
+/* levers & controls */
+.lever-track { fill: #161b21; stroke: #39444f; stroke-width: 2; }
+.lever-knob { fill: #1f2730; stroke: #4a5663; stroke-width: 2; }
+.throttle-knob { fill: #1c2630; }
+.lever-label { fill: #aeb9c4; font-size: 9px; font-weight: 700; text-anchor: middle; }
+.lever-knob { transition: transform 1s cubic-bezier(.5,0,.2,1); }
+.control-caption { fill: #8b97a3; font-size: 11px; font-weight: 700; text-anchor: middle; letter-spacing: .5px; }
+.detent { stroke: #4a5663; stroke-width: 1.5; }
+.detent-label { fill: #9aa7b4; font-size: 10px; font-weight: 600; }
+.flap-handle { fill: #ffb142; stroke: #c77f1f; stroke-width: 1.5; transition: y 1s cubic-bezier(.5,0,.2,1); }
+.yoke-arc { fill: none; stroke: #4a5663; stroke-width: 8; stroke-linecap: round; }
+.yoke-grip { fill: #2a333d; stroke: #4a5663; stroke-width: 2; }
+.yoke-col { stroke: #4a5663; stroke-width: 6; }
+.pedal { fill: #2a333d; stroke: #4a5663; stroke-width: 2; }
+
+/* highlight + feedback states */
+.instrument.target .bezel, .control.target .lever-track,
+.control.target .yoke-arc, .control.target .pedal {
+  stroke: var(--accent); stroke-width: 3;
+  filter: drop-shadow(0 0 8px var(--accent));
+}
+.control.target { animation: pulse 1.2s ease-in-out infinite; }
+.instrument.target { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .72; } }
+
+.flash-ok .bezel, .flash-ok .lever-track, .flash-ok .yoke-arc, .flash-ok .pedal {
+  stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important;
+}
+.flash-bad { animation: shake .4s; }
+.flash-bad .bezel, .flash-bad .lever-track, .flash-bad .yoke-arc, .flash-bad .pedal {
+  stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important;
+}
+.done-step { opacity: .85; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); } 20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); }
+}
+
+/* ---------------------------- fold-out --------------------------------- */
+.foldout {
+  position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 100%);
+  width: min(520px, 94vw); background: var(--panel-2);
+  border: 1px solid var(--line); border-bottom: none; border-radius: 14px 14px 0 0;
+  padding: 14px 18px 20px; box-shadow: 0 -10px 30px rgba(0,0,0,.5);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1); z-index: 50;
+}
+.foldout.open { transform: translate(-50%, 0); }
+.foldout.shake { animation: shake .4s; }
+.foldout-handle { width: 44px; height: 5px; border-radius: 3px; background: #4a5663; margin: 0 auto 10px; }
+.foldout-title { margin: 0 0 12px; text-align: center; font-size: 13px; letter-spacing: 2px; color: var(--muted); }
+.foldout-btns { display: flex; flex-direction: column; gap: 8px; }
+.fold-btn {
+  padding: 12px; border-radius: 9px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--muted); font-size: 15px; cursor: pointer; text-align: left;
+}
+.fold-btn.current { color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.fold-btn.done { color: var(--ok); border-color: #1d5e3a; }
+.fold-btn.done::after { content: "  ✓"; }
+.fold-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---------------------------- responsive ------------------------------- */
+@media (max-width: 880px) {
+  .layout { grid-template-columns: 1fr; }
+  .topbar h1 { font-size: 14px; }
+}
