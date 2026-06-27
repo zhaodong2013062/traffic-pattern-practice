@@ -191,6 +191,17 @@ const Cockpit = (() => {
     groups.rudder = { g };
   }
 
+  /* ---- switch / knob / button controls (fuel, mixture, A/P, belts, radio) -- */
+  function switchCtl(parent, { id, x, y, label }) {
+    const g = el("g", { class: "control", "data-id": id, transform: `translate(${x} ${y})` }, parent);
+    el("rect", { x: -46, y: -24, width: 92, height: 48, rx: 8, class: "switch-box" }, g);
+    el("text", { y: -6, class: "switch-label" }, g).textContent = label;
+    const val = el("text", { y: 14, class: "switch-val" }, g);
+    val.textContent = "—";
+    g.addEventListener("click", () => clickCb(id));
+    groups[id] = { g, setLabel: (t) => { val.textContent = t; } };
+  }
+
   /* ------------------------------ render -------------------------------- */
   function render(container) {
     svg = el("svg", { viewBox: "0 0 1000 600", class: "panel", preserveAspectRatio: "xMidYMid meet" });
@@ -210,6 +221,14 @@ const Cockpit = (() => {
 
     // tachometer (right cluster)
     gauge(svg, { id: "tach", cx: 815, cy: 175, r: 76, title: "TACHOMETER", unit: "RPM" });
+
+    // switch / knob cluster (right panel)
+    el("text", { x: 815, y: 290, class: "panel-title", "font-size": "11" }, svg).textContent = "PEDESTAL & SWITCHES";
+    switchCtl(svg, { id: "fuel",      x: 718, y: 330, label: "FUEL SEL" });
+    switchCtl(svg, { id: "mixture",   x: 815, y: 330, label: "MIXTURE" });
+    switchCtl(svg, { id: "autopilot", x: 912, y: 330, label: "AUTOPILOT" });
+    switchCtl(svg, { id: "seatbelt",  x: 718, y: 392, label: "SEATBELTS" });
+    switchCtl(svg, { id: "call",      x: 863, y: 392, label: "RADIO / CALL" });
 
     // controls along the lower pedestal
     yoke(svg, { x: 130, y: 500 });
@@ -247,7 +266,12 @@ const Cockpit = (() => {
     setTimeout(() => grp.g.classList.remove(cls), 600);
   }
 
-  return { render, onClick, setValues, highlight, clearHighlight, markDone, flash, _state: state };
+  function setControlLabel(id, text) {
+    const grp = groups[id];
+    if (grp && grp.setLabel) grp.setLabel(text);
+  }
+
+  return { render, onClick, setValues, highlight, clearHighlight, markDone, flash, setControlLabel, _state: state };
 })();
 
 window.Cockpit = Cockpit;
