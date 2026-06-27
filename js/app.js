@@ -29,8 +29,49 @@
     "confirm-glidepath": "Confirm aim point", "confirm-threshold": "Confirm over threshold",
   };
 
-  // pool of every action label, for generating plausible distractors
-  const ALL_LABELS = [...new Set([...SEQUENCE, ...GOAROUND].map((s) => s.label))];
+  // ---- distractor generation: pick wrong answers that are plausible *now* --
+  const PHASE_ORDER = ["TAKEOFF", "UPWIND", "CROSSWIND", "DOWNWIND", "BASE", "FINAL", "LANDING", "GOAROUND"];
+
+  function categorize(label) {
+    const l = label.toLowerCase();
+    if (/flap/.test(l)) return "flaps";
+    if (/rpm|power|throttle|idle/.test(l)) return "power";
+    if (/verbal|instruments green|airspeed alive|going around/.test(l)) return "call";
+    if (/seatbelt|fuel|mixture|autopilot|before landing|check/.test(l)) return "checklist";
+    if (/turn|track|level|align|abeam/.test(l)) return "nav";
+    return "energy"; // speeds, rotate, flare, hold, climb, aim, threshold, etc.
+  }
+
+  // unique label metadata across the whole flow
+  const META = (() => {
+    const seen = new Set(), out = [];
+    for (const s of [...SEQUENCE, ...GOAROUND]) {
+      if (seen.has(s.label)) continue;
+      seen.add(s.label);
+      out.push({ label: s.label, phase: s.phase, cat: categorize(s.label) });
+    }
+    return out;
+  })();
+
+  // score candidates by similarity to the current step, then sample for variety
+  function pickDistractors(step) {
+    const selfCat = categorize(step.label);
+    const selfPh = PHASE_ORDER.indexOf(step.phase);
+    const scored = META
+      .filter((m) => m.label !== step.label)
+      .map((m) => {
+        let sc = 0;
+        if (m.cat === selfCat) sc += 4;                       // same kind of action
+        if (m.phase === step.phase) sc += 3;                  // same leg
+        const pd = Math.abs(PHASE_ORDER.indexOf(m.phase) - selfPh);
+        if (pd === 1) sc += 2; else if (pd === 2) sc += 1;    // neighbouring leg
+        sc += Math.random() * 2;                              // jitter
+        return { label: m.label, sc };
+      })
+      .sort((a, b) => b.sc - a.sc);
+    // take a plausible top band, then randomly choose 3 from it
+    return shuffle(scored.slice(0, 7).map((x) => x.label)).slice(0, 3);
+  }
 
   const $ = (id) => document.getElementById(id);
   let steps = SEQUENCE.slice();
@@ -136,8 +177,7 @@
   }
 
   function renderOptions(s) {
-    const distractors = shuffle(ALL_LABELS.filter((l) => l !== s.label)).slice(0, 3);
-    const opts = shuffle([s.label, ...distractors]);
+    const opts = shuffle([s.label, ...pickDistractors(s)]);
     const list = $("optionList");
     list.innerHTML = "";
     opts.forEach((text) => {
