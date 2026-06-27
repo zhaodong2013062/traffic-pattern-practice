@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C172 Traffic Pattern Trainer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1>Cessna 172 · Traffic Pattern Trainer</h1>
+    <div class="controls">
+      <span id="progressText" class="progress"></span>
+      <button id="startBtn" class="btn primary">Start</button>
+      <button id="restartBtn" class="btn" hidden>Restart</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- LEFT: cockpit panel -->
+    <section class="cockpit-wrap">
+      <div id="cockpit" class="cockpit"></div>
+    </section>
+
+    <!-- RIGHT: guidance + minimap -->
+    <aside class="side">
+      <div id="phaseBanner" class="phase-banner">READY</div>
+
+      <div class="action-card">
+        <div id="calloutBubble" class="callout" hidden></div>
+        <h2 id="cardLabel" class="card-label"></h2>
+        <p id="cardDesc" class="card-desc"></p>
+        <p id="cardCond" class="card-cond"></p>
+        <ul id="todo" class="todo"></ul>
+        <button id="goaroundBtn" class="btn danger" hidden>⤴ Go Around</button>
+        <button id="minimapConfirm" class="btn confirm" hidden></button>
+      </div>
+
+      <div class="minimap-box">
+        <div id="minimap" class="minimap-holder"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- fold-out kneeboard for non-control actions -->
+  <div id="foldout" class="foldout">
+    <div class="foldout-handle"></div>
+    <h3 id="foldoutTitle" class="foldout-title">CHECKLIST</h3>
+    <div id="foldoutBtns" class="foldout-btns"></div>
+  </div>
+
+  <script src="js/sequence.js"></script>
+  <script src="js/cockpit.js"></script>
+  <script src="js/minimap.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
