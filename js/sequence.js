@@ -6,6 +6,10 @@
    from that control's menu (e.g. throttle -> 1500 / 2150 / idle). No guidance
    is given until a hint is requested.
 
+   Flying the airplane (turns, pitch, flare) is done with the YOKE — the
+   attitude/heading indicators are *references*, not controls. Power is the
+   throttle, configuration is flaps, the menu choices vary by stage.
+
    Each step:
      id, phase, condition          situational text shown to the pilot
      acts: [ ... ]                 one or more click-then-pick actions, IN ORDER
@@ -13,7 +17,7 @@
      branch                        true => a go-around may be initiated here
 
    Each act:
-     target        control/instrument id the pilot must click
+     target        control id the pilot must click
      correct       the menu choice that is correct
      options       (optional) override the control's default menu for this stage
      values        (optional) instrument values to animate to when the act lands
@@ -30,19 +34,16 @@ const PHASES = {
   GOAROUND:  { name: "GO-AROUND", color: "#ff4757" },
 };
 
-/* Default menu offered when a control is clicked. A step's act may override
-   `options` to vary the choices by stage. */
+/* Default menu offered when a control is clicked. Flight controls (yoke) vary
+   so much by stage that most yoke acts override `options`; the rest use these. */
 const CONTROL_OPTIONS = {
   throttle:  ["Full power (2500)", "2150 RPM", "1500 RPM", "Idle"],
   flaps:     ["0° (up)", "10°", "20°", "30° (full)"],
-  hi:        ["Track runway heading", "Turn crosswind", "Turn downwind", "Turn base", "Turn final"],
-  ai:        ["Climb attitude", "Level off", "Pitch for descent", "Pitch up — go around"],
-  yoke:      ["Rotate", "Flare (back-pressure)", "Hold it off", "Lower nosewheel"],
+  yoke:      ["Wings level", "Bank left", "Bank right"],
   asi:       ["90 kts", "80 kts", "74 kts", "70 kts", "60 kts"],
   alt:       ["1000 ft (TPA)", "700 ft AGL", "Descending", "50 ft"],
   tach:      ["2500 RPM", "2150 RPM", "1500 RPM", "1000 RPM"],
   vsi:       ["Positive rate / climb", "Level", "Descending"],
-  ti:        ["Wings level", "Standard-rate turn"],
   rudder:    ["Line up on centerline", "Track centerline", "Apply brakes"],
   fuel:      ["BOTH", "LEFT", "RIGHT", "OFF"],
   mixture:   ["RICH", "LEAN", "CUTOFF"],
@@ -55,7 +56,7 @@ const SEQUENCE = [
   /* ----------------------------- TAKEOFF -------------------------------- */
   {
     id: "lineup", phase: "TAKEOFF",
-    condition: "Cleared for takeoff. Runway heading, ready to roll.",
+    condition: "Cleared for takeoff. Lined up to roll on runway heading.",
     acts: [{ target: "rudder", correct: "Line up on centerline",
              values: { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0 } }],
     pos: { x: 190, y: 258 }, dwell: 600,
@@ -81,39 +82,55 @@ const SEQUENCE = [
   {
     id: "rotate", phase: "TAKEOFF",
     condition: "55 KIAS — rotation speed.",
-    acts: [{ target: "yoke", correct: "Rotate", values: { ias: 60, alt: 50, vsi: 600 } }],
+    acts: [{ target: "yoke", correct: "Rotate (ease back)",
+             options: ["Rotate (ease back)", "Hold it on the ground", "Push forward"],
+             values: { ias: 60, alt: 50, vsi: 600 } }],
     pos: { x: 190, y: 214 }, dwell: 1000,
   },
+
+  /* ------------------------------ UPWIND -------------------------------- */
   {
     id: "climb-attitude", phase: "UPWIND",
-    condition: "Airborne, positive rate of climb.",
-    acts: [{ target: "ai", correct: "Climb attitude", values: { ias: 74, alt: 200, vsi: 700 } }],
-    pos: { x: 190, y: 165 }, dwell: 1400,
+    condition: "Airborne, positive rate of climb. Set the climb.",
+    acts: [{ target: "yoke", correct: "Pitch for Vy (74 kts)",
+             options: ["Pitch for Vy (74 kts)", "Lower the nose", "Hold level"],
+             values: { ias: 74, alt: 200, vsi: 700 } }],
+    pos: { x: 190, y: 168 }, dwell: 1300,
   },
-
-  /* -------------------------- UPWIND / CROSSWIND ------------------------ */
   {
     id: "track-upwind", phase: "UPWIND",
-    condition: "Upwind leg, climbing at 74 kts on the extended centerline.",
-    acts: [{ target: "hi", correct: "Track runway heading", values: { alt: 500 } }],
-    pos: { x: 190, y: 120 }, dwell: 1400,
+    condition: "Upwind leg — climbing straight out on the extended centerline.",
+    acts: [{ target: "yoke", correct: "Wings level, runway heading",
+             options: ["Wings level, runway heading", "Bank left", "Bank right"],
+             values: { alt: 500 } }],
+    pos: { x: 190, y: 110 }, dwell: 1300,
   },
+
+  /* ----------------------------- CROSSWIND ------------------------------ */
   {
     id: "turn-crosswind", phase: "CROSSWIND",
-    condition: "Passing 700 ft AGL.",
-    acts: [{ target: "hi", correct: "Turn crosswind", values: { alt: 800 } }],
-    pos: { x: 150, y: 88 }, dwell: 1500,
+    condition: "Climbing through 700 ft AGL on the upwind leg.",
+    acts: [{ target: "yoke", correct: "Bank left to crosswind",
+             options: ["Bank left to crosswind", "Bank right", "Continue straight ahead"],
+             values: { alt: 800 } }],
+    pos: { x: 165, y: 88 }, dwell: 1400,
   },
 
   /* ------------------------------ DOWNWIND ------------------------------ */
   {
+    id: "turn-downwind", phase: "DOWNWIND",
+    condition: "On crosswind, about 1–1.2 NM from the runway and nearing TPA.",
+    acts: [{ target: "yoke", correct: "Bank left to downwind",
+             options: ["Bank left to downwind", "Bank right", "Continue on crosswind"],
+             values: { alt: 950 } }],
+    pos: { x: 112, y: 95 }, dwell: 1400,
+  },
+  {
     id: "level-downwind", phase: "DOWNWIND",
-    condition: "1–1.2 NM out, parallel to the runway, reaching pattern altitude.",
-    acts: [
-      { target: "hi", correct: "Turn downwind" },
-      { target: "throttle", correct: "2150 RPM", values: { alt: 1000, ias: 90, rpm: 2150, vsi: 0 } },
-    ],
-    pos: { x: 112, y: 100 }, dwell: 1600,
+    condition: "Rolled out on downwind — parallel to the runway, opposite heading. Level at TPA.",
+    acts: [{ target: "throttle", correct: "2150 RPM",
+             values: { alt: 1000, ias: 90, rpm: 2150, vsi: 0 } }],
+    pos: { x: 112, y: 135 }, dwell: 1400,
   },
   {
     id: "abeam-power", phase: "DOWNWIND",
@@ -153,7 +170,9 @@ const SEQUENCE = [
   {
     id: "turn-base", phase: "BASE",
     condition: "The threshold is about 45° behind your wing.",
-    acts: [{ target: "hi", correct: "Turn base", values: { ias: 80, vsi: -500 } }],
+    acts: [{ target: "yoke", correct: "Bank left to base",
+             options: ["Bank left to base", "Bank right", "Continue on downwind"],
+             values: { ias: 80, vsi: -500 } }],
     pos: { x: 150, y: 300 }, dwell: 1500,
   },
   {
@@ -166,8 +185,10 @@ const SEQUENCE = [
   /* ------------------------------- FINAL -------------------------------- */
   {
     id: "turn-final", phase: "FINAL",
-    condition: "Runway off your shoulder, ready to roll out on centerline.",
-    acts: [{ target: "hi", correct: "Turn final", values: { ias: 75, vsi: -500 } }],
+    condition: "Approaching the extended centerline — roll out aligned with the runway.",
+    acts: [{ target: "yoke", correct: "Bank left to final",
+             options: ["Bank left to final", "Bank right", "Continue on base"],
+             values: { ias: 75, vsi: -500 } }],
     pos: { x: 190, y: 300 }, dwell: 1400,
   },
   {
@@ -178,8 +199,10 @@ const SEQUENCE = [
   },
   {
     id: "stabilized", phase: "FINAL",
-    condition: "Aim point stationary in the windscreen — on glidepath. Set your approach speed.",
-    acts: [{ target: "asi", correct: "70 kts", values: { ias: 70, vsi: -450 } }],
+    condition: "Aim point stationary in the windscreen — on glidepath. Hold the approach speed.",
+    acts: [{ target: "yoke", correct: "Pitch for 70 kts",
+             options: ["Pitch for 70 kts", "Lower the nose (faster)", "Raise the nose (slower)"],
+             values: { ias: 70, vsi: -450 } }],
     pos: { x: 190, y: 275 }, dwell: 1300, branch: true,
   },
 
@@ -193,25 +216,33 @@ const SEQUENCE = [
   {
     id: "flare", phase: "LANDING",
     condition: "~20 ft — round out.",
-    acts: [{ target: "yoke", correct: "Flare (back-pressure)", values: { ias: 55, alt: 20, vsi: -60 } }],
+    acts: [{ target: "yoke", correct: "Begin the flare (ease back)",
+             options: ["Begin the flare (ease back)", "Push the nose down", "Hold attitude"],
+             values: { ias: 55, alt: 20, vsi: -60 } }],
     pos: { x: 190, y: 248 }, dwell: 900,
   },
   {
     id: "hold-off", phase: "LANDING",
     condition: "Floating just off the surface — let the speed bleed away.",
-    acts: [{ target: "yoke", correct: "Hold it off", values: { ias: 50, alt: 8, vsi: -30 } }],
+    acts: [{ target: "yoke", correct: "Hold it off (more back-pressure)",
+             options: ["Hold it off (more back-pressure)", "Relax back-pressure", "Push forward"],
+             values: { ias: 50, alt: 8, vsi: -30 } }],
     pos: { x: 190, y: 246 }, dwell: 1000,
   },
   {
     id: "mains-touch", phase: "LANDING",
     condition: "Main wheels touch down first.",
-    acts: [{ target: "yoke", correct: "Hold it off", values: { ias: 45, alt: 0, vsi: 0 } }],
+    acts: [{ target: "yoke", correct: "Keep holding back-pressure",
+             options: ["Keep holding back-pressure", "Push the nose down", "Neutral"],
+             values: { ias: 45, alt: 0, vsi: 0 } }],
     pos: { x: 190, y: 243 }, dwell: 800,
   },
   {
     id: "lower-nose", phase: "LANDING",
     condition: "Elevator authority fading as you slow.",
-    acts: [{ target: "yoke", correct: "Lower nosewheel", values: { ias: 35 } }],
+    acts: [{ target: "yoke", correct: "Gently lower the nosewheel",
+             options: ["Gently lower the nosewheel", "Hold the nose up", "Pull back"],
+             values: { ias: 35 } }],
     pos: { x: 190, y: 238 }, dwell: 800,
   },
   {
@@ -231,8 +262,10 @@ const GOAROUND = [
   },
   {
     id: "ga-pitch", phase: "GOAROUND",
-    condition: "Establish a positive climb.",
-    acts: [{ target: "ai", correct: "Pitch up — go around", values: { ias: 60, vsi: 500, alt: 100 } }],
+    condition: "Establish a positive climb attitude.",
+    acts: [{ target: "yoke", correct: "Pitch up to climb attitude",
+             options: ["Pitch up to climb attitude", "Lower the nose", "Hold level"],
+             values: { ias: 60, vsi: 500, alt: 100 } }],
     pos: { x: 190, y: 210 }, dwell: 1100,
   },
   {
