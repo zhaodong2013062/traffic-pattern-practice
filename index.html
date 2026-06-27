@@ -27,13 +27,20 @@
       <div id="phaseBanner" class="phase-banner">READY</div>
 
       <div class="action-card">
-        <div id="calloutBubble" class="callout" hidden></div>
-        <h2 id="cardLabel" class="card-label"></h2>
-        <p id="cardDesc" class="card-desc"></p>
-        <p id="cardCond" class="card-cond"></p>
-        <ul id="todo" class="todo"></ul>
-        <button id="goaroundBtn" class="btn danger" hidden>⤴ Go Around</button>
-        <button id="minimapConfirm" class="btn confirm" hidden></button>
+        <p id="situation" class="situation"></p>
+        <h2 id="quizQ" class="quiz-q"></h2>
+        <div id="optionList" class="options"></div>
+
+        <div id="performBox" class="perform" hidden>
+          <p id="performText" class="perform-text"></p>
+          <div id="performDots" class="dots"></div>
+        </div>
+
+        <div class="card-actions">
+          <button id="hintBtn" class="btn hint" hidden>Show hint</button>
+          <button id="goaroundBtn" class="btn danger" hidden>⤴ Go Around</button>
+        </div>
+        <div id="hintBox" class="hint-box" hidden></div>
       </div>
 
       <div class="minimap-box">
