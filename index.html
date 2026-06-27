@@ -17,24 +17,24 @@
   </header>
 
   <main class="layout">
-    <!-- LEFT: cockpit panel -->
+    <!-- LEFT: cockpit panel (relative — value popover anchors to controls here) -->
     <section class="cockpit-wrap">
       <div id="cockpit" class="cockpit"></div>
+      <div id="valuePopover" class="popover" hidden>
+        <div id="popTitle" class="pop-title"></div>
+        <div id="popOptions" class="pop-options"></div>
+      </div>
     </section>
 
-    <!-- RIGHT: guidance + minimap -->
+    <!-- RIGHT: conditions + minimap -->
     <aside class="side">
       <div id="phaseBanner" class="phase-banner">READY</div>
 
       <div class="action-card">
-        <p id="situation" class="situation"></p>
-        <h2 id="quizQ" class="quiz-q"></h2>
-        <div id="optionList" class="options"></div>
-
-        <div id="performBox" class="perform" hidden>
-          <p id="performText" class="perform-text"></p>
-          <div id="performDots" class="dots"></div>
-        </div>
+        <p class="conditions-label">CONDITIONS</p>
+        <p id="conditions" class="conditions"></p>
+        <p id="prompt" class="prompt"></p>
+        <div id="feedback" class="feedback" hidden></div>
 
         <div class="card-actions">
           <button id="hintBtn" class="btn hint" hidden>Show hint</button>
@@ -48,13 +48,6 @@
       </div>
     </aside>
   </main>
-
-  <!-- fold-out kneeboard for non-control actions -->
-  <div id="foldout" class="foldout">
-    <div class="foldout-handle"></div>
-    <h3 id="foldoutTitle" class="foldout-title">CHECKLIST</h3>
-    <div id="foldoutBtns" class="foldout-btns"></div>
-  </div>
 
   <script src="js/sequence.js"></script>
   <script src="js/cockpit.js"></script>
