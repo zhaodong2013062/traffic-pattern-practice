@@ -132,7 +132,8 @@
       return;
     }
 
-    // correct control -> open its value menu
+    // correct control -> clear any stale "wrong" feedback and open its value menu
+    hideFeedback();
     openPopover(id, act);
   }
 
@@ -164,8 +165,11 @@
     const pop = $("valuePopover");
     const px = r.left - w.left + r.width / 2;
     pop.style.left = Math.max(80, Math.min(px, w.width - 80)) + "px";
-    // flip below the control when there isn't room above (top instruments)
-    if (r.top - w.top < 150) {
+    // Drop the menu BELOW for controls in the upper ~58% of the panel (the
+    // six-pack gauges and the switch cluster) so it doesn't cover the gauges
+    // above it (e.g. the tachometer); open ABOVE for the low pedestal controls.
+    const centerY = (r.top + r.bottom) / 2 - w.top;
+    if (centerY < w.height * 0.70) {
       pop.classList.add("below");
       pop.style.top = (r.bottom - w.top) + "px";
     } else {
