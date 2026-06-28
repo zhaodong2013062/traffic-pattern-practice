@@ -258,9 +258,11 @@
     $("hintBtn").hidden = true;
     flashFeedback("✓ " + s.acts[s.acts.length - 1].correct, true);
 
-    Minimap.moveTo(s.pos, s.dwell, PHASES[s.phase].color, () => {
+    const next = steps[i + 1];
+    if (!next) { setTimeout(finishRun, 600); return; }
+    // fly to the NEXT action point (semi real-time), then show its conditions
+    Minimap.moveTo(next.pos, next.dwell, PHASES[next.phase].color, () => {
       i++;
-      if (i >= steps.length) return finishRun();
       loadStep();
     });
   }
@@ -269,9 +271,10 @@
     if (!running || goneAround || finished) return;
     goneAround = true;
     steps = GOAROUND.slice();
-    i = 0; a = 0; mode = "await-control"; finished = false;
+    i = 0; a = 0; mode = "await-control"; finished = true;
     $("goaroundBtn").hidden = true;
-    loadStep();
+    // fly into the go-around climb, then show its first conditions
+    Minimap.moveTo(steps[0].pos, steps[0].dwell, PHASES.GOAROUND.color, loadStep);
   }
 
   function finishRun() {
