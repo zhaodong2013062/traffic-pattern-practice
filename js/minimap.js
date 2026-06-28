@@ -62,7 +62,7 @@ const Minimap = (() => {
     // key reference numbers from the whiteboard
     el("text", { x: 152, y: 165, class: "map-note" }, svg).textContent = "1–1.2 NM";
     el("text", { x: 196, y: 92, class: "map-note", "text-anchor": "start" }, svg).textContent = "700 AGL xwind";
-    el("text", { x: 196, y: 250, class: "map-note", "text-anchor": "start" }, svg).textContent = "TPA 1000";
+    el("text", { x: 120, y: 116, class: "map-note", "text-anchor": "start" }, svg).textContent = "TPA 1000";
 
     // abeam tick + 45° base marker
     el("line", { x1: 112, y1: 248, x2: 184, y2: 248, class: "abeam-line" }, svg);

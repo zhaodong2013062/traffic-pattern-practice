@@ -209,7 +209,9 @@ body {
 .flash-ok .bezel, .flash-ok .lever-track, .flash-ok .yoke-arc, .flash-ok .pedal, .flash-ok .switch-box {
   stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important;
 }
-.flash-bad { animation: shake .4s; }
+/* NB: no transform-based shake here — cockpit groups are positioned with a
+   transform attribute, so animating `transform` would teleport them to the
+   origin. The red glow below (plus the shaking feedback banner) is the cue. */
 .flash-bad .bezel, .flash-bad .lever-track, .flash-bad .yoke-arc, .flash-bad .pedal, .flash-bad .switch-box {
   stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important;
 }
