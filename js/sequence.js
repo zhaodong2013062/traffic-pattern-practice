@@ -171,13 +171,13 @@ const SEQUENCE = [
   {
     id: "abeam-power", phase: "DOWNWIND",
     condition: "Threshold directly off your left wing (abeam). Chunk of power — start down.",
-    acts: [{ target: "throttle", correct: "1500 RPM", values: { rpm: 1500, ias: 85, vsi: -300 } }],
+    acts: [{ target: "throttle", correct: "1500 RPM", values: { rpm: 1500, ias: 85, alt: 950, vsi: -300 } }],
     pos: { x: 112, y: 248 }, dwell: 1500,
   },
   {
     id: "flaps-10", phase: "DOWNWIND",
     condition: "Below 110 kts (Vfe), descending from TPA.",
-    acts: [{ target: "flaps", correct: "10°", values: { flaps: 10, ias: 80, vsi: -400 } }],
+    acts: [{ target: "flaps", correct: "10°", values: { flaps: 10, ias: 80, alt: 880, vsi: -400 } }],
     pos: { x: 112, y: 258 }, dwell: 800,
   },
 
@@ -187,13 +187,13 @@ const SEQUENCE = [
     condition: "The threshold is about 45° behind your wing.",
     acts: [{ target: "yoke", correct: "Bank left to base",
              options: ["Bank left to base", "Bank right", "Continue on downwind"],
-             values: { ias: 80, vsi: -500 } }],
+             values: { ias: 80, alt: 700, vsi: -500 } }],
     pos: { x: 118, y: 294 }, dwell: 1300,
   },
   {
     id: "flaps-20", phase: "BASE",
     condition: "Established on base, 80 kts, descending.",
-    acts: [{ target: "flaps", correct: "20°", values: { flaps: 20, ias: 75, vsi: -500 } }],
+    acts: [{ target: "flaps", correct: "20°", values: { flaps: 20, ias: 75, alt: 600, vsi: -500 } }],
     pos: { x: 152, y: 301 }, dwell: 900,
   },
 
@@ -203,13 +203,13 @@ const SEQUENCE = [
     condition: "Approaching the extended centerline — roll out aligned with the runway.",
     acts: [{ target: "yoke", correct: "Bank left to final",
              options: ["Bank left to final", "Bank right", "Continue on base"],
-             values: { ias: 75, vsi: -500 } }],
+             values: { ias: 75, alt: 500, vsi: -500 } }],
     pos: { x: 188, y: 302 }, dwell: 1300,
   },
   {
     id: "flaps-30", phase: "FINAL",
     condition: "Runway made, on centerline.",
-    acts: [{ target: "flaps", correct: "30° (full)", values: { flaps: 30, ias: 70, vsi: -500 } }],
+    acts: [{ target: "flaps", correct: "30° (full)", values: { flaps: 30, ias: 70, alt: 400, vsi: -500 } }],
     pos: { x: 190, y: 294 }, dwell: 800,
   },
   {
@@ -217,7 +217,7 @@ const SEQUENCE = [
     condition: "Aim point stationary in the windscreen — on glidepath. Hold the approach speed.",
     acts: [{ target: "yoke", correct: "Pitch for 70 kts",
              options: ["Pitch for 70 kts", "Lower the nose (faster)", "Raise the nose (slower)"],
-             values: { ias: 70, vsi: -450 } }],
+             values: { ias: 70, alt: 250, vsi: -450 } }],
     pos: { x: 190, y: 278 }, dwell: 1100, branch: true,
   },
 
