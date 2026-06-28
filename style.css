@@ -152,6 +152,12 @@ body {
 .hub { fill: #cfd8df; }
 .readout { fill: #fff; font-size: 16px; font-weight: 700; text-anchor: middle; font-variant-numeric: tabular-nums; }
 .unit { fill: #6f7d8c; font-size: 8px; text-anchor: middle; }
+/* airspeed indicator color arcs (flap & operating speed ranges) */
+.gauge-arc { stroke-width: 4; fill: none; }
+.arc-white { stroke: #e8edf2; }
+.arc-green { stroke: #2ed573; }
+.arc-yellow { stroke: #ffd32a; }
+.arc-red { stroke: #ff4757; stroke-width: 2.5; }
 
 .instrument, .control { cursor: pointer; }
 .instrument .face, .control .lever-track { transition: filter .15s ease; }
