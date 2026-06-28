@@ -21,16 +21,35 @@ function el(tag, attrs = {}, parent = null) {
   return node;
 }
 
+// SVG arc path (degrees, 0 = straight up, clockwise) at radius R
+function arcPath(R, a1, a2) {
+  const pt = (deg) => { const t = deg * Math.PI / 180; return [R * Math.sin(t), -R * Math.cos(t)]; };
+  const [x1, y1] = pt(a1), [x2, y2] = pt(a2);
+  const large = Math.abs(a2 - a1) > 180 ? 1 : 0;
+  return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
+}
+
 const Cockpit = (() => {
   let svg, clickCb = () => {};
   const groups = {};            // id -> { g, setNeedle?, setReadout? }
   const state = { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0 };
 
   /* ---- a round instrument with bezel, tick label, needle + readout ----- */
-  function gauge(parent, { id, cx, cy, r, title, unit }) {
+  function gauge(parent, { id, cx, cy, r, title, unit, scale, arcs, redline }) {
     const g = el("g", { class: "instrument", "data-id": id, transform: `translate(${cx} ${cy})` }, parent);
     el("circle", { r: r + 8, class: "bezel" }, g);
     el("circle", { r: r, class: "face" }, g);
+    // color arcs (e.g. airspeed white/green/yellow flap & operating ranges)
+    if (arcs && scale) {
+      arcs.forEach((a) => el("path", {
+        d: arcPath(a.rr, scale(a.from), scale(a.to)), class: "gauge-arc " + a.cls, fill: "none",
+      }, g));
+    }
+    if (redline != null && scale) {
+      const t = scale(redline) * Math.PI / 180;
+      el("line", { x1: Math.sin(t) * (r - 1), y1: -Math.cos(t) * (r - 1),
+        x2: Math.sin(t) * (r - 12), y2: -Math.cos(t) * (r - 12), class: "arc-red" }, g);
+    }
     // tick marks
     for (let i = 0; i < 12; i++) {
       const a = (i / 12) * Math.PI * 2;
@@ -212,7 +231,14 @@ const Cockpit = (() => {
     el("text", { x: 500, y: 40, class: "panel-title" }, svg).textContent = "CESSNA 172 — TRAFFIC PATTERN TRAINER";
 
     // six-pack
-    gauge(svg, { id: "asi", cx: 150, cy: 175, r: 66, title: "AIRSPEED", unit: "KIAS" });
+    // C172S markings: white 40–85 (Vs0–Vfe full), green 48–129 (Vs1–Vno),
+    // yellow 129–163, redline 163. White arc = flap operating range.
+    gauge(svg, { id: "asi", cx: 150, cy: 175, r: 66, title: "AIRSPEED", unit: "KIAS",
+      scale: (v) => map.ias(v), redline: 163, arcs: [
+        { from: 48, to: 129, cls: "arc-green",  rr: 62 },
+        { from: 129, to: 163, cls: "arc-yellow", rr: 62 },
+        { from: 40, to: 85,  cls: "arc-white",  rr: 54 },
+      ] });
     attitude(svg, { cx: 330, cy: 175, r: 66 });
     gauge(svg, { id: "alt", cx: 510, cy: 175, r: 66, title: "ALTIMETER", unit: "FT" });
     symbolDial(svg, { id: "ti", cx: 150, cy: 335, r: 66, title: "TURN COORD" });
