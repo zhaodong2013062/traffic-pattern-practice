@@ -234,7 +234,7 @@ const SEQUENCE = [
     acts: [{ target: "yoke", correct: "Begin the flare (ease back)",
              options: ["Begin the flare (ease back)", "Push the nose down", "Hold attitude"],
              values: { ias: 55, alt: 20, vsi: -60 } }],
-    pos: { x: 190, y: 251 }, dwell: 800,
+    pos: { x: 190, y: 251 }, dwell: 800, branch: true,
   },
   {
     id: "hold-off", phase: "LANDING",
@@ -242,7 +242,7 @@ const SEQUENCE = [
     acts: [{ target: "yoke", correct: "Hold it off (more back-pressure)",
              options: ["Hold it off (more back-pressure)", "Relax back-pressure", "Push forward"],
              values: { ias: 50, alt: 8, vsi: -30 } }],
-    pos: { x: 190, y: 248 }, dwell: 900,
+    pos: { x: 190, y: 248 }, dwell: 900, branch: true,
   },
   {
     id: "mains-touch", phase: "LANDING",
@@ -250,7 +250,7 @@ const SEQUENCE = [
     acts: [{ target: "yoke", correct: "Keep holding back-pressure",
              options: ["Keep holding back-pressure", "Push the nose down", "Neutral"],
              values: { ias: 45, alt: 0, vsi: 0 } }],
-    pos: { x: 190, y: 245 }, dwell: 700,
+    pos: { x: 190, y: 245 }, dwell: 700, branch: true,
   },
   {
     id: "lower-nose", phase: "LANDING",
