@@ -59,6 +59,7 @@
     $("hintBtn").hidden = true;
     $("hintBox").hidden = true;
     $("goaroundBtn").hidden = true;
+    $("goaroundHint").hidden = true;
     $("progressText").textContent = "";
   }
 
@@ -111,6 +112,7 @@
     $("hintBox").hidden = true;
     $("hintBox").textContent = "";
     $("goaroundBtn").hidden = !(s.branch && !goneAround);
+    $("goaroundHint").hidden = !(s.branch && !goneAround);
 
     $("progressText").textContent =
       `Step ${i + 1} of ${steps.length}` + (goneAround ? " · GO-AROUND" : "");
@@ -259,6 +261,7 @@
     Cockpit.clearHighlight();
     closePopover();
     $("goaroundBtn").hidden = true;
+    $("goaroundHint").hidden = true;
     $("hintBtn").hidden = true;
     flashFeedback("✓ " + s.acts[s.acts.length - 1].correct, true);
 
@@ -277,6 +280,7 @@
     steps = GOAROUND.slice();
     i = 0; a = 0; mode = "await-control"; finished = true;
     $("goaroundBtn").hidden = true;
+    $("goaroundHint").hidden = true;
     // fly into the go-around climb, then show its first conditions
     Minimap.moveTo(steps[0].pos, steps[0].dwell, PHASES.GOAROUND.color, loadStep);
   }

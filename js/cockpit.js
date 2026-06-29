@@ -32,7 +32,8 @@ function arcPath(R, a1, a2) {
 const Cockpit = (() => {
   let svg, clickCb = () => {};
   const groups = {};            // id -> { g, setNeedle?, setReadout? }
-  const state = { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0 };
+  const state = { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 };
+  const PITCH_PX = 1.6;          // attitude-indicator pixels per degree of pitch
 
   /* ---- a round instrument with bezel, tick label, needle + readout ----- */
   function gauge(parent, { id, cx, cy, r, title, unit, scale, arcs, redline }) {
@@ -94,11 +95,13 @@ const Cockpit = (() => {
     set("vsi", map.vsi(state.vsi), (state.vsi > 0 ? "+" : "") + Math.round(state.vsi));
     set("tach", map.rpm(state.rpm), Math.round(state.rpm));
 
-    // Attitude indicator: shift the horizon for climb/descent.
-    if (groups.ai && groups.ai.horizon) {
-      const pitch = Math.max(-26, Math.min(26, -(state.vsi / 1000) * 18));
-      groups.ai.horizon.setAttribute("transform", `translate(0 ${pitch})`);
+    // Attitude indicator: pitch (translate) within the bank (rotate) frame.
+    if (groups.ai) {
+      groups.ai.roll.setAttribute("transform", `rotate(${state.bank})`);
+      groups.ai.horizon.setAttribute("transform", `translate(0 ${state.pitch * PITCH_PX})`);
     }
+    // Heading indicator: rotate the card so the current heading is under the lubber.
+    if (groups.hi && groups.hi.setHeading) groups.hi.setHeading(state.hdg);
     // Flap indicator bar.
     if (groups.flaps && groups.flaps.setFlap) groups.flaps.setFlap(state.flaps);
     // Throttle knob travel reflects RPM.
@@ -106,28 +109,77 @@ const Cockpit = (() => {
       groups.throttle.setTravel(Math.min(1, state.rpm / 2700));
   }
 
-  /* ----- attitude indicator: blue sky / brown ground that pitches ------- */
+  /* ----- attitude indicator: pitching horizon + bank scale ------------- */
   function attitude(parent, { cx, cy, r }) {
     const g = el("g", { class: "instrument", "data-id": "ai", transform: `translate(${cx} ${cy})` }, parent);
     el("circle", { r: r + 8, class: "bezel" }, g);
-    const clip = "aiClip";
-    const cp = el("clipPath", { id: clip }, g);
+    const cp = el("clipPath", { id: "aiClip" }, g);
     el("circle", { r: r }, cp);
-    const inner = el("g", { "clip-path": `url(#${clip})` }, g);
-    const horizon = el("g", {}, inner);
-    el("rect", { x: -r, y: -r * 2, width: r * 2, height: r * 2, class: "ai-sky" }, horizon);
-    el("rect", { x: -r, y: 0, width: r * 2, height: r * 2, class: "ai-ground" }, horizon);
+    const inner = el("g", { "clip-path": `url(#aiClip)` }, g);
+
+    // roll group (rotates for bank) -> horizon group (translates for pitch)
+    const roll = el("g", { class: "ai-roll" }, inner);
+    const horizon = el("g", { class: "ai-horizon" }, roll);
+    el("rect", { x: -r * 2, y: -r * 3, width: r * 4, height: r * 3, class: "ai-sky" }, horizon);
+    el("rect", { x: -r * 2, y: 0, width: r * 4, height: r * 3, class: "ai-ground" }, horizon);
     el("line", { x1: -r, y1: 0, x2: r, y2: 0, class: "ai-horizon-line" }, horizon);
-    for (let p = -20; p <= 20; p += 10) {
-      if (p === 0) continue;
-      el("line", { x1: -16, y1: p, x2: 16, y2: p, class: "ai-pitch" }, horizon);
-    }
+    // pitch ladder (±10, ±20)
+    [-20, -10, 10, 20].forEach((p) => {
+      const y = -p * PITCH_PX;
+      el("line", { x1: -15, y1: y, x2: 15, y2: y, class: "ai-pitch" }, horizon);
+      el("text", { x: 20, y: y + 3, class: "ai-pitch-num" }, horizon).textContent = Math.abs(p);
+      el("text", { x: -20, y: y + 3, class: "ai-pitch-num" }, horizon).textContent = Math.abs(p);
+    });
+    // roll pointer — rides on the roll group, points up to the fixed scale
+    el("polygon", { points: `0,${-r + 2} -5,${-r + 11} 5,${-r + 11}`, class: "ai-roll-ptr" }, roll);
+
+    // fixed bank scale on the case
+    [0, 10, 20, 30, 45, 60, -10, -20, -30, -45, -60].forEach((b) => {
+      const rad = b * Math.PI / 180, major = Math.abs(b) % 30 === 0;
+      const o = r, i = major ? r - 9 : r - 5;
+      el("line", { x1: Math.sin(rad) * o, y1: -Math.cos(rad) * o,
+        x2: Math.sin(rad) * i, y2: -Math.cos(rad) * i, class: "ai-bank-tick" }, inner);
+    });
     // fixed miniature airplane
-    el("path", { d: `M${-22} 0 L${-7} 0 M7 0 L22 0 M0 -3 L0 3`, class: "ai-symbol" }, inner);
-    el("polygon", { points: "0,-2 -6,-12 6,-12", class: "ai-symbol" }, inner);
-    el("text", { y: r * 0.7, class: "gauge-title" }, g).textContent = "ATTITUDE";
+    el("path", { d: "M-24 0 L-9 0 M9 0 L24 0", class: "ai-symbol" }, inner);
+    el("circle", { r: 2.5, class: "ai-symbol-dot" }, inner);
+
+    el("text", { y: r * 0.72, class: "gauge-title" }, g).textContent = "ATTITUDE";
     g.addEventListener("click", () => clickCb("ai"));
-    groups.ai = { g, horizon };
+    groups.ai = { g, roll, horizon };
+  }
+
+  /* ----- heading indicator: rotating card, runway-heading bug ----------- */
+  function headingIndicator(parent, { cx, cy, r }) {
+    const g = el("g", { class: "instrument", "data-id": "hi", transform: `translate(${cx} ${cy})` }, parent);
+    el("circle", { r: r + 8, class: "bezel" }, g);
+    el("circle", { r: r, class: "face" }, g);
+    const card = el("g", { class: "hdg-card" }, g);   // rotates by -hdg
+    const labels = { 0: "N", 90: "E", 180: "S", 270: "W",
+      30: "3", 60: "6", 120: "12", 150: "15", 210: "21", 240: "24", 300: "30", 330: "33" };
+    for (let d = 0; d < 360; d += 10) {
+      const rad = d * Math.PI / 180, o = r - 3, i = (d % 30 === 0) ? r - 12 : r - 7;
+      el("line", { x1: Math.sin(rad) * o, y1: -Math.cos(rad) * o,
+        x2: Math.sin(rad) * i, y2: -Math.cos(rad) * i, class: "hdg-tick" }, card);
+    }
+    Object.entries(labels).forEach(([d, t]) => {
+      const rad = +d * Math.PI / 180;
+      el("text", { x: Math.sin(rad) * (r - 22), y: -Math.cos(rad) * (r - 22) + 4, class: "compass" }, card)
+        .textContent = t;
+    });
+    // runway-heading bug (140°) rides on the card
+    el("polygon", { points: "-5,0 5,0 0,8", class: "hdg-bug", transform: `rotate(140) translate(0 ${-(r - 3)})` }, card);
+    // fixed lubber line + airplane symbol + digital readout
+    el("polygon", { points: `0,${-r - 1} -5,${-r + 9} 5,${-r + 9}`, class: "hdg-lubber" }, g);
+    el("path", { d: "M0,-13 L0,12 M-11,0 L11,0 M-7,9 L7,9", class: "plane-glyph-hi" }, g);
+    const readout = el("text", { y: r * 0.48, class: "hdg-readout" }, g);
+    el("text", { y: r * 0.68, class: "gauge-title" }, g).textContent = "HEADING";
+    g.addEventListener("click", () => clickCb("hi"));
+    groups.hi = { g, card, setHeading: (h) => {
+      const hh = ((Math.round(h) % 360) + 360) % 360;
+      card.setAttribute("transform", `rotate(${-h})`);
+      readout.textContent = String(hh).padStart(3, "0") + "°";
+    } };
   }
 
   /* ---- a symbolic dial (heading / turn coordinator) that just spins ---- */
@@ -242,7 +294,7 @@ const Cockpit = (() => {
     attitude(svg, { cx: 330, cy: 175, r: 66 });
     gauge(svg, { id: "alt", cx: 510, cy: 175, r: 66, title: "ALTIMETER", unit: "FT" });
     symbolDial(svg, { id: "ti", cx: 150, cy: 335, r: 66, title: "TURN COORD" });
-    symbolDial(svg, { id: "hi", cx: 330, cy: 335, r: 66, title: "HEADING", glyph: "heading" });
+    headingIndicator(svg, { cx: 330, cy: 335, r: 66 });
     gauge(svg, { id: "vsi", cx: 510, cy: 335, r: 66, title: "VERT SPEED", unit: "FPM" });
 
     // tachometer (right cluster)

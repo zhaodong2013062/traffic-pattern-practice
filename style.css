@@ -116,6 +116,14 @@ body {
   font-size: 13px; line-height: 1.45;
 }
 
+/* go-around conditions reminder (shown on branch steps) */
+.goaround-hint {
+  margin-top: 8px; padding: 8px 11px; border-radius: 8px;
+  background: #2a1418; border: 1px solid #5c2a30; color: #ffb3bb;
+  font-size: 12px; line-height: 1.45;
+}
+.goaround-hint strong { color: #ff6b78; }
+
 /* ---------------------------- minimap ---------------------------------- */
 .minimap-box {
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 8px;
@@ -170,16 +178,23 @@ body {
 .ai-ground { fill: #7a5230; }
 .ai-horizon-line { stroke: #fff; stroke-width: 1.5; }
 .ai-pitch { stroke: #d9e6f0; stroke-width: 1; }
-.ai-symbol { stroke: #ffd32a; stroke-width: 2.5; fill: #ffd32a; }
-.instrument.animating .ai-sky ~ *, .instrument.animating g { transition: transform 1s ease; }
-.ai-sky, .ai-ground { transition: none; }
-#aiClip ~ * { }
-.instrument [class^="ai-"] { }
-.instrument g[clip-path] g { transition: transform 1s cubic-bezier(.5,0,.2,1); }
+.ai-pitch-num { fill: #d9e6f0; font-size: 7px; text-anchor: middle; }
+.ai-symbol { stroke: #ffd32a; stroke-width: 2.5; fill: none; }
+.ai-symbol-dot { fill: #ffd32a; }
+.ai-roll-ptr { fill: #ffe66d; }
+.ai-bank-tick { stroke: #e8edf2; stroke-width: 1.5; }
+/* smooth pitch/bank changes */
+.ai-roll, .ai-horizon { transition: transform 1s cubic-bezier(.5,0,.2,1); }
 
-/* heading / turn coordinator */
+/* heading indicator / turn coordinator */
 .compass { fill: #cfd8df; font-size: 10px; font-weight: 700; text-anchor: middle; }
 .plane-glyph { fill: #ffe66d; }
+.plane-glyph-hi { stroke: #ffe66d; stroke-width: 2; fill: none; }
+.hdg-card { transition: transform 1s cubic-bezier(.5,0,.2,1); }
+.hdg-tick { stroke: #8b97a3; stroke-width: 1.5; }
+.hdg-bug { fill: #ff9f1a; stroke: #c77f1f; stroke-width: .5; }
+.hdg-lubber { fill: #ffe66d; }
+.hdg-readout { fill: #fff; font-size: 13px; font-weight: 700; text-anchor: middle; font-variant-numeric: tabular-nums; }
 .tc-wing { stroke: #ffe66d; stroke-width: 3; stroke-linecap: round; }
 
 /* levers & controls */

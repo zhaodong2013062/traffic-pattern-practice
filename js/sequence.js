@@ -65,7 +65,7 @@ const SEQUENCE = [
     id: "lineup", phase: "TAKEOFF",
     condition: "Cleared for takeoff. Lined up to roll on runway heading.",
     acts: [{ target: "rudder", correct: "Line up on centerline",
-             values: { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0 } }],
+             values: { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 } }],
     pos: { x: 190, y: 256 }, dwell: 600,
   },
   {
@@ -91,7 +91,7 @@ const SEQUENCE = [
     condition: "55 KIAS — rotation speed.",
     acts: [{ target: "yoke", correct: "Rotate (ease back)",
              options: ["Rotate (ease back)", "Hold it on the ground", "Push forward"],
-             values: { ias: 60, alt: 50, vsi: 600 } }],
+             values: { ias: 60, alt: 50, vsi: 600, pitch: 7 } }],
     pos: { x: 190, y: 214 }, dwell: 800,
   },
 
@@ -101,7 +101,7 @@ const SEQUENCE = [
     condition: "Airborne, positive rate of climb. Set the climb.",
     acts: [{ target: "yoke", correct: "Pitch for Vy (74 kts)",
              options: ["Pitch for Vy (74 kts)", "Lower the nose", "Hold level"],
-             values: { ias: 74, alt: 200, vsi: 700 } }],
+             values: { ias: 74, alt: 200, vsi: 700, pitch: 10 } }],
     pos: { x: 190, y: 178 }, dwell: 1100,
   },
   {
@@ -119,7 +119,7 @@ const SEQUENCE = [
     condition: "Climbing through 700 ft AGL on the upwind leg.",
     acts: [{ target: "yoke", correct: "Bank left to crosswind",
              options: ["Bank left to crosswind", "Bank right", "Continue straight ahead"],
-             values: { alt: 800 } }],
+             values: { alt: 800, bank: -20, hdg: 50 } }],
     pos: { x: 182, y: 92 }, dwell: 1200,
   },
   {
@@ -128,7 +128,7 @@ const SEQUENCE = [
     acts: [
       { target: "yoke", correct: "Level off at 1000 ft TPA",
         options: ["Level off at 1000 ft TPA", "Keep climbing", "Begin descent"],
-        values: { alt: 1000, ias: 80, vsi: 0 } },
+        values: { alt: 1000, ias: 80, vsi: 0, pitch: 0, bank: 0 } },
       { target: "throttle", correct: "2150 RPM", values: { rpm: 2150, ias: 90 } },
     ],
     pos: { x: 146, y: 83 }, dwell: 1100,
@@ -140,14 +140,14 @@ const SEQUENCE = [
     condition: "At pattern altitude, about 1–1.2 NM from the runway — turn downwind.",
     acts: [{ target: "yoke", correct: "Bank left to downwind",
              options: ["Bank left to downwind", "Bank right", "Continue on crosswind"],
-             values: { alt: 1000 } }],
+             values: { alt: 1000, bank: -20, hdg: 320 } }],
     pos: { x: 112, y: 92 }, dwell: 1100,
   },
   {
     id: "paa-check", phase: "DOWNWIND",
     condition: "Rolled out on downwind — verify Power, Altitude, Airspeed.",
     acts: [
-      { target: "tach", correct: "2150 RPM" },
+      { target: "tach", correct: "2150 RPM", values: { bank: 0 } },
       { target: "alt", correct: "1000 ft (TPA)" },
       { target: "asi", correct: "90 kts" },
     ],
@@ -167,7 +167,7 @@ const SEQUENCE = [
   {
     id: "abeam-power", phase: "DOWNWIND",
     condition: "Threshold directly off your left wing (abeam). Chunk of power — start down.",
-    acts: [{ target: "throttle", correct: "1500 RPM", values: { rpm: 1500, ias: 85, alt: 950, vsi: -300 } }],
+    acts: [{ target: "throttle", correct: "1500 RPM", values: { rpm: 1500, ias: 85, alt: 950, vsi: -300, pitch: -2.5 } }],
     pos: { x: 112, y: 248 }, dwell: 1500,
   },
   {
@@ -183,13 +183,13 @@ const SEQUENCE = [
     condition: "The threshold is about 45° behind your wing.",
     acts: [{ target: "yoke", correct: "Bank left to base",
              options: ["Bank left to base", "Bank right", "Continue on downwind"],
-             values: { ias: 80, alt: 700, vsi: -500 } }],
+             values: { ias: 80, alt: 700, vsi: -500, bank: -20, hdg: 230 } }],
     pos: { x: 118, y: 294 }, dwell: 1300,
   },
   {
     id: "flaps-20", phase: "BASE",
     condition: "On base at 80 KIAS, descending — second notch. Vfe (10°–full) is 85 KIAS.",
-    acts: [{ target: "flaps", correct: "20° · ≤85 kt", values: { flaps: 20, ias: 75, alt: 600, vsi: -500 } }],
+    acts: [{ target: "flaps", correct: "20° · ≤85 kt", values: { flaps: 20, ias: 75, alt: 600, vsi: -500, bank: 0 } }],
     pos: { x: 152, y: 301 }, dwell: 900,
   },
 
@@ -199,13 +199,13 @@ const SEQUENCE = [
     condition: "Approaching the extended centerline — roll out aligned with the runway.",
     acts: [{ target: "yoke", correct: "Bank left to final",
              options: ["Bank left to final", "Bank right", "Continue on base"],
-             values: { ias: 75, alt: 500, vsi: -500 } }],
+             values: { ias: 75, alt: 500, vsi: -500, bank: -20, hdg: 140 } }],
     pos: { x: 188, y: 302 }, dwell: 1300,
   },
   {
     id: "flaps-30", phase: "FINAL",
     condition: "Runway made, on centerline, ~75 KIAS slowing to 70 — full flaps. Vfe 85 KIAS.",
-    acts: [{ target: "flaps", correct: "30° full · ≤85 kt", values: { flaps: 30, ias: 70, alt: 400, vsi: -500 } }],
+    acts: [{ target: "flaps", correct: "30° full · ≤85 kt", values: { flaps: 30, ias: 70, alt: 400, vsi: -500, bank: 0 } }],
     pos: { x: 190, y: 294 }, dwell: 800,
   },
   {
@@ -229,7 +229,7 @@ const SEQUENCE = [
     condition: "~20 ft — round out.",
     acts: [{ target: "yoke", correct: "Begin the flare (ease back)",
              options: ["Begin the flare (ease back)", "Push the nose down", "Hold attitude"],
-             values: { ias: 55, alt: 20, vsi: -60 } }],
+             values: { ias: 55, alt: 20, vsi: -60, pitch: 5 } }],
     pos: { x: 190, y: 251 }, dwell: 800, branch: true,
   },
   {
@@ -237,7 +237,7 @@ const SEQUENCE = [
     condition: "Floating just off the surface — let the speed bleed away.",
     acts: [{ target: "yoke", correct: "Hold it off (more back-pressure)",
              options: ["Hold it off (more back-pressure)", "Relax back-pressure", "Push forward"],
-             values: { ias: 50, alt: 8, vsi: -30 } }],
+             values: { ias: 50, alt: 8, vsi: -30, pitch: 7 } }],
     pos: { x: 190, y: 248 }, dwell: 900, branch: true,
   },
   {
@@ -245,7 +245,7 @@ const SEQUENCE = [
     condition: "Main wheels touch down first.",
     acts: [{ target: "yoke", correct: "Keep holding back-pressure",
              options: ["Keep holding back-pressure", "Push the nose down", "Neutral"],
-             values: { ias: 45, alt: 0, vsi: 0 } }],
+             values: { ias: 45, alt: 0, vsi: 0, pitch: 6 } }],
     pos: { x: 190, y: 245 }, dwell: 700, branch: true,
   },
   {
@@ -253,7 +253,7 @@ const SEQUENCE = [
     condition: "Elevator authority fading as you slow.",
     acts: [{ target: "yoke", correct: "Gently lower the nosewheel",
              options: ["Gently lower the nosewheel", "Hold the nose up", "Pull back"],
-             values: { ias: 35 } }],
+             values: { ias: 35, pitch: 0 } }],
     pos: { x: 190, y: 240 }, dwell: 700,
   },
   {
@@ -276,7 +276,7 @@ const GOAROUND = [
     condition: "Establish a positive climb attitude.",
     acts: [{ target: "yoke", correct: "Pitch up to climb attitude",
              options: ["Pitch up to climb attitude", "Lower the nose", "Hold level"],
-             values: { ias: 60, vsi: 500, alt: 100 } }],
+             values: { ias: 60, vsi: 500, alt: 100, pitch: 10 } }],
     pos: { x: 190, y: 205 }, dwell: 1100,
   },
   {
