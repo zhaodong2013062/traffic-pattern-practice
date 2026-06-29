@@ -124,10 +124,13 @@ const SEQUENCE = [
   },
   {
     id: "climb-to-tpa", phase: "CROSSWIND",
-    condition: "On crosswind, still climbing — reaching pattern altitude. Level off at 1000 ft TPA.",
-    acts: [{ target: "yoke", correct: "Level off at 1000 ft TPA",
-             options: ["Level off at 1000 ft TPA", "Keep climbing", "Begin descent"],
-             values: { alt: 1000, ias: 85, vsi: 0 } }],
+    condition: "Reaching pattern altitude — level off at 1000 ft TPA and set cruise power.",
+    acts: [
+      { target: "yoke", correct: "Level off at 1000 ft TPA",
+        options: ["Level off at 1000 ft TPA", "Keep climbing", "Begin descent"],
+        values: { alt: 1000, ias: 80, vsi: 0 } },
+      { target: "throttle", correct: "2150 RPM", values: { rpm: 2150, ias: 90 } },
+    ],
     pos: { x: 146, y: 83 }, dwell: 1100,
   },
 
@@ -141,32 +144,25 @@ const SEQUENCE = [
     pos: { x: 112, y: 92 }, dwell: 1100,
   },
   {
-    id: "level-downwind", phase: "DOWNWIND",
-    condition: "Rolled out on downwind — parallel to the runway, opposite heading. Set cruise power.",
-    acts: [{ target: "throttle", correct: "2150 RPM",
-             values: { ias: 90, rpm: 2150, vsi: 0 } }],
-    pos: { x: 112, y: 122 }, dwell: 1100,
+    id: "paa-check", phase: "DOWNWIND",
+    condition: "Rolled out on downwind — verify Power, Altitude, Airspeed.",
+    acts: [
+      { target: "tach", correct: "2150 RPM" },
+      { target: "alt", correct: "1000 ft (TPA)" },
+      { target: "asi", correct: "90 kts" },
+    ],
+    pos: { x: 112, y: 128 }, dwell: 1100,
   },
   {
     id: "before-landing", phase: "DOWNWIND",
-    condition: "Level on downwind — run the Before-Landing flow before you start down.",
+    condition: "Now run the Before-Landing flow before you start down.",
     acts: [
       { target: "seatbelt", correct: "Secure / fasten" },
       { target: "fuel", correct: "BOTH" },
       { target: "mixture", correct: "RICH" },
       { target: "autopilot", correct: "OFF" },
     ],
-    pos: { x: 112, y: 150 }, dwell: 900,
-  },
-  {
-    id: "paa-check", phase: "DOWNWIND",
-    condition: "Before starting down, verify: Power, Altitude, Airspeed.",
-    acts: [
-      { target: "tach", correct: "2150 RPM" },
-      { target: "alt", correct: "1000 ft (TPA)" },
-      { target: "asi", correct: "90 kts" },
-    ],
-    pos: { x: 112, y: 178 }, dwell: 900,
+    pos: { x: 112, y: 160 }, dwell: 900,
   },
   {
     id: "abeam-power", phase: "DOWNWIND",
