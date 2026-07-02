@@ -98,6 +98,9 @@
     a = 0; mode = "await-control"; finished = false;
     Cockpit.clearHighlight();
     closePopover();
+    // Roll wings level on arrival: bank is transient (only shown while a turn
+    // animates), so every step is presented wings-level to match its condition.
+    Cockpit.setValues({ bank: 0 }, true);
 
     const ph = PHASES[s.phase];
     setBanner(ph.name, ph.color);
@@ -277,7 +280,11 @@
   function triggerGoAround() {
     if (!running || goneAround || finished) return;
     goneAround = true;
-    steps = GOAROUND.slice();
+    // Build the go-around from the CURRENT configuration: only include a flap
+    // retraction if there's actually a notch to bring up (e.g. from base at 10°
+    // you skip the 30°->20° step). `requiresFlapsAbove` gates each flap step.
+    const flaps = Cockpit._state.flaps;
+    steps = GOAROUND.filter((s) => s.requiresFlapsAbove == null || flaps > s.requiresFlapsAbove);
     i = 0; a = 0; mode = "await-control"; finished = true;
     $("goaroundBtn").hidden = true;
     $("goaroundHint").hidden = true;
