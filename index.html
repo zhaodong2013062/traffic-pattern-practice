@@ -41,8 +41,16 @@
           <button id="goaroundBtn" class="btn danger" hidden>⤴ Go Around</button>
         </div>
         <div id="goaroundHint" class="goaround-hint" hidden>
-          <strong>Go around if:</strong> not stabilized (speed · glidepath · centerline) ·
-          runway not clear · too high or too fast · balloon or bounce in the flare.
+          <strong>Not stabilized? Go around.</strong>
+          <span class="ga-sub">CLAPS / FLAPS — go around if any fails:</span>
+          <ul class="ga-crit">
+            <li><b>C</b> — Checklist complete</li>
+            <li><b>F</b> — Flight path (on glidepath &amp; centerline)</li>
+            <li><b>L</b> — Landing config (flaps/gear set)</li>
+            <li><b>A</b> — Airspeed on target</li>
+            <li><b>P</b> — Power stable</li>
+            <li><b>S</b> — Sink rate not excessive</li>
+          </ul>
         </div>
         <div id="hintBox" class="hint-box" hidden></div>
       </div>
