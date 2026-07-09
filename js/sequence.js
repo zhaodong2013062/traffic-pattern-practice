@@ -184,13 +184,13 @@ const SEQUENCE = [
     acts: [{ target: "yoke", correct: "Bank left to base",
              options: ["Bank left to base", "Bank right", "Continue on downwind"],
              values: { ias: 80, alt: 700, vsi: -500, bank: -20, hdg: 230 } }],
-    pos: { x: 118, y: 294 }, dwell: 1300,
+    pos: { x: 118, y: 294 }, dwell: 1300, branch: true,
   },
   {
     id: "flaps-20", phase: "BASE",
     condition: "On base at 80 KIAS, descending — second notch. Vfe (10°–full) is 85 KIAS.",
     acts: [{ target: "flaps", correct: "20° · ≤85 kt", values: { flaps: 20, ias: 75, alt: 600, vsi: -500, bank: 0 } }],
-    pos: { x: 152, y: 301 }, dwell: 900,
+    pos: { x: 152, y: 301 }, dwell: 900, branch: true,
   },
 
   /* ------------------------------- FINAL -------------------------------- */
@@ -200,13 +200,13 @@ const SEQUENCE = [
     acts: [{ target: "yoke", correct: "Bank left to final",
              options: ["Bank left to final", "Bank right", "Continue on base"],
              values: { ias: 75, alt: 500, vsi: -500, bank: -20, hdg: 140 } }],
-    pos: { x: 188, y: 302 }, dwell: 1300,
+    pos: { x: 188, y: 302 }, dwell: 1300, branch: true,
   },
   {
     id: "flaps-30", phase: "FINAL",
     condition: "Runway made, on centerline, ~75 KIAS slowing to 70 — full flaps. Vfe 85 KIAS.",
     acts: [{ target: "flaps", correct: "30° full · ≤85 kt", values: { flaps: 30, ias: 70, alt: 400, vsi: -500, bank: 0 } }],
-    pos: { x: 190, y: 294 }, dwell: 800,
+    pos: { x: 190, y: 294 }, dwell: 800, branch: true,
   },
   {
     id: "stabilized", phase: "FINAL",
@@ -273,32 +273,39 @@ const GOAROUND = [
   },
   {
     id: "ga-pitch", phase: "GOAROUND",
-    condition: "Establish a positive climb attitude.",
-    acts: [{ target: "yoke", correct: "Pitch up to climb attitude",
-             options: ["Pitch up to climb attitude", "Lower the nose", "Hold level"],
-             values: { ias: 60, vsi: 500, alt: 100, pitch: 10 } }],
+    condition: "Pitch for the go-around climb — Vy, 74 KIAS.",
+    acts: [{ target: "yoke", correct: "Pitch for 74 kts (Vy)",
+             options: ["Pitch for 74 kts (Vy)", "Lower the nose", "Hold level"],
+             values: { ias: 68, vsi: 500, alt: 100, pitch: 10 } }],
     pos: { x: 190, y: 205 }, dwell: 1100,
   },
   {
-    id: "ga-flaps-20", phase: "GOAROUND",
-    condition: "Reduce the last notch of flaps to improve the climb.",
-    acts: [{ target: "flaps", correct: "20° · ≤85 kt", values: { flaps: 20, ias: 65, vsi: 600 } }],
-    pos: { x: 190, y: 170 }, dwell: 1000,
+    // only shown if flaps are beyond 20° (i.e. full, from final/landing)
+    id: "ga-flaps-20", phase: "GOAROUND", requiresFlapsAbove: 20,
+    condition: "Dump the last notch of flaps to 20° to improve the climb.",
+    acts: [{ target: "flaps", correct: "20° · ≤85 kt", values: { flaps: 20, ias: 70, vsi: 600 } }],
+    pos: { x: 190, y: 178 }, dwell: 900,
   },
   {
     id: "ga-climb", phase: "GOAROUND",
-    condition: "Vy climb — verify, then milk the flaps up.",
+    condition: "Positive rate, climbing at Vy — verify airspeed and VSI.",
     acts: [
-      { target: "asi", correct: "60 kts" },
       { target: "vsi", correct: "Positive rate / climb" },
-      { target: "flaps", correct: "10° · ≤110 kt", values: { flaps: 10, ias: 70, vsi: 700, alt: 400 } },
+      { target: "asi", correct: "74 kts", values: { ias: 74, vsi: 700, alt: 300 } },
     ],
-    pos: { x: 190, y: 135 }, dwell: 1200,
+    pos: { x: 190, y: 150 }, dwell: 1100,
+  },
+  {
+    // only shown if a notch remains above 10° (from base 20° or final 30°)
+    id: "ga-flaps-10", phase: "GOAROUND", requiresFlapsAbove: 10,
+    condition: "Climb established — milk the flaps up to 10°.",
+    acts: [{ target: "flaps", correct: "10° · ≤110 kt", values: { flaps: 10, ias: 74, vsi: 700, alt: 450 } }],
+    pos: { x: 190, y: 128 }, dwell: 900,
   },
   {
     id: "ga-call", phase: "GOAROUND",
     condition: "Make the radio call and re-enter the pattern.",
     acts: [{ target: "call", correct: "Going around", values: { alt: 700 } }],
-    pos: { x: 190, y: 112 }, dwell: 1200,
+    pos: { x: 190, y: 110 }, dwell: 1100,
   },
 ];
