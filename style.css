@@ -242,6 +242,171 @@ body {
   40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); }
 }
 
+/* ====================== emergency-procedures mode ======================= */
+/* mode toggle in the top bar */
+.modes { display: flex; gap: 6px; }
+.btn.mode { padding: 6px 14px; font-size: 13px; opacity: .7; }
+.btn.mode.active { opacity: 1; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.small { padding: 4px 10px; font-size: 12px; }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn.wide { width: 100%; margin-top: 12px; }
+.btn.reveal { background: transparent; color: #ffb142; border-color: #ffb142; padding: 6px 12px; font-size: 13px; }
+
+/* the windscreen strip carries the "look outside" items */
+.windscreen-box { fill: #10202c; stroke: #2f4a5c; stroke-width: 2; }
+.control.target .windscreen-box { stroke: var(--accent); stroke-width: 3; }
+.flash-ok .windscreen-box { stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important; }
+.flash-bad .windscreen-box { stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important; }
+
+/* ---------------------- emergency panel hardware ----------------------- */
+.ctl-caption { fill: #8b97a3; font-size: 8.5px; font-weight: 700; text-anchor: middle; letter-spacing: .4px; }
+.ctl-value { fill: #ffe66d; font-size: 10px; font-weight: 700; text-anchor: middle; }
+.micro-label { fill: #7c8894; font-size: 7px; font-weight: 700; text-anchor: middle; letter-spacing: .3px; }
+
+/* rockers */
+.rocker-body { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.rocker-body.master { fill: #2a1418; stroke: #8d4048; }
+.rocker-nub { fill: #39444f; transition: y .18s ease; }
+.rocker-nub.master { fill: #b2454f; }
+
+/* magneto key switch */
+.key-face { fill: #11161c; stroke: #4a5663; stroke-width: 2; }
+.key-pos { fill: #8b97a3; font-size: 7px; font-weight: 700; text-anchor: middle; }
+.key-barrel { transition: transform .25s ease; }
+.key-blade { fill: #c9d3dc; }
+.key-hub { fill: #2a333d; stroke: #6b7783; stroke-width: 1.5; }
+
+/* push-pull + vernier knobs */
+.knob-shaft { fill: #2a333d; }
+.knob-head { fill: #2a333d; stroke: #6b7783; stroke-width: 1.5; transition: transform .2s ease; }
+.knob-head.mixture { fill: #9e2b32; stroke: #d4616a; }
+.knob-head.throttle { fill: #16191d; stroke: #8b97a3; }
+.knob-dot { fill: #6b7783; }
+.knob-dot.mixture { fill: #f0a8ad; }
+.knob-centre { fill: #6b7783; }
+.knob-centre.mixture { fill: #f0a8ad; }
+.knob-centre.throttle { fill: #c9d3dc; }
+
+/* fuel selector valve */
+.valve-face { fill: #11161c; stroke: #4a5663; stroke-width: 2; }
+.valve-pos { fill: #8b97a3; font-size: 7.5px; font-weight: 700; text-anchor: middle; }
+.valve-ptr { fill: #ffe66d; transition: transform .25s ease; }
+
+/* circuit breakers */
+.breaker-box { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.breaker { fill: #2a333d; stroke: #55616e; stroke-width: 1; }
+
+/* cabin items */
+.ext-body { fill: #9e2b32; stroke: #d4616a; stroke-width: 1.5; }
+.ext-neck, .ext-lever { fill: #c9d3dc; stroke: #c9d3dc; stroke-width: 2; }
+.ext-strap { fill: #39444f; }
+.mic-body { fill: #1f2730; stroke: #6b7783; stroke-width: 1.5; }
+.mic-grille { fill: #39444f; }
+.mic-cord { fill: none; stroke: #6b7783; stroke-width: 2; }
+.belt-strap { fill: #3a3125; stroke: #6b5b41; stroke-width: 1.5; }
+.belt-buckle { fill: #c9d3dc; stroke: #8b97a3; stroke-width: 1.5; }
+.door-plate { fill: #1f2730; stroke: #4a5663; stroke-width: 1.5; }
+.door-lever { fill: #8b97a3; transition: transform .2s ease; }
+.elt-box { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.elt-lamp { fill: #9e2b32; stroke: #d4616a; stroke-width: 1; }
+.placard-box { fill: #171d24; stroke: #4a5663; stroke-width: 1.5; stroke-dasharray: 3 2; }
+.avionics-stack { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.stack-readout { fill: #7ee3a0; font-size: 17px; font-weight: 700; text-anchor: middle;
+  font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+.stack-readout.dim { fill: #55616e; font-size: 13px; }
+
+/* toe brakes ride on top of the rudder pedals */
+.toe-brake { fill: #323c47; stroke: #55616e; stroke-width: 1.5; }
+.toe-brake-grip { stroke: #6b7783; stroke-width: 1.5; }
+
+/* highlight + flash have to reach the new shapes too */
+.control.target .rocker-body, .control.target .key-face, .control.target .knob-head,
+.control.target .valve-face, .control.target .breaker-box, .control.target .ext-body,
+.control.target .mic-body, .control.target .belt-buckle, .control.target .door-plate,
+.control.target .elt-box, .control.target .placard-box, .control.target .toe-brake {
+  stroke: var(--accent); stroke-width: 3; filter: drop-shadow(0 0 8px var(--accent));
+}
+.flash-ok .rocker-body, .flash-ok .key-face, .flash-ok .knob-head, .flash-ok .valve-face,
+.flash-ok .breaker-box, .flash-ok .ext-body, .flash-ok .mic-body, .flash-ok .belt-buckle,
+.flash-ok .door-plate, .flash-ok .elt-box, .flash-ok .placard-box, .flash-ok .toe-brake {
+  stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important;
+}
+.flash-bad .rocker-body, .flash-bad .key-face, .flash-bad .knob-head, .flash-bad .valve-face,
+.flash-bad .breaker-box, .flash-bad .ext-body, .flash-bad .mic-body, .flash-bad .belt-buckle,
+.flash-bad .door-plate, .flash-bad .elt-box, .flash-bad .placard-box, .flash-bad .toe-brake {
+  stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important;
+}
+
+/* the setup card's aircraft-state line */
+.state-line { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px;
+  background: #232a34; border: 1px solid var(--line); color: var(--muted);
+  font-size: 12px; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+
+/* memory items are closed-book — say so loudly */
+.prompt.memory { color: #ff8b95; }
+
+/* branch points ("If risk of fire ...") */
+.decision-box { margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: #23181c; border: 1px solid #6b3b44; }
+.decision-q { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+.btn.decision-opt { display: block; width: 100%; text-align: left; margin-bottom: 6px; font-size: 13px; }
+.btn.decision-opt.wrong { border-color: var(--bad); color: var(--bad); opacity: .6; }
+.handoff-box .btn + .btn { margin-left: 8px; }
+
+/* pointer to another checklist */
+.handoff-box { margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: #16222b; border: 1px solid #2f4a5c; }
+.handoff-line { margin: 0 0 6px; font-size: 12px; letter-spacing: 1.5px; color: #ffb142; font-weight: 700; }
+.handoff-text { margin: 0 0 10px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+
+/* the checklist card (right column, replaces the minimap) */
+.emergency-box { background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 14px; }
+.checklist { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.checklist li { padding: 5px 8px; border-left: 3px solid transparent; line-height: 1.35; }
+.checklist li.done { color: #8ff0bd; border-left-color: var(--ok); }
+.checklist li.done::before { content: "✓ "; }
+.checklist li.done.handoff { color: #ffd9a0; border-left-color: #ffb142; }
+.checklist li.ahead { color: var(--muted); }
+.checklist li.ahead.current { color: var(--ink); background: #232a34; border-left-color: var(--accent); }
+.checklist li.group-tag { color: var(--accent); font-size: 10.5px; letter-spacing: 1.2px;
+  text-transform: uppercase; padding: 8px 8px 2px; border-left-color: transparent; }
+.checklist li.ahead.grouped { padding-left: 18px; }
+.checklist li.ahead.grouped.current { border-left-color: var(--accent); }
+.checklist li.hidden-item { color: #6b7783; font-style: italic; letter-spacing: 1px; }
+.checklist-note { margin: 10px 0 0; padding: 8px 10px; border-radius: 8px;
+  background: #11324a; border: 1px solid #2f5f7e; color: #cdeafe; font-size: 12px; line-height: 1.45; }
+
+/* debrief */
+.debrief-box { margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: var(--panel-2); border: 1px solid var(--line); }
+.debrief-title { margin: 0 0 8px; font-size: 14px; font-weight: 700; }
+.debrief-line { margin: 0 0 4px; font-size: 13px; color: var(--muted); }
+.debrief-line.good { color: #8ff0bd; }
+.debrief-line.warn { color: #ffd9a0; }
+
+/* scenario picker */
+.picker-overlay { position: fixed; inset: 0; background: rgba(6,9,13,.75);
+  display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px; }
+/* `display:flex` outranks the UA [hidden] rule — restore it explicitly */
+.picker-overlay[hidden] { display: none; }
+.picker { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; width: min(560px, 100%); max-height: 86vh; overflow: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.picker-top { display: flex; align-items: center; justify-content: space-between; }
+.picker-top h2 { margin: 0; font-size: 16px; }
+.picker-actions { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+.picker-actions .progress { margin-left: auto; }
+.picker-group { margin-bottom: 14px; }
+.picker-head-row { display: flex; align-items: center; gap: 8px; font-size: 12px;
+  font-weight: 800; letter-spacing: 2px; padding-bottom: 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.picker-row { display: flex; align-items: center; gap: 8px; padding: 6px 0 6px 14px; }
+.picker-row label { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; font-size: 14px; }
+.picker-row em { display: block; font-size: 11px; color: var(--muted); font-style: normal; }
+.picker-row input, .picker-head-row input { accent-color: var(--accent); width: 15px; height: 15px; }
+
 /* ---------------------------- responsive ------------------------------- */
 @media (max-width: 880px) {
   .layout { grid-template-columns: 1fr; }
