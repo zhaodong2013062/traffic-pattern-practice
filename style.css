@@ -242,6 +242,82 @@ body {
   40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); }
 }
 
+/* ====================== emergency-procedures mode ======================= */
+/* mode toggle in the top bar */
+.modes { display: flex; gap: 6px; }
+.btn.mode { padding: 6px 14px; font-size: 13px; opacity: .7; }
+.btn.mode.active { opacity: 1; border-color: var(--accent); color: var(--accent); font-weight: 600; }
+body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn.small { padding: 4px 10px; font-size: 12px; }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn.wide { width: 100%; margin-top: 12px; }
+.btn.reveal { background: transparent; color: #ffb142; border-color: #ffb142; padding: 6px 12px; font-size: 13px; }
+
+/* the windscreen strip carries the "look outside" items */
+.windscreen-box { fill: #10202c; stroke: #2f4a5c; stroke-width: 2; }
+.control.target .windscreen-box { stroke: var(--accent); stroke-width: 3; }
+.flash-ok .windscreen-box { stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important; }
+.flash-bad .windscreen-box { stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important; }
+
+/* memory items are closed-book — say so loudly */
+.prompt.memory { color: #ff8b95; }
+
+/* branch points ("If risk of fire ...") */
+.decision-box { margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: #23181c; border: 1px solid #6b3b44; }
+.decision-q { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+.btn.decision-opt { display: block; width: 100%; text-align: left; margin-bottom: 6px; font-size: 13px; }
+.btn.decision-opt.wrong { border-color: var(--bad); color: var(--bad); opacity: .6; }
+
+/* pointer to another checklist */
+.handoff-box { margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: #16222b; border: 1px solid #2f4a5c; }
+.handoff-line { margin: 0 0 6px; font-size: 12px; letter-spacing: 1.5px; color: #ffb142; font-weight: 700; }
+.handoff-text { margin: 0 0 10px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+
+/* the checklist card (right column, replaces the minimap) */
+.emergency-box { background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; padding: 14px; }
+.checklist { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+.checklist li { padding: 5px 8px; border-left: 3px solid transparent; line-height: 1.35; }
+.checklist li.done { color: #8ff0bd; border-left-color: var(--ok); }
+.checklist li.done::before { content: "✓ "; }
+.checklist li.done.handoff { color: #ffd9a0; border-left-color: #ffb142; }
+.checklist li.ahead { color: var(--muted); }
+.checklist li.ahead.current { color: var(--ink); background: #232a34; border-left-color: var(--accent); }
+.checklist li.hidden-item { color: #6b7783; font-style: italic; letter-spacing: 1px; }
+.checklist-note { margin: 10px 0 0; padding: 8px 10px; border-radius: 8px;
+  background: #11324a; border: 1px solid #2f5f7e; color: #cdeafe; font-size: 12px; line-height: 1.45; }
+
+/* debrief */
+.debrief-box { margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: var(--panel-2); border: 1px solid var(--line); }
+.debrief-title { margin: 0 0 8px; font-size: 14px; font-weight: 700; }
+.debrief-line { margin: 0 0 4px; font-size: 13px; color: var(--muted); }
+.debrief-line.good { color: #8ff0bd; }
+.debrief-line.warn { color: #ffd9a0; }
+
+/* scenario picker */
+.picker-overlay { position: fixed; inset: 0; background: rgba(6,9,13,.75);
+  display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px; }
+/* `display:flex` outranks the UA [hidden] rule — restore it explicitly */
+.picker-overlay[hidden] { display: none; }
+.picker { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 18px; width: min(560px, 100%); max-height: 86vh; overflow: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6); }
+.picker-top { display: flex; align-items: center; justify-content: space-between; }
+.picker-top h2 { margin: 0; font-size: 16px; }
+.picker-actions { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
+.picker-actions .progress { margin-left: auto; }
+.picker-group { margin-bottom: 14px; }
+.picker-head-row { display: flex; align-items: center; gap: 8px; font-size: 12px;
+  font-weight: 800; letter-spacing: 2px; padding-bottom: 6px; border-bottom: 1px solid var(--line); cursor: pointer; }
+.picker-row { display: flex; align-items: center; gap: 8px; padding: 6px 0 6px 14px; }
+.picker-row label { display: flex; align-items: center; gap: 8px; flex: 1; cursor: pointer; font-size: 14px; }
+.picker-row em { display: block; font-size: 11px; color: var(--muted); font-style: normal; }
+.picker-row input, .picker-head-row input { accent-color: var(--accent); width: 15px; height: 15px; }
+
 /* ---------------------------- responsive ------------------------------- */
 @media (max-width: 880px) {
   .layout { grid-template-columns: 1fr; }

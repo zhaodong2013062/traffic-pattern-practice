@@ -1,9 +1,13 @@
 # Cessna 172 — Traffic Pattern Trainer
 
-A static, no-build web app for memorizing the C172 airport traffic pattern,
-from takeoff roll to touchdown (with a go-around branch). Built from a CFI
-whiteboard and corroborated against the FAA Airplane Flying Handbook (Ch. 8)
-and AIM §4-3-3.
+A static, no-build web app with two C172 drills:
+
+- **Pattern** — the airport traffic pattern, takeoff roll to touchdown, with a
+  go-around branch. Built from a CFI whiteboard and corroborated against the
+  FAA Airplane Flying Handbook (Ch. 8) and AIM §4-3-3.
+- **Emergencies** — the C172S emergency-procedures checklists, one random
+  scenario at a time. Built from the school's emergency placard and
+  corroborated against C172S POH Section 3.
 
 ## Live site
 **https://zhaodong2013062.github.io/traffic-pattern-practice/**
@@ -30,6 +34,33 @@ to happen"). You decide and act:
 - **Show hint** → names the control to click / the value to set, and glows it.
 - **Go-around** is offered on final / over-the-threshold.
 
+## Emergencies mode
+Same loop, different stakes. You get the **situation** and nothing else — no
+title telling you which checklist it is, because identifying the emergency is
+part of the drill.
+
+- **Random deck** — each session shuffles the scenarios you selected and plays
+  them one at a time, with no repeats until the deck is exhausted.
+- **Pick what to drill** — the `Scenarios` button opens a picker grouped the way
+  the placard is (Engine Failure · Fire · Forced Landing · Icing), with per-group
+  toggles and a "Drill this one" button to loop a single checklist. Your
+  selection is remembered between sessions.
+- **Strict order** — items run in QRH order. Wrong item or wrong value gives red
+  feedback and does not advance. There is no timer.
+- **Memory items are closed-book** — while the current item is a memory item the
+  checklist stays shut and there is no hint, only **Read the checklist**, which
+  is recorded in the debrief. Reference items show their lines as you work them.
+- **Branches** — the card's real decision points ("If Risk of Fire", "If Engine
+  Starts", "If fire extinguished and electrical power is necessary") are asked
+  as questions; the situation tells you which branch applies.
+- **Debrief** — per scenario and per session: items completed, wrong clicks, and
+  whether the memory items were flown from memory or the checklist was opened.
+
+The cockpit re-renders for this mode: the right half becomes the emergency
+switch panel (magnetos, master, stby batt, avionics bus, fuel shutoff, fuel
+pump, pitot heat, alt static air, fire extinguisher, ELT, doors, breakers …)
+and a windscreen strip carries the "look outside" items.
+
 ## How it works
 - **Cockpit panel** (`js/cockpit.js`) — an SVG C172 six-pack + tach, throttle,
   flap selector, yoke, rudder, and a pedestal/switch cluster (fuel selector,
@@ -42,6 +73,14 @@ to happen"). You decide and act:
   to vary the choices by stage.
 - **Minimap** (`js/minimap.js`) — top-down left-hand pattern; the airplane
   travels leg-to-leg in semi-real-time and the active leg lights up.
-- **State machine** (`js/app.js`) — handles control clicks, the value popover
-  (anchored to the clicked control), wrong-control/wrong-value feedback, hints,
-  compound-step sequencing, the semi-real-time transit, and the go-around branch.
+- **State machine** (`js/app.js`) — the mode switch plus the pattern drill:
+  control clicks, wrong-control/wrong-value feedback, hints, compound-step
+  sequencing, the semi-real-time transit, and the go-around branch.
+- **Shared chrome** (`js/ui.js`) — the value popover (anchored to the clicked
+  control), the feedback line and the phase banner, used by both drills.
+- **Emergency scenarios** (`js/emergencies.js`) — the source of truth for the
+  emergency drill: each scenario's situation, starting instrument values, and
+  its checklist as ordered nodes (`item` / `decision` / `handoff`), with each
+  item flagged as a memory item or a reference item.
+- **Emergency drill** (`js/emergency.js`) — the deck and scenario picker, the
+  closed-book rule, the checklist card, branch handling and the debrief.

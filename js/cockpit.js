@@ -4,7 +4,7 @@
    Every interactive element is a <g> with a data-id matching the `targets`
    used in sequence.js. The panel exposes a small API on window.Cockpit:
 
-     render(container)              draw the panel
+     render(container, mode)        draw the panel ("pattern" | "emergency")
      onClick(fn)                    fn(id) fired when a control is actuated
      setValues(values, animate)     drive needles / readouts to target values
      highlight(ids)                 glow the next-action element(s)
@@ -28,6 +28,23 @@ function arcPath(R, a1, a2) {
   const large = Math.abs(a2 - a1) > 180 ? 1 : 0;
   return `M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${R} ${R} 0 ${large} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}`;
 }
+
+/* Display names for every clickable id, shared by both drills. */
+const CONTROL_NAMES = {
+  throttle: "THROTTLE", flaps: "FLAP SELECTOR", yoke: "YOKE", rudder: "RUDDER PEDALS",
+  asi: "AIRSPEED INDICATOR", ai: "ATTITUDE INDICATOR", alt: "ALTIMETER",
+  ti: "TURN COORDINATOR", hi: "HEADING INDICATOR", vsi: "VERTICAL SPEED", tach: "TACHOMETER",
+  fuel: "FUEL SELECTOR", mixture: "MIXTURE", autopilot: "AUTOPILOT",
+  seatbelt: "SEATS / BELTS", call: "RADIO / CALL",
+  // emergency panel
+  magnetos: "MAGNETOS", master: "MASTER SWITCH", stbybatt: "STANDBY BATTERY",
+  avionics: "AVIONICS BUS 1 / 2", allswitches: "ELECTRICAL SWITCHES",
+  breakers: "CIRCUIT BREAKERS", fuelshutoff: "FUEL SHUTOFF VALVE", fuelpump: "FUEL PUMP",
+  extinguisher: "FIRE EXTINGUISHER", elt: "ELT", pitotheat: "PITOT HEAT",
+  altstatic: "ALTERNATE STATIC AIR", lights: "LIGHTS", vents: "CABIN VENTS",
+  cabinheat: "CABIN HEAT / AIR", defroster: "DEFROSTER OUTLETS", doors: "CABIN DOORS",
+  brakes: "BRAKES", action: "PILOT ACTION", outside: "OUTSIDE / WINDSCREEN",
+};
 
 const Cockpit = (() => {
   let svg, clickCb = () => {};
@@ -273,18 +290,10 @@ const Cockpit = (() => {
     groups[id] = { g, setLabel: (t) => { val.textContent = t; } };
   }
 
-  /* ------------------------------ render -------------------------------- */
-  function render(container) {
-    svg = el("svg", { viewBox: "0 0 1000 600", class: "panel", preserveAspectRatio: "xMidYMid meet" });
-    // glare shield / panel body
-    el("rect", { x: 0, y: 0, width: 1000, height: 600, class: "panel-bg" }, svg);
-    el("rect", { x: 30, y: 70, width: 600, height: 360, rx: 18, class: "panel-metal" }, svg);
-    el("rect", { x: 660, y: 70, width: 310, height: 360, rx: 18, class: "panel-metal" }, svg);
-    el("text", { x: 500, y: 40, class: "panel-title" }, svg).textContent = "CESSNA 172 — TRAFFIC PATTERN TRAINER";
-
-    // six-pack
-    // C172S markings: white 40–85 (Vs0–Vfe full), green 48–129 (Vs1–Vno),
-    // yellow 129–163, redline 163. White arc = flap operating range.
+  /* --------------------- shared panel sub-assemblies -------------------- */
+  function sixPack(svg) {
+    // C172S markings: white 40-85 (Vs0-Vfe full), green 48-129 (Vs1-Vno),
+    // yellow 129-163, redline 163. White arc = flap operating range.
     gauge(svg, { id: "asi", cx: 150, cy: 175, r: 66, title: "AIRSPEED", unit: "KIAS",
       scale: (v) => map.ias(v), redline: 163, arcs: [
         { from: 48, to: 129, cls: "arc-green",  rr: 62 },
@@ -296,23 +305,87 @@ const Cockpit = (() => {
     symbolDial(svg, { id: "ti", cx: 150, cy: 335, r: 66, title: "TURN COORD" });
     headingIndicator(svg, { cx: 330, cy: 335, r: 66 });
     gauge(svg, { id: "vsi", cx: 510, cy: 335, r: 66, title: "VERT SPEED", unit: "FPM" });
+  }
 
-    // tachometer (right cluster)
+  function lowerControls(svg) {
+    yoke(svg, { x: 130, y: 500 });
+    rudder(svg, { x: 300, y: 480 });
+    throttle(svg, { x: 470, y: 470 });
+    flaps(svg, { x: 620, y: 470 });
+  }
+
+  /* ------------------------ pattern-mode panel -------------------------- */
+  function renderPattern(svg) {
+    el("rect", { x: 30, y: 70, width: 600, height: 360, rx: 18, class: "panel-metal" }, svg);
+    el("rect", { x: 660, y: 70, width: 310, height: 360, rx: 18, class: "panel-metal" }, svg);
+    el("text", { x: 500, y: 40, class: "panel-title" }, svg).textContent =
+      "CESSNA 172 — TRAFFIC PATTERN TRAINER";
+
+    sixPack(svg);
     gauge(svg, { id: "tach", cx: 815, cy: 175, r: 76, title: "TACHOMETER", unit: "RPM" });
 
-    // switch / knob cluster (right panel)
-    el("text", { x: 815, y: 290, class: "panel-title", "font-size": "11" }, svg).textContent = "PEDESTAL & SWITCHES";
+    el("text", { x: 815, y: 290, class: "panel-title", "font-size": "11" }, svg).textContent =
+      "PEDESTAL & SWITCHES";
     switchCtl(svg, { id: "fuel",      x: 718, y: 330, label: "FUEL SEL" });
     switchCtl(svg, { id: "mixture",   x: 815, y: 330, label: "MIXTURE" });
     switchCtl(svg, { id: "autopilot", x: 912, y: 330, label: "AUTOPILOT" });
     switchCtl(svg, { id: "seatbelt",  x: 718, y: 392, label: "SEATBELTS" });
     switchCtl(svg, { id: "call",      x: 863, y: 392, label: "RADIO / CALL" });
 
-    // controls along the lower pedestal
-    yoke(svg, { x: 130, y: 500 });
-    rudder(svg, { x: 300, y: 480 });
-    throttle(svg, { x: 470, y: 470 });
-    flaps(svg, { x: 620, y: 470 });
+    lowerControls(svg);
+  }
+
+  /* ----------------------- emergency-mode panel -------------------------
+     The emergency checklists reach switches the pattern never touches (mags,
+     master, stby batt, avionics, fuel shutoff, pitot heat, alt static ...), so
+     the right half becomes a full switch panel. The tach goes with it — RPM
+     still reads through the throttle knob travel, and no checklist item on the
+     card targets the tachometer. A windscreen strip across the top carries the
+     "look outside" items (landing area select).
+     -------------------------------------------------------------------- */
+  const EMER_TILES = [
+    ["magnetos", "MAGNETOS"], ["master", "MASTER"],        ["stbybatt", "STBY BATT"],
+    ["avionics", "AVIONICS 1/2"], ["allswitches", "ALL SWITCHES"], ["breakers", "CIRCUIT BKRS"],
+    ["fuelshutoff", "FUEL SHUTOFF"], ["fuelpump", "FUEL PUMP"], ["fuel", "FUEL SEL"],
+    ["mixture", "MIXTURE"],   ["extinguisher", "FIRE EXT"],  ["elt", "ELT"],
+    ["pitotheat", "PITOT HEAT"], ["altstatic", "ALT STATIC"], ["lights", "LIGHTS"],
+    ["vents", "CABIN VENTS"], ["cabinheat", "CABIN HT/AIR"], ["defroster", "DEFROSTER"],
+    ["doors", "DOORS"],       ["seatbelt", "SEATS/BELTS"],   ["call", "RADIO / CALL"],
+    ["autopilot", "AUTOPILOT"], ["brakes", "BRAKES"],        ["action", "ACTION"],
+  ];
+
+  function renderEmergency(svg) {
+    el("rect", { x: 30, y: 70, width: 600, height: 360, rx: 18, class: "panel-metal" }, svg);
+    el("rect", { x: 660, y: 70, width: 315, height: 500, rx: 18, class: "panel-metal" }, svg);
+    el("text", { x: 817, y: 38, class: "panel-title" }, svg).textContent = "EMERGENCY PROCEDURES";
+
+    // windscreen / look-outside strip
+    const w = el("g", { class: "control windscreen", "data-id": "outside" }, svg);
+    el("rect", { x: 30, y: 6, width: 600, height: 46, rx: 10, class: "windscreen-box" }, w);
+    el("text", { x: 330, y: 26, class: "switch-label" }, w).textContent = "WINDSCREEN — LOOK OUTSIDE";
+    const wv = el("text", { x: 330, y: 43, class: "switch-val" }, w);
+    wv.textContent = "—";
+    w.addEventListener("click", () => clickCb("outside"));
+    groups.outside = { g: w, setLabel: (t) => { wv.textContent = t; } };
+
+    sixPack(svg);
+
+    const COLS = [712, 815, 918], ROW0 = 105, PITCH = 58;
+    EMER_TILES.forEach(([id, label], n) => {
+      switchCtl(svg, { id, x: COLS[n % 3], y: ROW0 + Math.floor(n / 3) * PITCH, label });
+    });
+
+    lowerControls(svg);
+  }
+
+  /* ------------------------------ render -------------------------------- */
+  function render(container, mode = "pattern") {
+    for (const k in groups) delete groups[k];
+    container.innerHTML = "";
+    svg = el("svg", { viewBox: "0 0 1000 600", class: "panel", preserveAspectRatio: "xMidYMid meet" });
+    el("rect", { x: 0, y: 0, width: 1000, height: 600, class: "panel-bg" }, svg);
+
+    if (mode === "emergency") renderEmergency(svg); else renderPattern(svg);
 
     container.appendChild(svg);
     applyValues(false);
@@ -349,7 +422,10 @@ const Cockpit = (() => {
     if (grp && grp.setLabel) grp.setLabel(text);
   }
 
-  return { render, onClick, setValues, highlight, clearHighlight, markDone, flash, setControlLabel, _state: state };
+  function hasLabel(id) { return !!(groups[id] && groups[id].setLabel); }
+
+  return { render, onClick, setValues, highlight, clearHighlight, markDone, flash,
+           setControlLabel, hasLabel, NAMES: CONTROL_NAMES, _state: state };
 })();
 
 window.Cockpit = Cockpit;
