@@ -49,8 +49,14 @@ the drill. It is named for you in the debrief, once you've flown it.
   the placard is (Engine Failure · Fire · Forced Landing · Icing), with per-group
   toggles and a "Drill this one" button to loop a single checklist. Your
   selection is remembered between sessions.
-- **Strict order** — items run in QRH order. Wrong item or wrong value gives red
-  feedback and does not advance. There is no timer.
+- **Order where order matters** — items run in QRH order, but things a pilot
+  does as one thought are grouped and accepted in any order: securing the
+  engine (mixture · fuel shutoff · mags), killing the electrics, getting fuel
+  to the engine, mayday and ELT, belts and doors. The checklist won't move on
+  until the whole group is done. Sequences with a real reason behind them stay
+  strict — airspeed before anything else, master ON before avionics ON, vents
+  closed before the extinguisher. Wrong item or wrong value gives red feedback
+  and does not advance. There is no timer.
 - **Memory items are closed-book** — while the current item is a memory item the
   checklist stays shut and there is no hint, only **Read the checklist**, which
   is recorded in the debrief. Reference items show their lines as you work them.

@@ -16,6 +16,13 @@
      DEBRIEF      items, wrong clicks, and whether the memory items were flown
                   from memory or the checklist was opened.
 
+   Items run in QRH order, except within a GROUP: consecutive items sharing a
+   `g` are accepted in any order, because killing the fuel, the spark and the
+   master is one action in the pilot's head rather than three ordered ones. All
+   of a group must be done before the checklist moves on. A group is
+   closed-book if ANY of its items is a memory item — half-hiding a group would
+   reveal the rest of it.
+
    The rule that shapes the screen: MEMORY ITEMS ARE CLOSED-BOOK. While the
    current item is a memory item nothing ahead of it is shown and there is no
    hint — only "Read the checklist", which is recorded in the debrief.
@@ -38,6 +45,7 @@ const EmergencyDrill = (() => {
   let sessionFlown = [];          // scenario ids already flown this session
 
   let scen = null, ptr = 0, node = null;
+  let pending = [], groupEnd = 0, openIdx = -1;   // the item(s) accepted right now
   let doneList = [];              // checklist lines completed THIS RUN
   let runIds = [], runTitles = [];  // scenario(s) flown this run (chained)
   let stats = null;
@@ -178,7 +186,7 @@ const EmergencyDrill = (() => {
     if (!id) return finishSession();
     scen = EMERGENCIES.find((s) => s.id === id);
     ptr = 0; revealed = false; awaitingValue = false; awaitingNext = false;
-    node = null;
+    node = null; pending = []; groupEnd = 0; openIdx = -1;
     doneList = [];
     runIds = [scen.id]; runTitles = [scen.title];
     stats = {
@@ -241,6 +249,21 @@ const EmergencyDrill = (() => {
   }
 
   /* ------------------------------- nodes -------------------------------- */
+  // The indices accepted right now: a whole group, or a single item.
+  function armFrom(i) {
+    const n = scen.nodes[i];
+    pending = [i];
+    groupEnd = i + 1;
+    if (!n.g) return;
+    while (groupEnd < scen.nodes.length) {
+      const m = scen.nodes[groupEnd];
+      if (m.t !== "item" || m.g !== n.g) break;
+      pending.push(groupEnd);
+      groupEnd++;
+    }
+  }
+  const pendingNodes = () => pending.map((i) => scen.nodes[i]);
+
   function runNode() {
     node = scen.nodes[ptr];
     if (!node) return endScenario();
@@ -249,15 +272,19 @@ const EmergencyDrill = (() => {
     $("decisionBox").hidden = true;
     $("handoffBox").hidden = true;
     awaitingValue = false;
+    openIdx = -1;
 
-    if (node.t === "item") return runItem();
+    if (node.t === "item") { armFrom(ptr); return runItem(); }
     if (node.t === "decision") return runDecision();
     if (node.t === "handoff") return runHandoff();
   }
 
   function runItem() {
     const closed = isClosedBook();
-    $("prompt").textContent = closed ? "Memory item — what do you do?" : "What do you do?";
+    const n = pending.length;
+    const many = n > 1 ? `${n} actions, any order` : "what do you do?";
+    $("prompt").textContent = (closed ? (n > 1 ? "Memory items — " : "Memory item — ") : "")
+      + (closed || n > 1 ? many : "What do you do?");
     $("prompt").className = "prompt" + (closed ? " memory" : "");
     $("hintBtn").hidden = closed;
     $("hintBtn").textContent = "Show hint";
@@ -345,6 +372,7 @@ const EmergencyDrill = (() => {
   function chainInto(next) {
     deck = deck.filter((id) => id !== next.id);
     scen = next; ptr = 0; revealed = false; awaitingValue = false;
+    pending = []; groupEnd = 0; openIdx = -1;
     runIds.push(next.id); runTitles.push(next.title);
     stats.memory += next.nodes.filter((n) => n.t === "item" && n.memory).length;
     $("conditions").textContent = next.situation;
@@ -355,7 +383,9 @@ const EmergencyDrill = (() => {
   /* --------------------------- cockpit clicks --------------------------- */
   function onCockpitClick(id) {
     if (!running || !node || node.t !== "item") return;
-    if (id !== node.control) {
+    // any pending item may be actioned — that is what a group means
+    const idx = pending.find((i) => scen.nodes[i].control === id);
+    if (idx === undefined) {
       Cockpit.flash(id, false);
       stats.misses++;
       UI.feedback("✗ Not that one.", false);
@@ -363,28 +393,42 @@ const EmergencyDrill = (() => {
     }
     UI.hideFeedback();
     awaitingValue = true;
-    const options = node.options || EMER_CONTROL_OPTIONS[node.control] || [];
-    UI.openPopover(id, options, onValue, () => { awaitingValue = false; });
+    openIdx = idx;
+    const target = scen.nodes[idx];
+    const options = target.options || EMER_CONTROL_OPTIONS[target.control] || [];
+    UI.openPopover(id, options, (opt, btn) => onValue(idx, opt, btn),
+      () => { awaitingValue = false; openIdx = -1; });
   }
 
-  function onValue(opt, btn) {
-    if (!awaitingValue || !node) return;
-    if (opt !== node.correct) {
+  function onValue(idx, opt, btn) {
+    if (!awaitingValue) return;
+    const done = scen.nodes[idx];
+    if (opt !== done.correct) {
       btn.classList.add("wrong");
       btn.disabled = true;
       stats.misses++;
       UI.feedback("✗ Not that setting.", false);
       return;
     }
-    Cockpit.flash(node.control, true);
-    if (Cockpit.hasLabel(node.control)) Cockpit.setControlLabel(node.control, tileLabel(node.control, opt));
-    if (node.values) Cockpit.setValues(node.values, true);
+    Cockpit.flash(done.control, true);
+    if (Cockpit.hasLabel(done.control)) Cockpit.setControlLabel(done.control, tileLabel(done.control, opt));
+    if (done.values) Cockpit.setValues(done.values, true);
     UI.closePopover();
-    UI.feedback("✓ " + opt, true);
+    awaitingValue = false; openIdx = -1;
     stats.items++;
-    markDone(node.line, node.memory ? "memory" : "reference");
-    showNote(node.note);
-    advance();
+    pending = pending.filter((i) => i !== idx);
+    markDone(done.line, done.memory ? "memory" : "reference");
+    showNote(done.note);
+
+    if (pending.length) {                       // rest of the group still open
+      UI.feedback(`✓ ${opt} · ${pending.length} to go`, true);
+      runItem();
+      return;
+    }
+    UI.feedback("✓ " + opt, true);
+    if (done.goto) return jump(done.goto);
+    ptr = groupEnd;
+    runNode();
   }
 
   // Switch faces are small; the windscreen strip and the placards are not.
@@ -396,6 +440,7 @@ const EmergencyDrill = (() => {
   }
 
   /* --------------------------- flow control ----------------------------- */
+  // only decisions and handoffs land here now; items advance in onValue
   function advance() {
     if (node && node.goto) return jump(node.goto);
     ptr++;
@@ -476,7 +521,12 @@ const EmergencyDrill = (() => {
     renderChecklist();
   }
 
-  function isClosedBook() { return !!node && node.t === "item" && node.memory && !revealed; }
+  // A group is closed-book if ANY of its items is a memory item: showing the
+  // reference half of a group would give away the memory half sitting with it.
+  function isClosedBook() {
+    if (revealed || !node || node.t !== "item") return false;
+    return pendingNodes().some((n) => n.memory);
+  }
 
   function renderChecklist(complete = false) {
     const list = $("checklist");
@@ -499,13 +549,27 @@ const EmergencyDrill = (() => {
       list.appendChild(li);
       return;
     }
-    scen.nodes.slice(ptr).forEach((n) => {
-      if (n.t === "decision") return;
+    let taggedGroup = null;
+    for (let i = ptr; i < scen.nodes.length; i++) {
+      const n = scen.nodes[i];
+      if (n.t === "decision") continue;
+      if (i < groupEnd && !pending.includes(i)) continue;   // already actioned
+      // head the group with its "any order" tag
+      if (n.t === "item" && n.g && n.g !== taggedGroup) {
+        taggedGroup = n.g;
+        const tag = document.createElement("li");
+        tag.className = "group-tag";
+        tag.textContent = `any order — ${n.g}`;
+        list.appendChild(tag);
+      } else if (!(n.t === "item" && n.g)) {
+        taggedGroup = null;
+      }
       const li = document.createElement("li");
-      li.className = "ahead" + (n === node ? " current" : "");
+      li.className = "ahead" + (pending.includes(i) ? " current" : "") +
+        (n.t === "item" && n.g ? " grouped" : "");
       li.textContent = n.line;
       list.appendChild(li);
-    });
+    }
   }
 
   // Notes belong to the item just completed; clear when the next item has none.
@@ -520,12 +584,16 @@ const EmergencyDrill = (() => {
     if (!node || node.t !== "item") return;
     const box = $("hintBox");
     box.hidden = false;
-    if (awaitingValue) {
-      box.textContent = `Set the ${Cockpit.NAMES[node.control]} to: ${node.correct}`;
-      UI.markPopoverOption(node.correct);
+    if (awaitingValue && openIdx >= 0) {
+      const open = scen.nodes[openIdx];
+      box.textContent = `Set the ${Cockpit.NAMES[open.control]} to: ${open.correct}`;
+      UI.markPopoverOption(open.correct);
     } else {
-      box.textContent = `Click the ${Cockpit.NAMES[node.control]}.`;
-      Cockpit.highlight([node.control]);
+      const names = pendingNodes().map((n) => Cockpit.NAMES[n.control]);
+      box.textContent = names.length > 1
+        ? `Any of these, in any order: ${names.join(", ")}.`
+        : `Click the ${names[0]}.`;
+      Cockpit.highlight(pendingNodes().map((n) => n.control));
     }
     $("hintBtn").textContent = "Hint shown";
   }
@@ -533,7 +601,7 @@ const EmergencyDrill = (() => {
   function revealChecklist() {
     if (!node) return;
     revealed = true;
-    if (!stats.revealedAt) stats.revealedAt = node.line || "the checklist";
+    if (!stats.revealedAt) stats.revealedAt = (pendingNodes()[0] || node).line || "the checklist";
     $("revealBtn").hidden = true;
     $("hintBtn").hidden = false;
     renderChecklist();

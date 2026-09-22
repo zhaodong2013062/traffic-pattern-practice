@@ -371,6 +371,10 @@ body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95;
 .checklist li.done.handoff { color: #ffd9a0; border-left-color: #ffb142; }
 .checklist li.ahead { color: var(--muted); }
 .checklist li.ahead.current { color: var(--ink); background: #232a34; border-left-color: var(--accent); }
+.checklist li.group-tag { color: var(--accent); font-size: 10.5px; letter-spacing: 1.2px;
+  text-transform: uppercase; padding: 8px 8px 2px; border-left-color: transparent; }
+.checklist li.ahead.grouped { padding-left: 18px; }
+.checklist li.ahead.grouped.current { border-left-color: var(--accent); }
 .checklist li.hidden-item { color: #6b7783; font-style: italic; letter-spacing: 1px; }
 .checklist-note { margin: 10px 0 0; padding: 8px 10px; border-radius: 8px;
   background: #11324a; border: 1px solid #2f5f7e; color: #cdeafe; font-size: 12px; line-height: 1.45; }

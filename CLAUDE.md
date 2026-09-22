@@ -60,7 +60,17 @@ add it to `CONTROL_OPTIONS`. New clickable controls must be drawn in
 - A session is a **shuffled deck** of the scenarios selected in the picker —
   no scenario repeats until the deck is exhausted. The selection persists in
   `localStorage`; "Drill this one" loops a single scenario instead.
-- Items run in **strict QRH order**. There is no timer.
+- Items run in QRH order, **except within a group**: consecutive items sharing
+  a `g` are accepted in any order, and all of them must be done before the
+  checklist moves on. Groups are the actions a pilot does as one thought —
+  securing the engine (mixture · fuel shutoff · mags), killing the electrics
+  (stby batt · master), getting fuel to the engine, telling someone (mayday ·
+  ELT), preparing the cabin (belts · doors). Anything with a real reason to be
+  ordered stays ordered: airspeed before everything, master ON before avionics
+  ON, close the vents before using the extinguisher.
+- A group is **closed-book if any of its items is a memory item** — showing the
+  reference half would give away the memory half sitting next to it.
+- There is no timer.
 - **Memory items are closed-book**: while the current item is one, nothing
   ahead of it is shown and the hint button is withheld — only "Read the
   checklist", which is recorded in the scenario debrief. Reference items show
@@ -91,8 +101,12 @@ branch turns on it being night, the situation says it is night.
 To add/change a scenario, edit `EMERGENCIES` in `js/emergencies.js`. Each needs
 a `situation`, a `state` line and its `nodes`, which are
 `{t:"item"|"decision"|"handoff"}`; `label`/`goto` wire the branches and
-`goto:"end"` finishes. Any new control needs a menu in `EMER_CONTROL_OPTIONS`,
-a tile in `cockpit.js` (`EMER_TILES`) and a display name in `CONTROL_NAMES`.
+`goto:"end"` finishes. Items that may be done in any order share a `g`
+(consecutive items only, and don't put the same control in one group twice).
+Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
+`CONTROL_NAMES`, and hardware drawn for it in `renderEmergency` in
+`cockpit.js` — use one of the existing primitives (`rocker`, `pullKnob`,
+`keySwitch`, `fuelValve`, `placard` …) rather than inventing a tile.
 
 ## Aviation accuracy
 Pattern numbers/procedures come from a CFI whiteboard, corroborated against the
