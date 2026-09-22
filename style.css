@@ -260,6 +260,11 @@ body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95;
 .flash-ok .windscreen-box { stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important; }
 .flash-bad .windscreen-box { stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important; }
 
+/* the setup card's aircraft-state line */
+.state-line { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px;
+  background: #232a34; border: 1px solid var(--line); color: var(--muted);
+  font-size: 12px; letter-spacing: .5px; font-variant-numeric: tabular-nums; }
+
 /* memory items are closed-book — say so loudly */
 .prompt.memory { color: #ff8b95; }
 
@@ -269,6 +274,7 @@ body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95;
 .decision-q { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
 .btn.decision-opt { display: block; width: 100%; text-align: left; margin-bottom: 6px; font-size: 13px; }
 .btn.decision-opt.wrong { border-color: var(--bad); color: var(--bad); opacity: .6; }
+.handoff-box .btn + .btn { margin-left: 8px; }
 
 /* pointer to another checklist */
 .handoff-box { margin-top: 12px; padding: 12px; border-radius: 10px;

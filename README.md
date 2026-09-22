@@ -35,10 +35,14 @@ to happen"). You decide and act:
 - **Go-around** is offered on final / over-the-threshold.
 
 ## Emergencies mode
-Same loop, different stakes. You get the **situation** and nothing else — no
-title telling you which checklist it is, because identifying the emergency is
-part of the drill.
+Same loop, different stakes. You get the **situation** and nothing else — not
+even the category on the banner, because identifying the emergency is part of
+the drill. It is named for you in the debrief, once you've flown it.
 
+- **Setup card** — every scenario opens with the situation and the aircraft
+  state ("1,800 ft · gliding 68 KIAS · engine out, will not restart") and a
+  Begin button. Nothing is live until you press it, so you are never dropped
+  into the middle of a checklist.
 - **Random deck** — each session shuffles the scenarios you selected and plays
   them one at a time, with no repeats until the deck is exhausted.
 - **Pick what to drill** — the `Scenarios` button opens a picker grouped the way
@@ -53,6 +57,9 @@ part of the drill.
 - **Branches** — the card's real decision points ("If Risk of Fire", "If Engine
   Starts", "If fire extinguished and electrical power is necessary") are asked
   as questions; the situation tells you which branch applies.
+- **Checklists that point at other checklists** — where the card says *Forced
+  Landing Checklist*, you can run it right there and keep flying the same
+  emergency; it then drops out of the rest of the deck.
 - **Debrief** — per scenario and per session: items completed, wrong clicks, and
   whether the memory items were flown from memory or the checklist was opened.
 

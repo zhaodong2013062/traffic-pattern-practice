@@ -5,11 +5,22 @@
    scenario is a checklist walked in strict QRH order through the same
    click-a-control / pick-a-value loop the pattern trainer uses.
 
-   The one rule that shapes the whole screen: MEMORY ITEMS ARE CLOSED-BOOK.
-   While the current item is a memory item nothing ahead of it is shown and
-   there is no hint — only a "Read the checklist" button, which opens the card
-   and is recorded in the debrief. Reference items show their lines as you
-   work them, the way you would have the QRH open in the airplane.
+   Shape of a run:
+     SETUP CARD   the situation and the aircraft state, with a Begin button.
+                  Nothing is armed until Begin — you are never dropped into
+                  the middle of a checklist.
+     THE DRILL    items in order; memory items closed-book (see below).
+     HANDOFF      where the card points at another checklist, the drill can
+                  roll straight on into it (engine failure -> forced landing)
+                  and that scenario drops out of the rest of the deck.
+     DEBRIEF      items, wrong clicks, and whether the memory items were flown
+                  from memory or the checklist was opened.
+
+   The rule that shapes the screen: MEMORY ITEMS ARE CLOSED-BOOK. While the
+   current item is a memory item nothing ahead of it is shown and there is no
+   hint — only "Read the checklist", which is recorded in the debrief.
+   Reference items show their lines as you work them, the way you would have
+   the QRH open in the airplane.
 
    API on window.EmergencyDrill: activate() / deactivate() / start() / restart()
    ========================================================================== */
@@ -17,16 +28,21 @@
 const EmergencyDrill = (() => {
   const $ = (id) => document.getElementById(id);
   const STORE_KEY = "c172-emergency-selection";
+  const IDLE_VALUES = { rpm: 1000, ias: 0, alt: 0, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 };
 
   let selected = null;            // Set of scenario ids
   let deck = [];                  // remaining scenario ids this session
   let loopOne = null;             // id when drilling a single scenario on repeat
-  let sessionTotal = 0, sessionDone = 0;
+  let sessionDone = 0;
   let results = [];               // per-scenario debrief rows
+  let sessionFlown = [];          // scenario ids already flown this session
 
   let scen = null, ptr = 0, node = null;
+  let doneList = [];              // checklist lines completed THIS RUN
+  let runIds = [], runTitles = [];  // scenario(s) flown this run (chained)
   let stats = null;
-  let active = false, running = false, awaitingValue = false, revealed = false;
+  let active = false, running = false, awaitingValue = false;
+  let revealed = false, awaitingNext = false;
 
   /* ---------------------------- selection ------------------------------- */
   function allIds() { return EMERGENCIES.map((s) => s.id); }
@@ -62,7 +78,7 @@ const EmergencyDrill = (() => {
       all.checked = list.every((s) => selected.has(s.id));
       all.addEventListener("change", () => {
         list.forEach((s) => (all.checked ? selected.add(s.id) : selected.delete(s.id)));
-        saveSelection(); buildPicker(); syncPickerCount();
+        saveSelection(); buildPicker();
       });
       head.appendChild(all);
       const title = document.createElement("span");
@@ -81,7 +97,7 @@ const EmergencyDrill = (() => {
         cb.checked = selected.has(s.id);
         cb.addEventListener("change", () => {
           cb.checked ? selected.add(s.id) : selected.delete(s.id);
-          saveSelection(); buildPicker(); syncPickerCount();
+          saveSelection(); buildPicker();
         });
         lab.appendChild(cb);
         const name = document.createElement("span");
@@ -105,19 +121,14 @@ const EmergencyDrill = (() => {
     const n = selected.size, total = EMERGENCIES.length;
     $("pickCount").textContent = `${n} of ${total} selected`;
     $("scenarioBtn").textContent = `Scenarios · ${n} of ${total}`;
-    // nothing selected -> nothing to fly
-    $("startBtn").disabled = active && n === 0;
+    $("startBtn").disabled = active && n === 0;   // nothing selected, nothing to fly
   }
 
   function openPicker() { buildPicker(); $("pickerOverlay").hidden = false; }
   function closePicker() {
     $("pickerOverlay").hidden = true;
-    // a changed selection reshuffles what is LEFT, it does not restart the run
-    if (running) {
-      deck = deck.filter((id) => selected.has(id));
-      sessionTotal = sessionDone + deck.length + (scen ? 1 : 0);
-      syncProgress();
-    }
+    // a changed selection reshapes what is LEFT, it does not restart the run
+    if (running) { deck = deck.filter((id) => selected.has(id)); syncProgress(); }
   }
 
   /* ------------------------------ session ------------------------------- */
@@ -133,17 +144,17 @@ const EmergencyDrill = (() => {
     if (!selected.size) return;
     loopOne = null;
     deck = shuffle([...selected]);
-    sessionTotal = deck.length; sessionDone = 0; results = [];
-    running = true;
-    $("startBtn").hidden = true;
-    $("restartBtn").hidden = false;
-    nextScenario();
+    beginSession();
   }
 
   function startLoop(id) {
     loopOne = id;
     deck = [id];
-    sessionTotal = 1; sessionDone = 0; results = [];
+    beginSession();
+  }
+
+  function beginSession() {
+    sessionDone = 0; results = []; sessionFlown = [];
     running = true;
     $("startBtn").hidden = true;
     $("restartBtn").hidden = false;
@@ -151,7 +162,7 @@ const EmergencyDrill = (() => {
   }
 
   function restart() {
-    running = false; scen = null; node = null;
+    running = false; scen = null; node = null; awaitingNext = false;
     Cockpit.clearHighlight();
     UI.closePopover();
     $("startBtn").hidden = false;
@@ -160,42 +171,72 @@ const EmergencyDrill = (() => {
     renderIdle();
   }
 
+  /* -------------------------- one scenario ------------------------------ */
+  // The setup card: situation + aircraft state, nothing armed until "Begin".
   function nextScenario() {
     const id = deck.shift();
     if (!id) return finishSession();
     scen = EMERGENCIES.find((s) => s.id === id);
-    ptr = 0; revealed = false; awaitingValue = false;
-    stats = { items: 0, misses: 0, revealedAt: null, memory: scen.nodes.filter((n) => n.t === "item" && n.memory).length };
+    ptr = 0; revealed = false; awaitingValue = false; awaitingNext = false;
+    node = null;
+    doneList = [];
+    runIds = [scen.id]; runTitles = [scen.title];
+    stats = {
+      items: 0, misses: 0, revealedAt: null,
+      memory: scen.nodes.filter((n) => n.t === "item" && n.memory).length,
+    };
 
-    const grp = EMERGENCY_GROUPS[scen.group];
-    UI.setBanner(grp.name, grp.color);
+    // The banner stays generic while you fly: naming the group would answer
+    // the first question the drill asks — which emergency is this? The
+    // checklist is named in the debrief once it is done.
+    UI.setBanner("EMERGENCY", "#c0392b");
+    UI.hideFeedback();
+    UI.closePopover();
     Cockpit.clearHighlight();
     Cockpit.setValues(scen.values, false);
     resetTileLabels();
 
     $("conditionsLabel").textContent = "SITUATION";
     $("conditions").textContent = scen.situation;
+    $("stateLine").hidden = false;
+    $("stateLine").textContent = scen.state || "";
+    $("prompt").textContent = "";
+    $("prompt").className = "prompt";
+    hideActionButtons();
+    $("decisionBox").hidden = true;
+    $("handoffBox").hidden = true;
     $("debriefBox").hidden = true;
     $("nextBtn").hidden = true;
-    $("emergencyBox").hidden = false;
-    renderChecklist();
+    $("checklistNote").hidden = true;
+    $("emergencyBox").hidden = true;      // no checklist until the drill arms
+    $("beginBtn").hidden = false;
     syncProgress();
+  }
+
+  function beginScenario() {
+    $("beginBtn").hidden = true;
+    $("stateLine").hidden = true;
+    $("emergencyBox").hidden = false;
     runNode();
   }
 
   function finishSession() {
-    running = false; scen = null; node = null;
+    running = false; scen = null; node = null; awaitingNext = false;
     UI.setBanner("SESSION COMPLETE", "#2ed573");
     $("conditionsLabel").textContent = "DEBRIEF";
     $("conditions").textContent = results.length
       ? `${results.length} emergenc${results.length === 1 ? "y" : "ies"} flown.`
       : "Nothing flown.";
+    $("stateLine").hidden = true;
     $("prompt").textContent = "";
     hideActionButtons();
     $("decisionBox").hidden = true;
+    $("handoffBox").hidden = true;
     $("nextBtn").hidden = true;
+    $("beginBtn").hidden = true;
     $("startBtn").hidden = false;
     $("restartBtn").hidden = true;
+    $("progressText").textContent = "";
     renderSessionDebrief();
   }
 
@@ -203,7 +244,6 @@ const EmergencyDrill = (() => {
   function runNode() {
     node = scen.nodes[ptr];
     if (!node) return endScenario();
-    UI.hideFeedback();
     UI.closePopover();
     $("hintBox").hidden = true;
     $("decisionBox").hidden = true;
@@ -216,13 +256,12 @@ const EmergencyDrill = (() => {
   }
 
   function runItem() {
-    $("prompt").textContent = isClosedBook()
-      ? "Memory item — what do you do?"
-      : "What do you do?";
-    $("prompt").className = "prompt" + (isClosedBook() ? " memory" : "");
-    $("hintBtn").hidden = isClosedBook();
+    const closed = isClosedBook();
+    $("prompt").textContent = closed ? "Memory item — what do you do?" : "What do you do?";
+    $("prompt").className = "prompt" + (closed ? " memory" : "");
+    $("hintBtn").hidden = closed;
     $("hintBtn").textContent = "Show hint";
-    $("revealBtn").hidden = !isClosedBook();
+    $("revealBtn").hidden = !closed;
     renderChecklist();
   }
 
@@ -254,8 +293,11 @@ const EmergencyDrill = (() => {
       });
       box.appendChild(b);
     });
+    renderChecklist();
   }
 
+  // A pointer to another checklist. Where the card continues into one we
+  // actually have (forced landing), offer to fly it rather than dead-end.
   function runHandoff() {
     $("prompt").textContent = "";
     hideActionButtons();
@@ -270,12 +312,44 @@ const EmergencyDrill = (() => {
     p.className = "handoff-text";
     p.textContent = node.text;
     box.appendChild(p);
-    const b = document.createElement("button");
-    b.className = "btn primary";
-    b.textContent = "Continue";
-    b.addEventListener("click", () => { markDone(node.line, "handoff"); advance(); });
-    box.appendChild(b);
+
+    // Offer to fly the checklist the card points at — unless this session has
+    // already flown it, in which case repeating eleven identical items is just
+    // busywork and the pointer alone is the lesson.
+    const nextScen = node.continues && !sessionFlown.includes(node.continues) &&
+      EMERGENCIES.find((s) => s.id === node.continues);
+    if (nextScen) {
+      const go = document.createElement("button");
+      go.className = "btn primary";
+      go.textContent = "Run that checklist";
+      go.addEventListener("click", () => { markDone(node.line, "handoff"); chainInto(nextScen); });
+      box.appendChild(go);
+      const stop = document.createElement("button");
+      stop.className = "btn ghost";
+      stop.textContent = "Stop here";
+      stop.addEventListener("click", () => { markDone(node.line, "handoff"); endScenario(); });
+      box.appendChild(stop);
+    } else {
+      const b = document.createElement("button");
+      b.className = "btn primary";
+      b.textContent = "Continue";
+      b.addEventListener("click", () => { markDone(node.line, "handoff"); advance(); });
+      box.appendChild(b);
+    }
     renderChecklist();
+  }
+
+  // Roll on into the checklist the card pointed at, keeping the same run: the
+  // airplane state carries over untouched, and that scenario drops out of the
+  // rest of the deck so the session does not fly it twice.
+  function chainInto(next) {
+    deck = deck.filter((id) => id !== next.id);
+    scen = next; ptr = 0; revealed = false; awaitingValue = false;
+    runIds.push(next.id); runTitles.push(next.title);
+    stats.memory += next.nodes.filter((n) => n.t === "item" && n.memory).length;
+    $("conditions").textContent = next.situation;
+    syncProgress();
+    runNode();
   }
 
   /* --------------------------- cockpit clicks --------------------------- */
@@ -309,7 +383,7 @@ const EmergencyDrill = (() => {
     UI.feedback("✓ " + opt, true);
     stats.items++;
     markDone(node.line, node.memory ? "memory" : "reference");
-    if (node.note) showNote(node.note);
+    showNote(node.note);
     advance();
   }
 
@@ -333,9 +407,11 @@ const EmergencyDrill = (() => {
 
   function endScenario() {
     node = null;
+    awaitingNext = true;
     sessionDone++;
+    sessionFlown.push(...runIds);
     results.push({
-      title: scen.title, card: scen.card,
+      title: runTitles.join(" → "),
       items: stats.items, misses: stats.misses,
       memory: stats.memory, revealedAt: stats.revealedAt,
     });
@@ -353,25 +429,28 @@ const EmergencyDrill = (() => {
     $("nextBtn").textContent = more ? "Next emergency" : "Finish session";
     $("nextBtn").onclick = () => {
       $("nextBtn").hidden = true;
-      if (loopOne) { deck = [loopOne]; sessionTotal++; }
+      if (loopOne && !deck.length) deck = [loopOne];
       nextScenario();
     };
   }
 
   /* ------------------------------ debrief ------------------------------- */
   function renderScenarioDebrief() {
+    const r = results[results.length - 1];
     const box = $("debriefBox");
     box.hidden = false;
-    const flown = stats.memory === 0
+    const grp = EMERGENCY_GROUPS[scen.group];
+    UI.setBanner("CHECKLIST COMPLETE", grp.color);
+    const flown = r.memory === 0
       ? "reference checklist"
-      : stats.revealedAt
-        ? `checklist opened at “${stats.revealedAt}”`
-        : `${stats.memory} memory item${stats.memory === 1 ? "" : "s"} flown from memory`;
+      : r.revealedAt
+        ? `checklist opened at “${r.revealedAt}”`
+        : `${r.memory} memory item${r.memory === 1 ? "" : "s"} flown from memory`;
     box.innerHTML =
-      `<p class="debrief-title">${scen.title}</p>` +
-      `<p class="debrief-line">${stats.items} item${stats.items === 1 ? "" : "s"} · ` +
-      `${stats.misses} wrong click${stats.misses === 1 ? "" : "s"}</p>` +
-      `<p class="debrief-line ${stats.revealedAt ? "warn" : "good"}">${flown}</p>`;
+      `<p class="debrief-title">${r.title}</p>` +
+      `<p class="debrief-line">${r.items} item${r.items === 1 ? "" : "s"} · ` +
+      `${r.misses} wrong click${r.misses === 1 ? "" : "s"}</p>` +
+      `<p class="debrief-line ${r.revealedAt ? "warn" : "good"}">${flown}</p>`;
   }
 
   function renderSessionDebrief() {
@@ -390,25 +469,23 @@ const EmergencyDrill = (() => {
 
   /* --------------------------- checklist card --------------------------- */
   function markDone(line, kind) {
-    if (!scen._done) scen._done = [];
-    scen._done.push({ line, kind });
+    doneList.push({ line, kind });
     renderChecklist();
   }
 
-  function isClosedBook() { return node && node.t === "item" && node.memory && !revealed; }
+  function isClosedBook() { return !!node && node.t === "item" && node.memory && !revealed; }
 
   function renderChecklist(complete = false) {
     const list = $("checklist");
     list.innerHTML = "";
-    const done = scen._done || [];
-    done.forEach((d) => {
+    doneList.forEach((d) => {
       const li = document.createElement("li");
       li.className = "done " + d.kind;
       li.textContent = d.line;
       list.appendChild(li);
     });
 
-    if (complete) { $("checklistNote").hidden = true; return; }
+    if (complete) return;
 
     // Ahead of the cursor: hidden while the current item is closed-book,
     // otherwise shown greyed so reference items read like the card.
@@ -428,10 +505,11 @@ const EmergencyDrill = (() => {
     });
   }
 
+  // Notes belong to the item just completed; clear when the next item has none.
   function showNote(text) {
     const n = $("checklistNote");
-    n.hidden = false;
-    n.textContent = text;
+    n.hidden = !text;
+    n.textContent = text || "";
   }
 
   /* -------------------------------- hint -------------------------------- */
@@ -472,10 +550,13 @@ const EmergencyDrill = (() => {
     });
   }
 
+  // The deck can grow (a chain removes one) or shrink (the picker), so the
+  // total is recomputed rather than remembered.
   function syncProgress() {
-    $("progressText").textContent = running
-      ? `Emergency ${Math.min(sessionDone + 1, sessionTotal)} of ${sessionTotal}`
-      : "";
+    if (!running) { $("progressText").textContent = ""; return; }
+    const pending = awaitingNext ? 0 : 1;
+    const total = sessionDone + deck.length + pending;
+    $("progressText").textContent = `Emergency ${sessionDone + pending} of ${total}`;
   }
 
   function renderIdle() {
@@ -484,18 +565,23 @@ const EmergencyDrill = (() => {
     $("conditions").textContent =
       "Random emergencies, one at a time. You get the situation and nothing else — " +
       "work the checklist in order. Memory items are closed-book.";
+    $("stateLine").hidden = true;
     $("prompt").textContent = "";
     $("prompt").className = "prompt";
     hideActionButtons();
     UI.hideFeedback();
     UI.closePopover();
+    Cockpit.setValues(IDLE_VALUES, false);
+    resetTileLabels();
     $("decisionBox").hidden = true;
     $("handoffBox").hidden = true;
     $("debriefBox").hidden = true;
     $("nextBtn").hidden = true;
+    $("beginBtn").hidden = true;
     $("emergencyBox").hidden = true;
+    $("checklistNote").hidden = true;
     $("progressText").textContent = "";
-    EMERGENCIES.forEach((s) => { s._done = []; });
+    doneList = [];
   }
 
   /* ---------------------------- activation ------------------------------ */
@@ -509,15 +595,14 @@ const EmergencyDrill = (() => {
     $("goaroundHint").hidden = true;
     $("scenarioBtn").hidden = false;
     $("startBtn").hidden = false;
-    $("startBtn").disabled = !selected.size;
     $("restartBtn").hidden = true;
-    running = false; scen = null; node = null;
+    running = false; scen = null; node = null; awaitingNext = false;
     syncPickerCount();
     renderIdle();
   }
 
   function deactivate() {
-    active = false; running = false; scen = null; node = null;
+    active = false; running = false; scen = null; node = null; awaitingNext = false;
     UI.closePopover();
     $("scenarioBtn").hidden = true;
     $("pickerOverlay").hidden = true;
@@ -526,6 +611,8 @@ const EmergencyDrill = (() => {
     $("handoffBox").hidden = true;
     $("debriefBox").hidden = true;
     $("nextBtn").hidden = true;
+    $("beginBtn").hidden = true;
+    $("stateLine").hidden = true;
     $("startBtn").disabled = false;
     $("conditionsLabel").textContent = "CONDITIONS";
   }
@@ -538,12 +625,12 @@ const EmergencyDrill = (() => {
     });
     $("pickAll").addEventListener("click", () => {
       selected = new Set(allIds()); saveSelection(); buildPicker();
-      $("startBtn").disabled = false;
     });
     $("pickNone").addEventListener("click", () => {
       selected = new Set(); saveSelection(); buildPicker();
     });
     $("revealBtn").addEventListener("click", revealChecklist);
+    $("beginBtn").addEventListener("click", beginScenario);
   }
 
   return { activate, deactivate, start, restart, init, showHint,

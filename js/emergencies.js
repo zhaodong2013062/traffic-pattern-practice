@@ -13,10 +13,17 @@
      - `decision` nodes carry the card's real branches ("If Risk of Fire",
        "If Engine Starts"), and pick the correct branch from the situation.
 
+   Every scenario stands on its own: `situation` says what is happening now
+   without assuming the pilot just flew some other scenario, and `state` is the
+   one-line aircraft state shown on the setup card before the drill arms.
+   A `handoff` node whose `continues` names another scenario rolls straight on
+   into that checklist, which is how the card's "Forced Landing Checklist"
+   pointer actually gets flown.
+
    Node shapes (executed in order; `label`/`goto` handle the branches):
      { t:"item",  line, control, correct, memory, options?, values?, note? }
      { t:"decision", prompt, options:[{ label, goto, correct? }] }
-     { t:"handoff", line, text }          a pointer to another checklist
+     { t:"handoff", line, text, continues? } a pointer to another checklist
    `goto:"end"` finishes the scenario.
 
    SOURCE: the school's C172S (G1000) emergency placard, corroborated against
@@ -79,8 +86,10 @@ const EMERGENCIES = [
     id: "ef-takeoff-roll", group: "ENGINE",
     title: "Engine Failure During Takeoff",
     card: "ENGINE FAILURE · DURING TAKEOFF",
-    situation: "Takeoff roll, accelerating through 40 KIAS. The engine coughs, " +
-      "loses power and you smell raw fuel — there is still runway ahead of you.",
+    situation: "Takeoff roll on runway 14, accelerating through 40 KIAS. The " +
+      "engine coughs, loses power, and you smell raw fuel. There is still " +
+      "runway ahead of you.",
+    state: "On the runway · 40 KIAS · power failing · raw fuel smell",
     values: { rpm: 700, ias: 40, alt: 0, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 },
     nodes: [
       it("THROTTLE — IDLE", "throttle", "IDLE", { values: { rpm: 500, ias: 30 } }),
@@ -106,8 +115,10 @@ const EMERGENCIES = [
     id: "ef-after-takeoff", group: "ENGINE",
     title: "Engine Failure After Takeoff",
     card: "ENGINE FAILURE · AFTER TAKEOFF",
-    situation: "Climbing through 400 ft AGL off the departure end, flaps up. " +
-      "The engine goes quiet. There is open field ahead, no runway left behind you.",
+    situation: "Just airborne off runway 14, climbing through 400 ft AGL with " +
+      "the flaps up. The engine goes quiet. There is open field ahead and no " +
+      "runway left behind you.",
+    state: "400 ft AGL · 70 KIAS · flaps up · engine out",
     values: { rpm: 600, ias: 70, alt: 400, flaps: 0, vsi: -600, pitch: -3, bank: 0, hdg: 140 },
     nodes: [
       /* POH prints 70 KIAS flaps-up here; the placard teaches best glide. */
@@ -128,8 +139,9 @@ const EMERGENCIES = [
     id: "ef-in-flight", group: "ENGINE",
     title: "Engine Failure In Flight",
     card: "ENGINE FAILURE · IN FLIGHT",
-    situation: "Cruise, 3,500 ft, well clear of the airport. The engine stops " +
-      "making power and the propeller is windmilling.",
+    situation: "Cruise at 3,500 ft, ten miles out from the field. The engine " +
+      "stops making power and the propeller is windmilling.",
+    state: "3,500 ft · 100 KIAS · engine out, prop windmilling",
     values: { rpm: 800, ias: 100, alt: 3500, flaps: 0, vsi: -400, pitch: -2, bank: 0, hdg: 140 },
     nodes: [
       it("AIRSPEED — 68 KIAS", "asi", "68 KIAS", { values: { ias: 68, vsi: -700 } }),
@@ -140,9 +152,9 @@ const EMERGENCIES = [
       it("FUEL PUMP — ON", "fuelpump", "ON"),
       it("MAGNETOS — CHECK", "magnetos", "CHECK (L / R / BOTH)",
          { note: "Start position if the propeller has stopped windmilling." }),
-      { t: "handoff", line: "FORCED LANDING CHECKLIST",
-        text: "No restart. Fly the airplane to the field you picked and run the " +
-              "Emergency Landing Without Engine Power checklist." },
+      { t: "handoff", line: "FORCED LANDING CHECKLIST", continues: "forced-no-power",
+        text: "The engine will not restart. Fly the airplane to the field you " +
+              "picked and run the Emergency Landing Without Engine Power checklist." },
     ],
   },
 
@@ -151,18 +163,21 @@ const EMERGENCIES = [
     id: "fire-start-ground", group: "FIRE",
     title: "Engine Fire During Start",
     card: "FIRE · DURING START ON GROUND",
-    situation: "On the ramp, cranking. The engine is over-primed and flames are " +
-      "visible in the cowling air intake. It has not started.",
+    situation: "On the ramp at engine start. The engine is over-primed and " +
+      "flames are visible in the induction air intake. It has not caught.",
+    state: "Parked · engine not running · fire in the intake",
     values: { rpm: 0, ias: 0, alt: 0, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 },
     nodes: [
       it("MAGNETOS — START (keep cranking)", "magnetos", "START",
          { note: "Cranking draws the fire back into the engine." }),
       {
         t: "decision",
-        prompt: "Does the engine start?",
+        prompt: "You keep cranking. The engine does not catch. " +
+                "Which branch of the card are you on?",
         options: [
-          { label: "It starts and runs", goto: "started" },
-          { label: "It will not start", goto: "nostart", correct: true },
+          { label: "It started — run it at 1800 RPM, then shut down", goto: "started" },
+          { label: "It will not start — keep cranking and secure the airplane",
+            goto: "nostart", correct: true },
         ],
       },
       it("THROTTLE — 1800 RPM FOR 2 MIN", "throttle", "1800 RPM for 2 min",
@@ -187,8 +202,9 @@ const EMERGENCIES = [
     id: "fire-engine-flight", group: "FIRE",
     title: "Engine Fire In Flight",
     card: "FIRE · ENGINE FIRE IN FLIGHT",
-    situation: "Cruise at 2,500 ft. Flame and heavy smoke are streaming back from " +
-      "the engine cowling.",
+    situation: "Cruise at 2,500 ft. Flame and heavy smoke stream back from the " +
+      "engine cowling.",
+    state: "2,500 ft · 110 KIAS · engine fire",
     values: { rpm: 2300, ias: 110, alt: 2500, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 },
     nodes: [
       it("MIXTURE — IDLE CUTOFF", "mixture", "IDLE CUTOFF", { values: { rpm: 0 } }),
@@ -200,7 +216,7 @@ const EMERGENCIES = [
       it("AIRSPEED — 100+ KIAS", "asi", "100+ KIAS",
          { memory: false, values: { ias: 105, vsi: -900, pitch: -6, alt: 2100 },
            note: "A higher speed helps blow the fire out." }),
-      { t: "handoff", line: "FORCED LANDING CHECKLIST",
+      { t: "handoff", line: "FORCED LANDING CHECKLIST", continues: "forced-no-power",
         text: "The engine is secured and the fire is starved of fuel. Run the " +
               "Emergency Landing Without Engine Power checklist." },
     ],
@@ -209,8 +225,9 @@ const EMERGENCIES = [
     id: "fire-electrical", group: "FIRE",
     title: "Electrical Fire In Flight",
     card: "FIRE · ELECTRICAL FIRE IN FLIGHT",
-    situation: "Cruise. Acrid smoke and the smell of burning insulation fill the " +
-      "cabin; the ammeter is showing a heavy discharge.",
+    situation: "Night cross-country at 3,000 ft. Acrid smoke and the smell of " +
+      "burning insulation fill the cabin, and the ammeter shows a heavy discharge.",
+    state: "Night · 3,000 ft · 110 KIAS · electrical smoke",
     values: { rpm: 2300, ias: 110, alt: 3000, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 },
     nodes: [
       it("STBY BATT — OFF", "stbybatt", "OFF"),
@@ -226,9 +243,10 @@ const EMERGENCIES = [
       it("CIRCUIT BREAKERS — CHECK", "breakers", "CHECK", { memory: false }),
       {
         t: "decision",
-        prompt: "The fire is out. Do you need electrical power to get down safely?",
+        prompt: "The fire is out and the airplane is cold and dark. It is night. " +
+                "Do you need electrical power to get down safely?",
         options: [
-          { label: "Yes — night, and you need lights and radios", goto: "power", correct: true },
+          { label: "Yes — you need lights and radios to land", goto: "power", correct: true },
           { label: "No — stay cold and dark", goto: "end" },
         ],
       },
@@ -242,7 +260,9 @@ const EMERGENCIES = [
     id: "fire-cabin", group: "FIRE",
     title: "Cabin Fire",
     card: "FIRE · CABIN FIRE",
-    situation: "Smoke is coming from behind the panel in the cabin itself.",
+    situation: "Cruise at 2,500 ft. Smoke is pouring from behind the instrument " +
+      "panel — the fire is in the cabin itself.",
+    state: "2,500 ft · 105 KIAS · smoke in the cabin",
     values: { rpm: 2300, ias: 105, alt: 2500, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 },
     nodes: [
       it("STBY BATT — OFF", "stbybatt", "OFF"),
@@ -258,7 +278,9 @@ const EMERGENCIES = [
     id: "fire-wing", group: "FIRE",
     title: "Wing Fire",
     card: "FIRE · WING FIRE",
-    situation: "Fire on the left wing, at the strobe/nav light position.",
+    situation: "Cruise at 2,500 ft. There is fire on the left wing, out at the " +
+      "nav/strobe light.",
+    state: "2,500 ft · 105 KIAS · fire on the left wing",
     values: { rpm: 2300, ias: 105, alt: 2500, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 140 },
     nodes: [
       it("LIGHTS — OFF", "lights", "OFF"),
@@ -275,8 +297,10 @@ const EMERGENCIES = [
     id: "forced-no-power", group: "FORCED",
     title: "Forced Landing — No Engine Power",
     card: "FORCED LANDING · NO ENGINE POWER",
-    situation: "The restart attempt failed. You are gliding at 1,800 ft with a " +
-      "field picked and made.",
+    situation: "The engine has failed and will not restart — the restart flow " +
+      "is done and the propeller has stopped. You are gliding through 1,800 ft " +
+      "with a field picked and made.",
+    state: "1,800 ft · gliding 68 KIAS · engine out, will not restart",
     values: { rpm: 400, ias: 68, alt: 1800, flaps: 0, vsi: -700, pitch: -4, bank: 0, hdg: 140 },
     nodes: [
       it("AIRSPEED — 68 KIAS FLAPS UP / 65 KIAS FLAPS DOWN", "asi",
@@ -298,8 +322,10 @@ const EMERGENCIES = [
     id: "forced-with-power", group: "FORCED",
     title: "Precautionary Landing — With Engine Power",
     card: "FORCED LANDING · WITH ENGINE POWER",
-    situation: "Weather has closed in below you and fuel is low. The engine is " +
-      "still running and you have picked a field.",
+    situation: "Weather has closed in below you and you are low on fuel. The " +
+      "engine is still running, and you have decided to put it down in a field " +
+      "rather than press on.",
+    state: "1,200 ft · 90 KIAS · engine running · field selected",
     values: { rpm: 2000, ias: 90, alt: 1200, flaps: 0, vsi: -300, pitch: -2, bank: 0, hdg: 140 },
     nodes: [
       it("LANDING AREA — SELECT", "outside", "Select a landing area", { memory: false }),
@@ -320,8 +346,9 @@ const EMERGENCIES = [
     id: "forced-ditching", group: "FORCED",
     title: "Water Ditching",
     card: "FORCED LANDING · WATER DITCHING",
-    situation: "Engine out over open water, 1,500 ft, high wind and heavy seas. " +
-      "There is no shoreline within gliding distance.",
+    situation: "Engine out over open water at 1,500 ft, high wind and heavy " +
+      "seas. There is no shoreline within gliding distance.",
+    state: "1,500 ft · gliding 68 KIAS · open water · high wind, heavy seas",
     values: { rpm: 500, ias: 68, alt: 1500, flaps: 0, vsi: -600, pitch: -4, bank: 0, hdg: 140 },
     nodes: [
       it("LANDING AREA — SELECT", "outside", "Select a landing area", { memory: false }),
@@ -348,6 +375,7 @@ const EMERGENCIES = [
     card: "ICING · DURING FLIGHT",
     situation: "In cloud at 5,000 ft, +1°C. Clear ice is building on the wing " +
       "struts and the windshield is glazing over.",
+    state: "5,000 ft · 95 KIAS · in cloud, +1°C · ice building",
     values: { rpm: 2300, ias: 95, alt: 5000, flaps: 0, vsi: 0, pitch: 1, bank: 0, hdg: 140 },
     nodes: [
       it("PITOT HEAT — ON", "pitotheat", "ON"),
@@ -370,8 +398,10 @@ const EMERGENCIES = [
     id: "icing-static", group: "ICING",
     title: "Static Source Blockage",
     card: "ICING · STATIC SOURCE BLOCKAGE",
-    situation: "The altimeter has frozen, the VSI reads zero in a climb and the " +
-      "airspeed is reading low. The static port is blocked.",
+    situation: "Climbing through 3,000 ft in visible moisture. The altimeter " +
+      "has frozen, the VSI reads zero in the climb and the airspeed is reading " +
+      "low — the static port is blocked.",
+    state: "3,000 ft · climbing · altimeter frozen, VSI zero",
     values: { rpm: 2300, ias: 80, alt: 3000, flaps: 0, vsi: 0, pitch: 4, bank: 0, hdg: 140 },
     nodes: [
       it("ALTERNATE STATIC AIR — PULL ON", "altstatic", "PULL ON",

@@ -45,6 +45,18 @@ add it to `CONTROL_OPTIONS`. New clickable controls must be drawn in
 `cockpit.js` with a matching `data-id`.
 
 ## Emergencies mode (don't regress this either)
+- Every scenario opens on a **setup card**: the situation, the aircraft state
+  line, and a Begin button. Nothing is armed until Begin — the pilot is never
+  dropped into the middle of a checklist.
+- Each scenario's `situation` **stands on its own**. It never assumes the pilot
+  just flew some other scenario, even where the checklist really is a
+  continuation (forced landing).
+- The banner reads a generic **EMERGENCY** while you fly; naming the group
+  would answer the drill's first question. The checklist is named in the
+  debrief once it is done.
+- A `handoff` node with `continues` **rolls on into that checklist** in the same
+  run (engine failure → forced landing), and that scenario drops out of the
+  rest of the deck. The offer is withheld if the session already flew it.
 - A session is a **shuffled deck** of the scenarios selected in the picker —
   no scenario repeats until the deck is exhausted. The selection persists in
   `localStorage`; "Drill this one" loops a single scenario instead.
@@ -60,7 +72,11 @@ add it to `CONTROL_OPTIONS`. New clickable controls must be drawn in
   alt static …) and a windscreen strip carries the "look outside" items. The
   tach is not drawn in this mode — no checklist item targets it.
 
-To add/change a scenario, edit `EMERGENCIES` in `js/emergencies.js`. Nodes are
+Whatever a `decision` node asks must be answerable from the `situation` — if a
+branch turns on it being night, the situation says it is night.
+
+To add/change a scenario, edit `EMERGENCIES` in `js/emergencies.js`. Each needs
+a `situation`, a `state` line and its `nodes`, which are
 `{t:"item"|"decision"|"handoff"}`; `label`/`goto` wire the branches and
 `goto:"end"` finishes. Any new control needs a menu in `EMER_CONTROL_OPTIONS`,
 a tile in `cockpit.js` (`EMER_TILES`) and a display name in `CONTROL_NAMES`.
