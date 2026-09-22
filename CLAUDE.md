@@ -67,10 +67,23 @@ add it to `CONTROL_OPTIONS`. New clickable controls must be drawn in
   their lines as you work them.
 - `decision` nodes carry the card's real branches ("If Risk of Fire", "If
   Engine Starts"); the situation text determines which branch is correct.
-- The cockpit re-renders in emergency layout: the right half becomes a grid of
-  switch tiles (mags, master, stby batt, avionics, fuel shutoff, pitot heat,
-  alt static …) and a windscreen strip carries the "look outside" items. The
-  tach is not drawn in this mode — no checklist item targets it.
+- **Airspeed is flown, not selected.** Same rule as the pattern: pitch with the
+  YOKE, read the ASI. No emergency item targets an instrument — the six-pack is
+  reference only in this mode.
+- The cockpit re-renders in emergency layout, drawn as actual hardware rather
+  than a grid of identical buttons: a magneto key switch that rotates, a split
+  red MASTER rocker, push-pull knobs (fuel shutoff, alt static, cabin heat/air,
+  defrost), a fuel selector valve, a breaker panel, an extinguisher, the hand
+  mic, the door handle, the belt buckle — and **toe brakes on the rudder
+  pedals**, which is where the brakes are. Finding the control is part of the
+  drill, so don't flatten these back into tiles.
+- Each control's `setLabel` both prints the chosen value and *moves the thing*
+  (rockers flip, knobs pull out, the key rotates, the valve pointer swings).
+- The tach is not drawn in this mode — no checklist item targets it, and RPM
+  still reads through the throttle knob travel.
+- Only two ids are not hardware — `action` ("land as soon as practical") and
+  `allswitches` — and they are drawn as placards, on their own plate, to keep
+  that distinction visible.
 
 Whatever a `decision` node asks must be answerable from the `situation` — if a
 branch turns on it being night, the situation says it is night.

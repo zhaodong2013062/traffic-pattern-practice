@@ -63,10 +63,18 @@ the drill. It is named for you in the debrief, once you've flown it.
 - **Debrief** — per scenario and per session: items completed, wrong clicks, and
   whether the memory items were flown from memory or the checklist was opened.
 
-The cockpit re-renders for this mode: the right half becomes the emergency
-switch panel (magnetos, master, stby batt, avionics bus, fuel shutoff, fuel
-pump, pitot heat, alt static air, fire extinguisher, ELT, doors, breakers …)
-and a windscreen strip carries the "look outside" items.
+The cockpit re-renders for this mode as a working emergency panel, not a menu:
+a magneto key switch that turns to OFF · R · L · BOTH · START, the split red
+MASTER rocker, STBY BATT / avionics / fuel pump / pitot heat / lights rockers,
+red push-pull knobs for the fuel shutoff and cabin heat, the alternate static
+air knob, the fuel selector valve, a circuit breaker panel, the extinguisher in
+its bracket, the hand mic, the door handle, the belt buckle — and **toe brakes
+on the rudder pedals**. Switches flip, knobs pull out and the key rotates as you
+set them. A windscreen strip across the top carries the "look outside" items.
+
+As in the pattern, **airspeed is flown with the yoke** — best glide is a pitch
+attitude, not a number you dial in, so the ASI is a reference and never a
+target.
 
 ## How it works
 - **Cockpit panel** (`js/cockpit.js`) — an SVG C172 six-pack + tach, throttle,

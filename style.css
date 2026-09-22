@@ -260,6 +260,85 @@ body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95;
 .flash-ok .windscreen-box { stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important; }
 .flash-bad .windscreen-box { stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important; }
 
+/* ---------------------- emergency panel hardware ----------------------- */
+.ctl-caption { fill: #8b97a3; font-size: 8.5px; font-weight: 700; text-anchor: middle; letter-spacing: .4px; }
+.ctl-value { fill: #ffe66d; font-size: 10px; font-weight: 700; text-anchor: middle; }
+.micro-label { fill: #7c8894; font-size: 7px; font-weight: 700; text-anchor: middle; letter-spacing: .3px; }
+
+/* rockers */
+.rocker-body { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.rocker-body.master { fill: #2a1418; stroke: #8d4048; }
+.rocker-nub { fill: #39444f; transition: y .18s ease; }
+.rocker-nub.master { fill: #b2454f; }
+
+/* magneto key switch */
+.key-face { fill: #11161c; stroke: #4a5663; stroke-width: 2; }
+.key-pos { fill: #8b97a3; font-size: 7px; font-weight: 700; text-anchor: middle; }
+.key-barrel { transition: transform .25s ease; }
+.key-blade { fill: #c9d3dc; }
+.key-hub { fill: #2a333d; stroke: #6b7783; stroke-width: 1.5; }
+
+/* push-pull + vernier knobs */
+.knob-shaft { fill: #2a333d; }
+.knob-head { fill: #2a333d; stroke: #6b7783; stroke-width: 1.5; transition: transform .2s ease; }
+.knob-head.mixture { fill: #9e2b32; stroke: #d4616a; }
+.knob-head.throttle { fill: #16191d; stroke: #8b97a3; }
+.knob-dot { fill: #6b7783; }
+.knob-dot.mixture { fill: #f0a8ad; }
+.knob-centre { fill: #6b7783; }
+.knob-centre.mixture { fill: #f0a8ad; }
+.knob-centre.throttle { fill: #c9d3dc; }
+
+/* fuel selector valve */
+.valve-face { fill: #11161c; stroke: #4a5663; stroke-width: 2; }
+.valve-pos { fill: #8b97a3; font-size: 7.5px; font-weight: 700; text-anchor: middle; }
+.valve-ptr { fill: #ffe66d; transition: transform .25s ease; }
+
+/* circuit breakers */
+.breaker-box { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.breaker { fill: #2a333d; stroke: #55616e; stroke-width: 1; }
+
+/* cabin items */
+.ext-body { fill: #9e2b32; stroke: #d4616a; stroke-width: 1.5; }
+.ext-neck, .ext-lever { fill: #c9d3dc; stroke: #c9d3dc; stroke-width: 2; }
+.ext-strap { fill: #39444f; }
+.mic-body { fill: #1f2730; stroke: #6b7783; stroke-width: 1.5; }
+.mic-grille { fill: #39444f; }
+.mic-cord { fill: none; stroke: #6b7783; stroke-width: 2; }
+.belt-strap { fill: #3a3125; stroke: #6b5b41; stroke-width: 1.5; }
+.belt-buckle { fill: #c9d3dc; stroke: #8b97a3; stroke-width: 1.5; }
+.door-plate { fill: #1f2730; stroke: #4a5663; stroke-width: 1.5; }
+.door-lever { fill: #8b97a3; transition: transform .2s ease; }
+.elt-box { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.elt-lamp { fill: #9e2b32; stroke: #d4616a; stroke-width: 1; }
+.placard-box { fill: #171d24; stroke: #4a5663; stroke-width: 1.5; stroke-dasharray: 3 2; }
+.avionics-stack { fill: #11161c; stroke: #4a5663; stroke-width: 1.5; }
+.stack-readout { fill: #7ee3a0; font-size: 17px; font-weight: 700; text-anchor: middle;
+  font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+.stack-readout.dim { fill: #55616e; font-size: 13px; }
+
+/* toe brakes ride on top of the rudder pedals */
+.toe-brake { fill: #323c47; stroke: #55616e; stroke-width: 1.5; }
+.toe-brake-grip { stroke: #6b7783; stroke-width: 1.5; }
+
+/* highlight + flash have to reach the new shapes too */
+.control.target .rocker-body, .control.target .key-face, .control.target .knob-head,
+.control.target .valve-face, .control.target .breaker-box, .control.target .ext-body,
+.control.target .mic-body, .control.target .belt-buckle, .control.target .door-plate,
+.control.target .elt-box, .control.target .placard-box, .control.target .toe-brake {
+  stroke: var(--accent); stroke-width: 3; filter: drop-shadow(0 0 8px var(--accent));
+}
+.flash-ok .rocker-body, .flash-ok .key-face, .flash-ok .knob-head, .flash-ok .valve-face,
+.flash-ok .breaker-box, .flash-ok .ext-body, .flash-ok .mic-body, .flash-ok .belt-buckle,
+.flash-ok .door-plate, .flash-ok .elt-box, .flash-ok .placard-box, .flash-ok .toe-brake {
+  stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important;
+}
+.flash-bad .rocker-body, .flash-bad .key-face, .flash-bad .knob-head, .flash-bad .valve-face,
+.flash-bad .breaker-box, .flash-bad .ext-body, .flash-bad .mic-body, .flash-bad .belt-buckle,
+.flash-bad .door-plate, .flash-bad .elt-box, .flash-bad .placard-box, .flash-bad .toe-brake {
+  stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important;
+}
+
 /* the setup card's aircraft-state line */
 .state-line { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px;
   background: #232a34; border: 1px solid var(--line); color: var(--muted);

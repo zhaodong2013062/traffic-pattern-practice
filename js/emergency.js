@@ -377,7 +377,7 @@ const EmergencyDrill = (() => {
       return;
     }
     Cockpit.flash(node.control, true);
-    if (Cockpit.hasLabel(node.control)) Cockpit.setControlLabel(node.control, tileLabel(opt));
+    if (Cockpit.hasLabel(node.control)) Cockpit.setControlLabel(node.control, tileLabel(node.control, opt));
     if (node.values) Cockpit.setValues(node.values, true);
     UI.closePopover();
     UI.feedback("✓ " + opt, true);
@@ -387,9 +387,12 @@ const EmergencyDrill = (() => {
     advance();
   }
 
-  function tileLabel(opt) {
+  // Switch faces are small; the windscreen strip and the placards are not.
+  const WIDE_FACES = new Set(["outside", "action", "allswitches", "breakers"]);
+  function tileLabel(id, opt) {
     const t = opt.split(" (")[0].split(" — ")[0];
-    return t.length > 17 ? t.slice(0, 16) + "…" : t;
+    const max = WIDE_FACES.has(id) ? 30 : 17;
+    return t.length > max ? t.slice(0, max - 1) + "…" : t;
   }
 
   /* --------------------------- flow control ----------------------------- */
