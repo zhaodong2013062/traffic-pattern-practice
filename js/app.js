@@ -1,13 +1,15 @@
 /* ============================================================================
    app.js  —  Mode switch + the traffic-pattern drill.
 
-   Two drills share this screen:
+   Three drills share this screen:
      PATTERN      — fly takeoff to touchdown (SEQUENCE / GOAROUND in
                     sequence.js), driven from this file.
      EMERGENCIES  — random emergency checklists (emergencies.js), driven by
                     emergency.js.
+     MANEUVERS    — phase-check maneuvers (maneuvers.js), driven by
+                    maneuver.js.
 
-   Both ask the same question the same way: each step shows only the
+   All three ask the same question the same way: each step shows only the
    CONDITIONS, the pilot clicks a control/instrument, and a value menu pops up
    over that control to choose the setting. The popover, feedback line and
    banner are shared (ui.js).
@@ -243,27 +245,31 @@
   })();
 
   /* ============================ mode switch ============================= */
+  const DRILLS = { pattern: Pattern, emergency: EmergencyDrill, maneuver: ManeuverDrill };
+  const BUTTONS = { pattern: "modePattern", emergency: "modeEmergency", maneuver: "modeManeuver" };
   let current = "pattern";
 
   function setMode(next) {
     if (next === current) return;
-    (current === "pattern" ? Pattern : EmergencyDrill).deactivate();
+    DRILLS[current].deactivate();
     current = next;
-    $("modePattern").classList.toggle("active", next === "pattern");
-    $("modeEmergency").classList.toggle("active", next === "emergency");
+    Object.entries(BUTTONS).forEach(([m, id]) => $(id).classList.toggle("active", m === next));
     document.body.classList.toggle("emergency-mode", next === "emergency");
-    (next === "pattern" ? Pattern : EmergencyDrill).activate();
+    document.body.classList.toggle("maneuver-mode", next === "maneuver");
+    DRILLS[next].activate();
   }
 
-  const activeDrill = () => (current === "pattern" ? Pattern : EmergencyDrill);
+  const activeDrill = () => DRILLS[current];
 
   /* -------------------------------- setup ------------------------------- */
   function init() {
     Minimap.render($("minimap"));
     EmergencyDrill.init();
+    ManeuverDrill.init();
 
     $("modePattern").addEventListener("click", () => setMode("pattern"));
     $("modeEmergency").addEventListener("click", () => setMode("emergency"));
+    $("modeManeuver").addEventListener("click", () => setMode("maneuver"));
     $("startBtn").addEventListener("click", () => activeDrill().start());
     $("restartBtn").addEventListener("click", () => activeDrill().restart());
     $("hintBtn").addEventListener("click", () => activeDrill().showHint());

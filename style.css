@@ -248,6 +248,7 @@ body {
 .btn.mode { padding: 6px 14px; font-size: 13px; opacity: .7; }
 .btn.mode.active { opacity: 1; border-color: var(--accent); color: var(--accent); font-weight: 600; }
 body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95; }
+body.maneuver-mode .btn.mode.active { border-color: #9c9bf0; color: #c4c3ff; }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn.small { padding: 4px 10px; font-size: 12px; }
 .btn.ghost { background: transparent; color: var(--muted); }
@@ -412,3 +413,29 @@ body.emergency-mode .btn.mode.active { border-color: var(--bad); color: #ff8b95;
   .layout { grid-template-columns: 1fr; }
   .topbar h1 { font-size: 14px; }
 }
+
+/* ----------------------------- maneuvers ------------------------------- */
+.man-menu { margin-top: 12px; }
+.btn.man-opt { display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 6px; font-size: 14px; }
+.btn.man-opt em { margin-left: auto; font-style: normal; font-size: 11px; color: var(--muted); letter-spacing: .5px; }
+.man-swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.btn.man-random { width: 100%; margin-top: 4px; }
+.man-pre { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; font-size: 12px;
+  color: var(--muted); line-height: 1.4; cursor: pointer; }
+.man-pre input { accent-color: var(--accent); margin-top: 2px; }
+.man-note { margin: 8px 0 0; font-size: 12px; color: #6b7783; }
+.man-actions { display: flex; gap: 8px; margin-top: 12px; }
+.man-actions[hidden] { display: none; }
+.man-actions .btn { flex: 1; }
+.why-box { margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+  background: #2a1418; border: 1px solid #5c2a30; color: #ffb3bb; font-size: 13px; line-height: 1.45; }
+.man-standards { margin: 0 0 12px; padding-left: 18px; font-size: 13px; line-height: 1.5; color: var(--ink); }
+.man-log { max-height: 260px; overflow-y: auto; }
+
+/* elevator trim wheel */
+.trim-wheel { fill: #2a2f36; stroke: #4b5562; stroke-width: 2; }
+.trim-ridge { stroke: #11151a; stroke-width: 2; }
+.trim-ptr { fill: #ffe66d; transition: transform .6s ease; }
+.control.target .trim-wheel { stroke: var(--accent); stroke-width: 3; }
+.flash-ok .trim-wheel { stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important; }
+.flash-bad .trim-wheel { stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important; }

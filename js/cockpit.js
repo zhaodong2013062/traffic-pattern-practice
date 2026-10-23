@@ -4,7 +4,7 @@
    Every interactive element is a <g> with a data-id matching the `targets`
    used in sequence.js. The panel exposes a small API on window.Cockpit:
 
-     render(container, mode)        draw the panel ("pattern" | "emergency")
+     render(container, mode)        draw the panel ("pattern" | "emergency" | "maneuver")
      onClick(fn)                    fn(id) fired when a control is actuated
      setValues(values, animate)     drive needles / readouts to target values
      highlight(ids)                 glow the next-action element(s)
@@ -44,6 +44,8 @@ const CONTROL_NAMES = {
   altstatic: "ALTERNATE STATIC AIR", lights: "LIGHTS", vents: "CABIN VENTS / AIR",
   cabinheat: "CABIN HEAT / AIR", defroster: "DEFROSTER OUTLETS", doors: "CABIN DOORS",
   brakes: "TOE BRAKES", action: "PILOT ACTION", outside: "OUTSIDE / WINDSCREEN",
+  // maneuvers panel
+  trim: "ELEVATOR TRIM",
 };
 
 const Cockpit = (() => {
@@ -332,10 +334,13 @@ const Cockpit = (() => {
   }
 
   /* ------------------------ pattern-mode panel -------------------------- */
-  function renderPattern(svg) {
+  // The maneuvers drill flies the same panel; it swaps the title for the
+  // windscreen (area checks are a look outside) and adds the trim wheel.
+  function renderPattern(svg, maneuver = false) {
     el("rect", { x: 30, y: 70, width: 600, height: 360, rx: 18, class: "panel-metal" }, svg);
     el("rect", { x: 660, y: 70, width: 310, height: 360, rx: 18, class: "panel-metal" }, svg);
-    el("text", { x: 500, y: 40, class: "panel-title" }, svg).textContent =
+    if (maneuver) windscreen(svg);
+    else el("text", { x: 500, y: 40, class: "panel-title" }, svg).textContent =
       "CESSNA 172 — TRAFFIC PATTERN TRAINER";
 
     sixPack(svg);
@@ -350,6 +355,36 @@ const Cockpit = (() => {
     switchCtl(svg, { id: "call",      x: 863, y: 392, label: "RADIO / CALL" });
 
     lowerControls(svg);
+    if (maneuver) trimWheel(svg, { id: "trim", x: 760, y: 510 });
+  }
+
+  /* windscreen strip — the "look outside" items (area checks, the field) */
+  function windscreen(svg) {
+    const w = el("g", { class: "control windscreen", "data-id": "outside" }, svg);
+    el("rect", { x: 30, y: 4, width: 940, height: 42, rx: 10, class: "windscreen-box" }, w);
+    el("text", { x: 500, y: 21, class: "switch-label" }, w).textContent = "WINDSCREEN — LOOK OUTSIDE";
+    const wv = el("text", { x: 500, y: 38, class: "switch-val" }, w);
+    wv.textContent = "—";
+    w.addEventListener("click", () => clickCb("outside"));
+    groups.outside = { g: w, setLabel: (t) => { wv.textContent = t; } };
+  }
+
+  /* elevator trim wheel, edge-on, with its position indicator */
+  function trimWheel(parent, { id, x, y }) {
+    const g = el("g", { class: "control", "data-id": id, transform: `translate(${x} ${y})` }, parent);
+    el("rect", { x: -14, y: -44, width: 28, height: 88, rx: 12, class: "trim-wheel" }, g);
+    for (let i = -36; i <= 36; i += 8) el("line", { x1: -12, y1: i, x2: 12, y2: i, class: "trim-ridge" }, g);
+    el("text", { x: 30, y: -34, class: "detent-label" }, g).textContent = "NOSE DN";
+    el("text", { x: 30, y: 42, class: "detent-label" }, g).textContent = "NOSE UP";
+    const ptr = el("polygon", { points: "20,0 28,-5 28,5", class: "trim-ptr" }, g);
+    el("text", { y: 64, class: "control-caption" }, g).textContent = "TRIM";
+    const v = el("text", { y: 80, class: "ctl-value" }, g);
+    v.textContent = "";
+    g.addEventListener("click", () => clickCb(id));
+    groups[id] = { g, setLabel: (t) => {
+      v.textContent = t === "—" ? "" : t;
+      ptr.setAttribute("transform", `translate(0 ${/UP/i.test(t) ? 22 : /DOWN/i.test(t) ? -22 : 0})`);
+    } };
   }
 
   /* ======================= emergency-panel hardware ======================
@@ -558,14 +593,7 @@ const Cockpit = (() => {
 
   /* ----------------------- emergency-mode panel ------------------------- */
   function renderEmergency(svg) {
-    // windscreen strip — the "look outside" items
-    const w = el("g", { class: "control windscreen", "data-id": "outside" }, svg);
-    el("rect", { x: 30, y: 4, width: 940, height: 42, rx: 10, class: "windscreen-box" }, w);
-    el("text", { x: 500, y: 21, class: "switch-label" }, w).textContent = "WINDSCREEN — LOOK OUTSIDE";
-    const wv = el("text", { x: 500, y: 38, class: "switch-val" }, w);
-    wv.textContent = "—";
-    w.addEventListener("click", () => clickCb("outside"));
-    groups.outside = { g: w, setLabel: (t) => { wv.textContent = t; } };
+    windscreen(svg);
 
     // instrument panel + avionics stack
     el("rect", { x: 30, y: 56, width: 670, height: 244, rx: 14, class: "panel-metal" }, svg);
@@ -625,7 +653,8 @@ const Cockpit = (() => {
     svg = el("svg", { viewBox: "0 0 1000 600", class: "panel", preserveAspectRatio: "xMidYMid meet" });
     el("rect", { x: 0, y: 0, width: 1000, height: 600, class: "panel-bg" }, svg);
 
-    if (mode === "emergency") renderEmergency(svg); else renderPattern(svg);
+    if (mode === "emergency") renderEmergency(svg);
+    else renderPattern(svg, mode === "maneuver");
 
     container.appendChild(svg);
     applyValues(false);
