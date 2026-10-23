@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>C172 Traffic Pattern Trainer</title>
+  <title>C172 Trainer — Pattern · Emergencies · Maneuvers</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,6 +12,7 @@
     <div class="modes">
       <button id="modePattern" class="btn mode active">Pattern</button>
       <button id="modeEmergency" class="btn mode">Emergencies</button>
+      <button id="modeManeuver" class="btn mode">Maneuvers</button>
     </div>
     <div class="controls">
       <span id="progressText" class="progress"></span>
@@ -57,9 +58,18 @@
           runway not clear · too high or too fast · balloon or bounce in the flare.
         </div>
         <div id="hintBox" class="hint-box" hidden></div>
+        <!-- maneuvers: why a wrong click is an evaluator deduction -->
+        <div id="whyBox" class="why-box" hidden></div>
+        <!-- maneuvers: pick what the evaluator asked for -->
+        <div id="manMenu" class="man-menu" hidden></div>
         <div id="debriefBox" class="debrief-box" hidden></div>
         <button id="beginBtn" class="btn primary wide" hidden>Begin</button>
         <button id="nextBtn" class="btn primary wide" hidden>Next emergency</button>
+        <button id="beginManBtn" class="btn primary wide" hidden>Begin</button>
+        <div id="manActions" class="man-actions" hidden>
+          <button id="manAgainBtn" class="btn primary">Fly it again</button>
+          <button id="manMenuBtn" class="btn">Other maneuvers</button>
+        </div>
       </div>
 
       <div id="minimapBox" class="minimap-box">
@@ -70,6 +80,13 @@
         <p class="conditions-label">CHECKLIST</p>
         <ol id="checklist" class="checklist"></ol>
         <p id="checklistNote" class="checklist-note" hidden></p>
+      </div>
+
+      <div id="manBox" class="emergency-box" hidden>
+        <p id="manStdTitle" class="conditions-label">STANDARDS</p>
+        <ul id="manStandards" class="man-standards"></ul>
+        <p class="conditions-label">FLOWN</p>
+        <ol id="manLog" class="checklist man-log"></ol>
       </div>
     </aside>
   </main>
@@ -92,10 +109,12 @@
 
   <script src="js/sequence.js"></script>
   <script src="js/emergencies.js"></script>
+  <script src="js/maneuvers.js"></script>
   <script src="js/cockpit.js"></script>
   <script src="js/minimap.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/emergency.js"></script>
+  <script src="js/maneuver.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
