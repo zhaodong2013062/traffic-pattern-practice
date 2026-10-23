@@ -8,8 +8,8 @@
    a control, pick its setting, nothing shown until "Show hint".
 
    Two things the pattern doesn't have:
-     - The PRE-MANEUVER FLOW (height · area · engine check · radio · clearing
-       turns · references) runs ahead of every maneuver unless it is switched
+     - The PRE-MANEUVER FLOW (the call, then CAPPE: clearing turns ·
+       altitude · pick a heading · pick a landmark · emergency field) runs ahead of every maneuver unless it is switched
        off in the menu; it is the same every time, and skipping it is the most
        common phase-check deduction.
      - DEDUCTIONS. Where a wrong click is a classic evaluator write-up (power
@@ -90,7 +90,7 @@ const ManeuverDrill = (() => {
     cb.checked = withPre;
     cb.addEventListener("change", () => { withPre = cb.checked; savePre(); });
     lab.appendChild(cb);
-    lab.appendChild(document.createTextNode(" Include the pre-maneuver flow (height · area · checks · radio · clearing turns)"));
+    lab.appendChild(document.createTextNode(" Include the pre-maneuver flow (call · clearing turns · altitude · heading · landmark · emergency field)"));
     box.appendChild(lab);
 
     const note = document.createElement("p");

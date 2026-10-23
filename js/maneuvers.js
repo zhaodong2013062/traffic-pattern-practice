@@ -24,7 +24,7 @@
 
    Step shape is the pattern's (sequence.js) plus:
      phase        SETUP | ENTRY | MANEUVER | RECOVERY (the card label)
-     anyOrder     the acts may be done in any order (the pre-maneuver check)
+     anyOrder     the acts may be done in any order
    Act shape is the pattern's plus:
      why          { controlId | menu choice : text } — a wrong click that is a
                   classic evaluator deduction gets the reason, not just a ✗,
@@ -42,8 +42,6 @@ const MANEUVER_PHASES = {
    back to CONTROL_OPTIONS from sequence.js. */
 const MAN_CONTROL_OPTIONS = {
   trim:    ["Trim nose-up", "Trim nose-down", "Leave it"],
-  outside: ["Clear of airspace & towns · field picked", "Over the town — fine", "Pick a field if I need one"],
-  mixture: ["Set for altitude", "Full LEAN", "CUTOFF"],
 };
 
 // recurring deductions, worded once
@@ -61,35 +59,19 @@ const CLIMB_OPTIONS = ["Pitch for Vy (74) — positive rate", "Pull up hard", "H
 const CLIMB_WHY = { "Pull up hard": WHY.secondary };
 
 /* ----------------------- the pre-maneuver flow --------------------------
-   Height · area · engine check · radio · clearing turns · references. Shared
-   by every maneuver; `o` carries the parts that differ. Ground reference
-   maneuvers are flown LOW (600–1,000 AGL) and set their own references. */
+   One flow, the same every time: the CALL, then CAPPE —
+     Clearing turns · Altitude · Pick a heading · Pick a landmark ·
+     Emergency landing spot.
+   `o` carries only what differs: where you are, what was asked, the entry
+   heading, the landmark, and whether it is flown LOW (ground reference,
+   600–1,000 AGL) or high (recover above 1,500 AGL). */
 function preManeuver(o) {
-  const steps = [
+  const hdg = o.heading || "360", mark = o.landmark || "the lone peak on the nose";
+  const altOk = o.low ? "600–1,000 AGL — right for this" : "Recovery will be above 1,500 AGL";
+  return [
     {
-      id: "pre-height", phase: "SETUP",
-      condition: o.where + " Terrain here is about 1,000 MSL. " + o.ask,
-      acts: [{ target: "alt", correct: o.low ? "600–1,000 AGL — right for this" : "Recovery will be above 1,500 AGL",
-               options: ["Recovery will be above 1,500 AGL", "600–1,000 AGL — right for this", "Too low — climb first"] }],
-    },
-    {
-      id: "pre-area", phase: "SETUP",
-      condition: "Height is good. Below you: farmland, the reservoir off to the east, a long " +
-        "hayfield at your 10 o'clock, the town and the Class C shelf well behind you.",
-      acts: [{ target: "outside", correct: "Clear of airspace & towns · field picked" }],
-    },
-    {
-      id: "pre-check", phase: "SETUP", anyOrder: true,
-      condition: "Area is good. Now the pre-maneuver check (fuel-injected 172S — there is no carb heat).",
-      acts: [
-        { target: "fuel", correct: "BOTH" },
-        { target: "mixture", correct: "Set for altitude" },
-        { target: "seatbelt", correct: "Secure / fasten" },
-      ],
-    },
-    {
-      id: "pre-radio", phase: "SETUP",
-      condition: "Checks complete. Two other trainers are working this practice area.",
+      id: "pre-call", phase: "SETUP",
+      condition: o.where + " " + o.ask + " Two other trainers are working this area.",
       acts: [{ target: "call", correct: "Area call — position, altitude, maneuver",
                options: ["Area call — position, altitude, maneuver", "Mayday", "Going around", "No call needed"] }],
     },
@@ -100,14 +82,32 @@ function preManeuver(o) {
                options: ["Clearing turns — two 90° (or one 180°)", "Roll straight into it", "A quick wing-rock"],
                why: { "Roll straight into it": WHY.skipClear, "A quick wing-rock": WHY.skipClear } }],
     },
+    {
+      id: "pre-alt", phase: "SETUP",
+      condition: "Clear above, below and behind. Terrain here is about 1,000 MSL.",
+      acts: [{ target: "alt", correct: altOk,
+               options: ["Recovery will be above 1,500 AGL", "600–1,000 AGL — right for this", "Too low — climb first"] }],
+    },
+    {
+      id: "pre-heading", phase: "SETUP",
+      condition: `Rolled out of the clearing turns on ${hdg}°.`,
+      acts: [{ target: "hi", correct: `Entry heading ${hdg}°`,
+               options: [`Entry heading ${hdg}°`, "No heading needed", "Whatever it reads after"] }],
+    },
+    {
+      id: "pre-landmark", phase: "SETUP",
+      condition: `Heading set. Out front: ${mark}.`,
+      acts: [{ target: "outside", correct: "Landmark picked — " + mark,
+               options: ["Landmark picked — " + mark, "Fly the heading indicator only", "Pick one later"] }],
+    },
+    {
+      id: "pre-emergency", phase: "SETUP",
+      condition: "Below you: farmland, the town well behind, a long hayfield at your 10 o'clock.",
+      acts: [{ target: "outside", correct: "Emergency field — hayfield, 10 o'clock",
+               options: ["Emergency field — hayfield, 10 o'clock", "The town square", "Find one if I need it"],
+               why: { "Find one if I need it": "If the engine quits mid-maneuver there's no time to look — pick the field first." } }],
+    },
   ];
-  if (o.reference) steps.push({
-    id: "pre-ref", phase: "SETUP",
-    condition: "Clear above, below and behind. Rolled out heading north with a lone peak on the nose.",
-    acts: [{ target: "hi", correct: "Entry 360° on the peak · " + o.reference,
-             options: ["Entry 360° on the peak · " + o.reference, "No reference needed", "Entry 180° · 3,000"] }],
-  });
-  return steps;
 }
 
 const MANEUVERS = [
@@ -120,7 +120,7 @@ const MANEUVERS = [
     standards: ["Altitude ±100 ft", "Heading ±10°", "Airspeed +10 / −0 kt", "Bank ±10°",
       "No stall warning", "Completed no lower than 1,500 AGL"],
     values: { rpm: 2200, ias: 95, alt: 3500, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 360 },
-    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for slow flight.", reference: "3,500 ft" },
+    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for slow flight." },
     steps: [
       {
         id: "sf-power", phase: "ENTRY",
@@ -228,7 +228,7 @@ const MANEUVERS = [
     standards: ["Heading ±10° (straight)", "Or bank ≤20° ±10° (turning)", "Recover after the full stall",
       "Coordinated throughout", "Completed no lower than 1,500 AGL"],
     values: { rpm: 2200, ias: 95, alt: 3500, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 360 },
-    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for a power-off stall.", reference: "3,500 ft" },
+    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for a power-off stall." },
     steps: [
       {
         id: "pof-power", phase: "ENTRY",
@@ -341,7 +341,7 @@ const MANEUVERS = [
     standards: ["Power ≥65% (as assigned)", "Heading ±10° (straight)", "Or bank ≤20° ±10° (turning)",
       "Recover after the full stall", "Completed no lower than 1,500 AGL"],
     values: { rpm: 2200, ias: 95, alt: 3500, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 360 },
-    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for a power-on stall.", reference: "3,500 ft" },
+    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for a power-on stall." },
     steps: [
       {
         id: "pon-power", phase: "ENTRY",
@@ -424,7 +424,7 @@ const MANEUVERS = [
     standards: ["Altitude ±100 ft", "Airspeed ±10 kt", "Bank 45° ±5°", "Roll out on entry heading ±10°",
       "At or below Va"],
     values: { rpm: 2200, ias: 95, alt: 3500, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 360 },
-    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for steep turns.", reference: "3,500 ft" },
+    pre: { where: "Level at 3,500 MSL over the practice area.", ask: "The evaluator asks for steep turns." },
     steps: [
       {
         id: "st-speed", phase: "ENTRY",
@@ -519,7 +519,7 @@ const MANEUVERS = [
       "Coordinated, divided attention"],
     values: { rpm: 2150, ias: 90, alt: 2000, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 90 },
     pre: { low: true, where: "Level at 2,000 MSL, south of the practice area. Wind 270° at 15 kt.",
-           ask: "The evaluator asks for turns around a point." },
+           ask: "The evaluator asks for turns around a point.", heading: "090", landmark: "a lone grain silo" },
     steps: [
       {
         id: "tp-entry", phase: "ENTRY",
@@ -583,7 +583,7 @@ const MANEUVERS = [
       "Equal half-circles — wind correction"],
     values: { rpm: 2150, ias: 90, alt: 2000, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 90 },
     pre: { low: true, where: "Level at 2,000 MSL, south of the practice area. Wind 270° at 15 kt.",
-           ask: "The evaluator asks for S-turns." },
+           ask: "The evaluator asks for S-turns.", heading: "090", landmark: "a straight north–south road" },
     steps: [
       {
         id: "s-entry", phase: "ENTRY",
@@ -646,7 +646,7 @@ const MANEUVERS = [
       "Constant distance — wind correction"],
     values: { rpm: 2150, ias: 90, alt: 2000, flaps: 0, vsi: 0, pitch: 0, bank: 0, hdg: 45 },
     pre: { low: true, where: "Level at 2,000 MSL, south of the practice area. Wind 270° at 15 kt.",
-           ask: "The evaluator asks for a rectangular course." },
+           ask: "The evaluator asks for a rectangular course.", heading: "045", landmark: "a square field bordered by roads" },
     steps: [
       {
         id: "rc-entry", phase: "ENTRY",

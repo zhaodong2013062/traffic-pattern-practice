@@ -119,10 +119,11 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
   the ACS standards; nothing is armed until Begin.
 - Same click-a-control / pick-a-value loop as the pattern, on the pattern panel
   plus a windscreen strip (`outside`, for the area check) and a trim wheel.
-- The **pre-maneuver flow** (height · area · fuel/mixture/belts in any order ·
-  radio · clearing turns · references) is prepended by `preManeuver()` unless
-  switched off in the menu (persisted in `localStorage`). Ground reference
-  maneuvers pass `low: true` (600–1,000 AGL) and set their own references.
+- The **pre-maneuver flow** is standardized: the radio call, then CAPPE —
+  Clearing turns · Altitude · Pick a heading · Pick a landmark · Emergency
+  landing spot. `preManeuver()` prepends it unless switched off in the menu
+  (persisted in `localStorage`). Ground reference maneuvers pass `low: true`
+  (600–1,000 AGL) plus their own heading and landmark.
 - A step with `anyOrder: true` accepts its acts in any order.
 - An act's `why` maps a wrong control id or wrong menu choice to the evaluator
   deduction it represents (power before nose-down, all flaps at once, chasing
