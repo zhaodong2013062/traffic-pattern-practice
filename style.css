@@ -439,3 +439,24 @@ body.maneuver-mode .btn.mode.active { border-color: #9c9bf0; color: #c4c3ff; }
 .control.target .trim-wheel { stroke: var(--accent); stroke-width: 3; }
 .flash-ok .trim-wheel { stroke: var(--ok) !important; filter: drop-shadow(0 0 10px var(--ok)) !important; }
 .flash-bad .trim-wheel { stroke: var(--bad) !important; filter: drop-shadow(0 0 10px var(--bad)) !important; }
+
+/* ----------------------------- flashcards ------------------------------ */
+.flash-view { width: min(760px, 100%); margin: 0 auto; padding: 18px 16px 40px; }
+.flash-view[hidden], .layout[hidden] { display: none; }
+.flash-decks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.flash-chip { border: 1px solid var(--line); background: transparent; color: var(--muted);
+  border-radius: 999px; padding: 5px 12px; font-size: 12px; cursor: pointer; }
+.flash-chip.on { border-color: var(--chip); color: var(--ink); background: color-mix(in srgb, var(--chip) 18%, transparent); }
+.flash-card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 22px; min-height: 260px; cursor: pointer; }
+.flash-deck-tag { margin: 0 0 10px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; }
+.flash-q { margin: 0 0 14px; font-size: 20px; line-height: 1.4; font-weight: 600; }
+.flash-answer { border-top: 1px solid var(--line); padding-top: 14px; }
+.flash-a { margin: 0 0 10px; font-size: 16px; line-height: 1.55; white-space: pre-line; color: #cdeafe; }
+.flash-src { margin: 0; font-size: 12px; color: #6b7783; }
+.flash-grade { display: flex; gap: 10px; margin-top: 16px; }
+.flash-grade .btn { flex: 1; margin: 0; text-align: center; }
+.flash-count { display: block; margin-top: 10px; text-align: center; }
+.key { margin-left: 6px; padding: 0 5px; border-radius: 4px; font-size: 11px;
+  border: 1px solid currentColor; opacity: .6; }
+body.flash-mode .btn.mode.active { border-color: #ffb142; color: #ffd9a0; }

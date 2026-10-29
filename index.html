@@ -13,6 +13,7 @@
       <button id="modePattern" class="btn mode active">Pattern</button>
       <button id="modeEmergency" class="btn mode">Emergencies</button>
       <button id="modeManeuver" class="btn mode">Maneuvers</button>
+      <button id="modeFlash" class="btn mode">Flashcards</button>
     </div>
     <div class="controls">
       <span id="progressText" class="progress"></span>
@@ -22,7 +23,7 @@
     </div>
   </header>
 
-  <main class="layout">
+  <main id="mainLayout" class="layout">
     <!-- LEFT: cockpit panel (relative — value popover anchors to controls here) -->
     <section class="cockpit-wrap">
       <div id="cockpit" class="cockpit"></div>
@@ -91,6 +92,27 @@
     </aside>
   </main>
 
+  <!-- flashcards: no cockpit, replaces the layout above -->
+  <section id="flashView" class="flash-view" hidden>
+    <p class="conditions-label">STAGE 1 CHECK — DECKS</p>
+    <div id="flashDecks" class="flash-decks"></div>
+    <div id="flashCard" class="flash-card">
+      <p id="flashDeckTag" class="flash-deck-tag"></p>
+      <p id="flashQ" class="flash-q"></p>
+      <div id="flashAnswer" class="flash-answer" hidden>
+        <p id="flashA" class="flash-a"></p>
+        <p id="flashSrc" class="flash-src"></p>
+      </div>
+      <button id="flashFlip" class="btn primary wide">Show answer <span class="key">Space</span></button>
+      <div id="flashGrade" class="flash-grade" hidden>
+        <button id="flashAgain" class="btn danger">Again <span class="key">1</span></button>
+        <button id="flashGot" class="btn primary">Got it <span class="key">2</span></button>
+      </div>
+      <button id="flashReset" class="btn primary wide" hidden>Shuffle again</button>
+    </div>
+    <p id="flashCount" class="progress flash-count"></p>
+  </section>
+
   <!-- scenario picker -->
   <div id="pickerOverlay" class="picker-overlay" hidden>
     <div class="picker">
@@ -110,11 +132,13 @@
   <script src="js/sequence.js"></script>
   <script src="js/emergencies.js"></script>
   <script src="js/maneuvers.js"></script>
+  <script src="js/flashcards.js"></script>
   <script src="js/cockpit.js"></script>
   <script src="js/minimap.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/emergency.js"></script>
   <script src="js/maneuver.js"></script>
+  <script src="js/flash.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

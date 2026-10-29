@@ -1,15 +1,17 @@
 /* ============================================================================
    app.js  —  Mode switch + the traffic-pattern drill.
 
-   Three drills share this screen:
+   Four modes share this screen:
      PATTERN      — fly takeoff to touchdown (SEQUENCE / GOAROUND in
                     sequence.js), driven from this file.
      EMERGENCIES  — random emergency checklists (emergencies.js), driven by
                     emergency.js.
      MANEUVERS    — phase-check maneuvers (maneuvers.js), driven by
                     maneuver.js.
+     FLASHCARDS   — stage-check study cards (flashcards.js), driven by
+                    flash.js; no cockpit.
 
-   All three ask the same question the same way: each step shows only the
+   The three drills ask the same question the same way: each step shows only the
    CONDITIONS, the pilot clicks a control/instrument, and a value menu pops up
    over that control to choose the setting. The popover, feedback line and
    banner are shared (ui.js).
@@ -245,8 +247,8 @@
   })();
 
   /* ============================ mode switch ============================= */
-  const DRILLS = { pattern: Pattern, emergency: EmergencyDrill, maneuver: ManeuverDrill };
-  const BUTTONS = { pattern: "modePattern", emergency: "modeEmergency", maneuver: "modeManeuver" };
+  const DRILLS = { pattern: Pattern, emergency: EmergencyDrill, maneuver: ManeuverDrill, flash: FlashDrill };
+  const BUTTONS = { pattern: "modePattern", emergency: "modeEmergency", maneuver: "modeManeuver", flash: "modeFlash" };
   let current = "pattern";
 
   function setMode(next) {
@@ -256,6 +258,7 @@
     Object.entries(BUTTONS).forEach(([m, id]) => $(id).classList.toggle("active", m === next));
     document.body.classList.toggle("emergency-mode", next === "emergency");
     document.body.classList.toggle("maneuver-mode", next === "maneuver");
+    document.body.classList.toggle("flash-mode", next === "flash");
     DRILLS[next].activate();
   }
 
@@ -266,10 +269,12 @@
     Minimap.render($("minimap"));
     EmergencyDrill.init();
     ManeuverDrill.init();
+    FlashDrill.init();
 
     $("modePattern").addEventListener("click", () => setMode("pattern"));
     $("modeEmergency").addEventListener("click", () => setMode("emergency"));
     $("modeManeuver").addEventListener("click", () => setMode("maneuver"));
+    $("modeFlash").addEventListener("click", () => setMode("flash"));
     $("startBtn").addEventListener("click", () => activeDrill().start());
     $("restartBtn").addEventListener("click", () => activeDrill().restart());
     $("hintBtn").addEventListener("click", () => activeDrill().showHint());

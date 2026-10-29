@@ -3,7 +3,7 @@
 Guidance for working in this repository.
 
 ## What this is
-A **static, no-build** web app with three Cessna 172 drills, switched from the
+A **static, no-build** web app with three Cessna 172 drills plus flashcards, switched from the
 top bar:
 - **Pattern** — the airport traffic pattern (takeoff → touchdown, plus a
   go-around branch).
@@ -11,6 +11,7 @@ top bar:
   at a time.
 - **Maneuvers** — private-pilot phase-check maneuvers (slow flight, stalls,
   steep turns, ground reference, emergency descent), one at a time.
+- **Flashcards** — stage-check study cards (Stage 1 so far), no cockpit.
 
 Pure HTML/CSS/vanilla JS — no framework, no bundler, no package.json. It opens
 directly in a browser and is hosted on GitHub Pages.
@@ -23,17 +24,19 @@ index.html        entry point; cockpit + value popover (left), conditions + mini
 style.css         all styling
 js/sequence.js    SOURCE OF TRUTH (pattern) — PHASES, CONTROL_OPTIONS, SEQUENCE[], GOAROUND[]
 js/emergencies.js SOURCE OF TRUTH (emergencies) — EMERGENCY_GROUPS, EMER_CONTROL_OPTIONS, EMERGENCIES[]
+js/flashcards.js  SOURCE OF TRUTH (flashcards) — FLASH_DECKS, FLASHCARDS[] (emergency + maneuver decks built from the data above)
 js/maneuvers.js   SOURCE OF TRUTH (maneuvers) — MANEUVER_PHASES, MAN_CONTROL_OPTIONS, preManeuver(), MANEUVERS[]
 js/cockpit.js     SVG C172 panel; window.Cockpit API (render(el, mode)/setValues/highlight/flash/…)
 js/minimap.js     top-down pattern; window.Minimap API (render/moveTo/setLegActive/…)
 js/ui.js          shared chrome — value popover, feedback line, phase banner
 js/emergency.js   emergency drill controller (deck, picker, checklist card, debrief)
 js/maneuver.js    maneuver drill controller (menu, setup card, standards card, debrief)
+js/flash.js       flashcard controller (deck chips, flip, Again / Got it queue)
 js/app.js         mode switch + the pattern drill
 ```
 Load order in index.html matters:
-sequence → emergencies → maneuvers → cockpit → minimap → ui → emergency →
-maneuver → app.
+sequence → emergencies → maneuvers → flashcards → cockpit → minimap → ui →
+emergency → maneuver → flash → app.
 
 ## Interaction model (don't regress this)
 - Each step shows **only the conditions**. No hint about what to click.
@@ -131,6 +134,14 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
 - Heading values are continuous, not wrapped: a left turn keeps decreasing
   (90 → 0 → −90 …) so the heading card spins the right way.
 - Simulated engine failure lives in Emergencies, not here.
+
+## Flashcards
+- Stage 1 (FL16, pre-solo) content per the school's PPL syllabus. Cards are
+  `{ deck, q, a, src, verify? }`; `verify` marks numbers or flows the school's
+  Stan Manual / QRC may state differently — the card says so.
+- The emergency memory-item cards and maneuver ACS-standard cards are generated
+  from `EMERGENCIES` and `MANEUVERS` — edit those, not the cards.
+- Space flips; 1 / ← = Again (card returns 3 later), 2 / → = Got it.
 
 ## Aviation accuracy
 Pattern numbers/procedures come from a CFI whiteboard, corroborated against the
