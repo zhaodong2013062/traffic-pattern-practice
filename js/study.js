@@ -126,7 +126,9 @@ const StudyDrill = (() => {
   // is due moves it up a box; right out of the last box and it is retired.
   const BOX_DAYS = [0, 1, 3, 7, 14];
   const cardKey = {
-    quiz: (q) => "q:" + q.q,
+    // the answer is part of the key: the light-gun and sign questions share
+    // their wording ("What does it mean?") and differ only by the figure
+    quiz: (q) => "q:" + q.q + "|" + q.o[0],
     sort: (it, a) => "s:" + a.title + "|" + it.t,
     inop: (c) => "i:" + c.item + "|" + c.flight,
   };
@@ -615,9 +617,25 @@ const StudyDrill = (() => {
       };
 
       const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+      // at most one slip (wrong, missing, extra or swapped letter) between a and b
+      const near = (a, b) => {
+        if (Math.abs(a.length - b.length) > 1) return false;
+        let i = 0;
+        while (i < a.length && a[i] === b[i]) i++;
+        const rest = (x, y) => a.slice(x) === b.slice(y);
+        return rest(i, i) || rest(i + 1, i + 1) || rest(i + 1, i) || rest(i, i + 1) ||
+          (a[i] === b[i + 1] && a[i + 1] === b[i] && rest(i + 2, i + 2));
+      };
+      // the first five letters decide, one typo forgiven ("alchohol", "ilness").
+      // Short alternates ("ad", "t/o", "wx") must be the whole answer or a
+      // whole word of it — otherwise "radio" would pass for ADs.
       const accepts = (it, raw) => {
-        const v = norm(raw), cands = [it.w, ...(it.alt || [])].map(norm);
-        return v.length >= 2 && cands.some((c) => c.startsWith(v.slice(0, Math.max(3, Math.min(v.length, 5)))) && v.length >= 3 || v.includes(c));
+        const v = norm(raw), words = raw.toLowerCase().split(/[^a-z0-9]+/), p = v.slice(0, 5);
+        if (v.length < 2) return false;
+        return [it.w, ...(it.alt || [])].map(norm).some((c) => c.length < 4
+          ? v === c || words.includes(c) || (c.length === 3 && v.startsWith(c))
+          : (v.length >= 3 && c.startsWith(p)) || v.includes(c) ||
+            (p.length === 5 && [4, 5, 6].some((n) => near(p, c.slice(0, n)))));
       };
       const typed = () => {
         const inputs = [...box.querySelectorAll(".s1-slot input")];

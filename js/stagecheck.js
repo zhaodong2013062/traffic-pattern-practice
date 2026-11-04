@@ -179,7 +179,7 @@ const STAGE1_TOPICS = {
         { l: "R", w: "Registration" },
         { l: "R", w: "Radio station license", alt: ["radio"] },
         { l: "O", w: "Operating limitations", alt: ["operating", "poh", "limit"] },
-        { l: "W", w: "Weight & balance", alt: ["weight"] },
+        { l: "W", w: "Weight & balance", alt: ["weight", "w&b"] },
       ] },
       { type: "quiz", qs: [
         { q: "When does the airworthiness certificate expire?",

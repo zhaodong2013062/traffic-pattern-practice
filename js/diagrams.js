@@ -69,7 +69,7 @@ const Diagrams = (() => {
       <path d="M-100,0 C-100,-16 -62,-27 -12,-26 C40,-24 80,-9 104,1 C70,4 28,8 -12,8 C-62,8 -100,6 -100,0 Z"
         fill="#59636f" stroke="${INK}" stroke-width="1.5"/>
       <line x1="-115" y1="0" x2="120" y2="0" stroke="${MUTED}" stroke-dasharray="4 4"/>
-      ${text(124, 14, "chord", { size: 10, fill: MUTED, anchor: "start" })}
+      ${text(124, -4, "chord", { size: 10, fill: MUTED, anchor: "start" })}
       ${eddies}
     </g>`;
     // relative wind, lift (perpendicular to relative wind)
@@ -594,7 +594,8 @@ const Diagrams = (() => {
         `<circle cx="${X(b)}" cy="${Y(Math.sqrt(g))}" r="3.5" fill="${SKY}"/>` +
         text(X(b) + 6, Y(Math.sqrt(g)) + 14, hidden ? "×?" : "×" + Math.sqrt(g).toFixed(2), { size: 10, fill: SKY, anchor: "start" });
     };
-    const lift = Math.min(70, 34 * n(bank)), ar = id("lfa"), aw = id("lfw");
+    // capped so the tilted arrow (and its head) stays inside the frame at 60°
+    const lift = Math.min(54, 30 * n(bank)), ar = id("lfa"), aw = id("lfw");
     return svg(460, 236, `<defs>${arrowDefs(ar, OK)}${arrowDefs(aw, BAD)}</defs>
       <line x1="50" y1="200" x2="304" y2="200" stroke="${MUTED}"/><line x1="50" y1="24" x2="50" y2="200" stroke="${MUTED}"/>
       ${grid}
@@ -604,13 +605,13 @@ const Diagrams = (() => {
       ${text(175, 232, "bank angle, level turn", { size: 11, fill: MUTED })}
       <line x1="318" y1="24" x2="338" y2="24" stroke="${INK}" stroke-width="2.5"/>${text(344, 28, "load factor", { size: 10, fill: INK, anchor: "start" })}
       <line x1="318" y1="40" x2="338" y2="40" stroke="${SKY}" stroke-width="2" stroke-dasharray="6 4"/>${text(344, 44, "stall speed ×", { size: 10, fill: SKY, anchor: "start" })}
-      <g transform="translate(390,140)">
+      <g transform="translate(382,140)">
         <g transform="rotate(${bank})"><g transform="scale(.7)">${planeFront()}</g>
           <line x1="0" y1="-14" x2="0" y2="${-14 - lift}" stroke="${OK}" stroke-width="3.5" marker-end="url(#${ar})"/></g>
         <line x1="0" y1="10" x2="0" y2="48" stroke="${BAD}" stroke-width="3.5" marker-end="url(#${aw})"/>
       </g>
-      ${text(390, 214, `${bank}° bank`, { size: 11, weight: 700, fill: WARN })}
-      ${text(390, 228, "lift tilts — it has to grow", { size: 10, fill: MUTED })}
+      ${text(382, 214, `${bank}° bank`, { size: 11, weight: 700, fill: WARN })}
+      ${text(382, 228, "lift tilts — it has to grow", { size: 10, fill: MUTED })}
     `);
   }
 

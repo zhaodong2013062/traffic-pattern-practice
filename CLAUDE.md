@@ -158,6 +158,14 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
   FRAT are labelled as examples — the school's own forms govern.
 - Inop cases never assert what the KOEL says: where it matters, the case's
   `given` states it as part of the scenario.
+- Engagement layer (all in `study.js`, all localStorage-optional): a
+  review-my-misses deck on a growing schedule (cards keyed by question text
+  **plus its correct answer**, since many questions share wording like "What
+  does it mean?"), daily streak, badges, combo counter, keys 1–9 / Enter,
+  a Rapid fire acronym mode, and an examiner-chat mock oral with optional
+  text-to-speech. Rewording a question orphans its saved misses — harmless.
+- Typed answers allow one typo in the first five letters; short `alt`s must
+  match a whole word, so "ad" can't match inside "radio".
 - Diagrams are illustrative. Mind handedness: the prop turns clockwise from
   the cockpit; in a top view with the nose left, the pilot's left is DOWN.
 

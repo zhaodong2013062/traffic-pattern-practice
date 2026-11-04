@@ -855,7 +855,12 @@ kbd { font: 11px/1 ui-monospace, monospace; padding: 2px 5px; border: 1px solid 
   .study .btn, .s1-seg button, .s1-tab, .s1-chip, .s1-tile, .s1-mi, .s1-opt, .s1-bucket { min-height: 42px; }
   .s1-seg { width: 100%; } .s1-seg button { flex: 1; }
   .s1-check { min-height: 40px; align-items: center; }
-  .s1-table, .s1-matrix { display: block; overflow-x: auto; }
+  .s1-table { display: block; overflow-x: auto; }
+  /* the risk matrix squeezes to fit rather than scroll — a hidden column reads as missing */
+  .s1-matrix { font-size: 11px; border-spacing: 2px; }
+  .s1-matrix th { font-size: 10px; }
+  .s1-matrix td { padding: 10px 1px; }
+  .s1-widget { overflow-x: auto; }   /* last resort on the narrowest phones */
   .s1-msg { max-width: 100%; }
   .s1-replies { margin-left: 0; }
   .s1-rapid-letter { font-size: 76px; }
