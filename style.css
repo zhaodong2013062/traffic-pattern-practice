@@ -496,6 +496,7 @@ body.study-mode .btn.mode.active { border-color: #2ed573; color: #8ff0bd; }
   background: none; border: 0; border-bottom: 3px solid transparent; color: var(--muted);
   padding: 8px 14px; font-size: 14px; cursor: pointer;
 }
+.s1-topic-head + .s1-body { margin-top: 14px; }   /* mock oral / review: no tabs */
 .s1-tab.on { color: var(--ink); border-bottom-color: var(--c); font-weight: 700; }
 .s1-block {
   background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 12px;
@@ -737,6 +738,7 @@ body.study-mode .btn.mode.active { border-color: #2ed573; color: #8ff0bd; }
   display: inline-flex; align-items: baseline; gap: 4px; padding: 3px 10px; border-radius: 14px;
   background: linear-gradient(90deg, #ff6b35, #f6c90e); color: #1a0e00; font-weight: 800;
 }
+.s1-combo[hidden] { display: none; }
 .s1-combo b { font-size: 16px; }
 .s1-combo small { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
 .s1-combo.bump { animation: bump .3s ease; }
@@ -844,6 +846,10 @@ kbd { font: 11px/1 ui-monospace, monospace; padding: 2px 5px; border: 1px solid 
   .modes { flex-wrap: wrap; }
   .study { padding: 12px; }
   .s1-stats { grid-template-columns: 1fr; }
+  .s1-cards { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .s1-card { padding: 10px 11px; }
+  .s1-card-name { font-size: 14px; }
+  .s1-topic-head .s1-tag { align-self: center; }
   .s1-badges { grid-template-columns: repeat(2, 1fr); }
   /* tap targets ≥ 40px */
   .study .btn, .s1-seg button, .s1-tab, .s1-chip, .s1-tile, .s1-mi, .s1-opt, .s1-bucket { min-height: 42px; }

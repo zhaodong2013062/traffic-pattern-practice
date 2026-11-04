@@ -12,11 +12,12 @@
    API on window.Diagrams:
      airfoil(aoa) · clCurve(aoa) · forces()
      torque() · pfactor() · slipstream() · precession()
-     overshoot() · glidepath(vert, speed)
-     lightGun(color, mode, onGround)
-     sign(parts) · holdShort() · runway() · displaced() · closedRunway()
+     liftFlow() · spin() · loadFactor(bank, hide)
+     overshoot() · glidepath(vert, speed) · gate()
+     lightGun(color, mode, onGround) · acknowledge()
+     sign(parts) · holdShort() · marking(kind) · runway() · displaced() · closedRunway()
      segmentedCircle() · untowered()
-     fuelSystem() · electrical()
+     fuelSystem() · electrical() · panel205() · inspections() · pohMap()
    ========================================================================== */
 
 const Diagrams = (() => {
@@ -41,6 +42,8 @@ const Diagrams = (() => {
   // Coefficient of lift: linear to the critical AOA, then it falls away.
   const cl = (a) => a <= CRIT ? 0.25 + 0.075 * a : Math.max(0.5, 1.45 - 0.09 * (a - CRIT));
 
+  const tilt = (x, aoa) => Math.tan(aoa * Math.PI / 180) * x * Math.exp(-((x / 110) ** 2));
+
   function airfoil(aoa) {
     const stalled = aoa > CRIT;
     const ah = id("ah"), aw = id("aw"), al = id("al"), ab = id("ab");
@@ -52,26 +55,23 @@ const Diagrams = (() => {
       let d = "";
       for (let x = -230; x <= 230; x += 10) {
         const bump = Math.exp(-(((x + 10) / 90) ** 2)) * (above ? -(10 + aoa * 0.9) : 4);
-        let tail = x > 0 ? (x / 230) * aoa * (above ? 1.1 : 0.9) : 0;
-        if (stalled && above && x > -20) tail = -(aoa - CRIT) * 1.5 * (x + 20) / 250;  // flow leaves the surface
+        // near the wing the flow follows the tilted chord (upwash ahead, downwash behind)
+        let tail = tilt(x, aoa) + (x > 0 ? (x / 230) * aoa * (above ? 1.1 : 0.9) : 0);
+        if (stalled && above && x > -20) tail = tilt(-20, aoa) - (aoa - CRIT) * 1.5 * (x + 20) / 250;  // flow leaves the surface
         d += (x === -230 ? "M" : "L") + (230 + x) + "," + (140 + y0 + bump + tail).toFixed(1);
       }
       body += `<path d="${d}" fill="none" stroke="${SKY}" stroke-opacity=".45" stroke-width="1.5"/>`;
     });
-    // wing, rotated nose-up by AOA about mid-chord
-    body += `<g transform="translate(230,140) rotate(${-aoa})">
+    // wing, rotated nose-up by AOA about mid-chord (leading edge on the left, into the wind)
+    const eddies = !stalled ? "" : [[-10, -38, 7], [22, -40, 8], [52, -34, 9], [82, -26, 10], [112, -16, 11]].map(([cx, cy, r]) =>
+      `<path d="M${cx + r},${cy} A${r},${r} 0 1 1 ${cx},${cy - r}" fill="none" stroke="${BAD}" stroke-width="1.6" class="eddy"/>`).join("");
+    body += `<g transform="translate(230,140) rotate(${aoa})">
       <path d="M-100,0 C-100,-16 -62,-27 -12,-26 C40,-24 80,-9 104,1 C70,4 28,8 -12,8 C-62,8 -100,6 -100,0 Z"
         fill="#59636f" stroke="${INK}" stroke-width="1.5"/>
       <line x1="-115" y1="0" x2="120" y2="0" stroke="${MUTED}" stroke-dasharray="4 4"/>
-      ${text(128, 4, "chord", { size: 10, fill: MUTED, anchor: "start" })}
+      ${text(124, 14, "chord", { size: 10, fill: MUTED, anchor: "start" })}
+      ${eddies}
     </g>`;
-    // turbulent eddies over the aft upper surface once stalled
-    if (stalled) {
-      for (let k = 0; k < 5; k++) {
-        const cx = 250 + k * 34, cy = 108 - k * 6 - (aoa - CRIT) * 1.2, r = 7 + k * 2;
-        body += `<path d="M${cx + r},${cy} A${r},${r} 0 1 1 ${cx},${cy - r}" fill="none" stroke="${BAD}" stroke-width="1.6" class="eddy"/>`;
-      }
-    }
     // relative wind, lift (perpendicular to relative wind)
     body += `<line x1="18" y1="205" x2="110" y2="205" stroke="${MUTED}" stroke-width="2" marker-end="url(#${ah})"/>`;
     body += text(64, 225, "relative wind", { size: 11, fill: MUTED });
@@ -178,17 +178,18 @@ const Diagrams = (() => {
   function pfactor() {
     const a = id("pf"), y = id("py");
     return svg(320, 200, `<defs>${arrowDefs(a, OK)}${arrowDefs(y, BAD)}</defs>
-      ${planeTop(160, 112, 1.05)}
-      <line x1="146" y1="66" x2="146" y2="44" stroke="${OK}" stroke-width="3" marker-end="url(#${a})"/>
-      <line x1="174" y1="66" x2="174" y2="16" stroke="${OK}" stroke-width="5" marker-end="url(#${a})"/>
-      ${text(140, 40, "ascending blade", { size: 10, fill: MUTED, anchor: "end" })}
-      ${text(140, 53, "less thrust", { size: 10, fill: MUTED, anchor: "end" })}
-      ${text(182, 24, "descending blade (right)", { size: 10, fill: OK, anchor: "start" })}
-      ${text(182, 37, "bigger bite → more thrust", { size: 10, fill: OK, anchor: "start" })}
-      <path d="M128,92 Q108,70 118,50" fill="none" stroke="${BAD}" stroke-width="3" marker-end="url(#${y})"/>
-      ${text(240, 120, "top view, climbing", { size: 10, fill: MUTED })}
-      ${text(240, 134, "(high AOA)", { size: 10, fill: MUTED })}
-      ${text(160, 190, "more thrust on the right → yaw LEFT", { fill: BAD, size: 12, weight: 700 })}`);
+      ${planeTop(160, 132, 1)}
+      <line x1="150" y1="82" x2="150" y2="58" stroke="${OK}" stroke-width="3" marker-end="url(#${a})"/>
+      <line x1="170" y1="82" x2="170" y2="16" stroke="${OK}" stroke-width="3" marker-end="url(#${a})"/>
+      ${text(140, 56, "ascending blade", { size: 10, fill: MUTED, anchor: "end" })}
+      ${text(140, 69, "less thrust", { size: 10, fill: MUTED, anchor: "end" })}
+      ${text(180, 26, "descending blade (right)", { size: 10, fill: OK, anchor: "start" })}
+      ${text(180, 39, "bigger bite → more thrust", { size: 10, fill: OK, anchor: "start" })}
+      <line x1="140" y1="92" x2="100" y2="92" stroke="${BAD}" stroke-width="3" marker-end="url(#${y})"/>
+      ${text(98, 108, "nose yaws", { size: 10, fill: BAD, anchor: "start" })}
+      ${text(262, 148, "top view, climbing", { size: 10, fill: MUTED })}
+      ${text(262, 162, "(high AOA)", { size: 10, fill: MUTED })}
+      ${text(160, 192, "more thrust on the right → yaw LEFT", { fill: BAD, size: 12, weight: 700 })}`);
   }
   function slipstream() {
     const a = id("ss");
@@ -206,7 +207,8 @@ const Diagrams = (() => {
       ${text(262, 160, "hits the fin's", { fill: BAD, size: 11 })}
       ${text(262, 174, "LEFT side", { fill: BAD, size: 11, weight: 700 })}
       ${text(16, 16, "top view, nose left — pilot's left is down", { fill: MUTED, size: 10, anchor: "start" })}
-      <path d="M52,70 Q14,86 24,132" fill="none" stroke="${BAD}" stroke-width="3" marker-end="url(#${a})"/>
+      <line x1="22" y1="112" x2="22" y2="150" stroke="${BAD}" stroke-width="3" marker-end="url(#${a})"/>
+      ${text(30, 166, "nose yaws", { size: 10, fill: BAD, anchor: "start" })}
       ${text(160, 202, "corkscrewing slipstream → nose yaws LEFT", { fill: BAD, size: 12, weight: 700 })}`);
   }
   function precession() {
@@ -353,33 +355,40 @@ const Diagrams = (() => {
     `);
   }
 
+  // Landing east on runway 9. Touchdown-zone bars run along the runway in
+  // pairs of groups — 3, then the aiming point, then 2, 2, 1 (AIM 2-3-3).
   function runway() {
     const thr = Array.from({ length: 8 }, (_, k) => `<rect x="${40 + k * 12}" y="22" width="6" height="56" fill="#fff"/>`).join("");
-    const tdz = [205, 325, 385].map((x, k) =>
-      `<rect x="${x}" y="24" width="30" height="${6 - k}" fill="#fff"/><rect x="${x}" y="${70 + k}" width="30" height="${6 - k}" fill="#fff"/>`).join("");
-    return svg(470, 100, `
+    const tdz = [[200, 3], [330, 2], [372, 2], [414, 1]].map(([x, n]) => Array.from({ length: n }, (_, k) =>
+      `<rect x="${x}" y="${18 + k * 7}" width="26" height="4" fill="#fff"/><rect x="${x}" y="${78 - k * 7}" width="26" height="4" fill="#fff"/>`).join("")).join("");
+    return svg(470, 104, `
       <rect x="20" y="10" width="440" height="80" fill="#3b4350"/>
       ${thr}
-      <text x="160" y="62" fill="#fff" font-size="30" font-weight="800" font-family="Arial" transform="rotate(90,160,50)" text-anchor="middle">27</text>
+      <text x="160" y="61" fill="#fff" font-size="30" font-weight="800" font-family="Arial" transform="rotate(90,160,50)" text-anchor="middle">9</text>
       ${tdz}
       <rect x="250" y="20" width="50" height="12" fill="#fff"/><rect x="250" y="68" width="50" height="12" fill="#fff"/>
       <line x1="190" y1="50" x2="460" y2="50" stroke="#fff" stroke-width="3" stroke-dasharray="24 16"/>
-      ${text(70, 8, "threshold", { size: 9, fill: MUTED })}
-      ${text(275, 98, "aiming point", { size: 9, fill: MUTED })}
+      ${text(84, 8, "threshold", { size: 9, fill: MUTED })}
+      ${text(213, 8, "touchdown zone", { size: 9, fill: MUTED })}
+      ${text(275, 100, "aiming point", { size: 9, fill: MUTED })}
+      ${text(400, 100, "touchdown zone 2 · 2 · 1", { size: 9, fill: MUTED })}
     `);
   }
 
+  // AIM 2-3-3: arrows along the centerline of the displaced area, arrowheads
+  // across the runway just prior to the threshold bar, then the threshold.
   function displaced() {
-    const arrows = [60, 120].map((x) => `<path d="M${x},50 L${x + 34},50 M${x + 24},42 L${x + 34},50 L${x + 24},58" stroke="#fff" stroke-width="3" fill="none"/>`).join("");
+    const arrows = [36, 96].map((x) => `<path d="M${x},50 L${x + 40},50 M${x + 28},41 L${x + 40},50 L${x + 28},59" stroke="#fff" stroke-width="3" fill="none"/>`).join("");
+    const heads = [0, 1, 2, 3].map((k) => `<path d="M168,${18 + k * 18} L182,${25 + k * 18} L168,${32 + k * 18} Z" fill="#fff"/>`).join("");
     return svg(470, 100, `
       <rect x="20" y="10" width="440" height="80" fill="#3b4350"/>
-      <line x1="30" y1="50" x2="180" y2="50" stroke="#fff" stroke-width="2" stroke-dasharray="12 10"/>
-      ${arrows}
-      <rect x="196" y="12" width="7" height="76" fill="#fff"/>
-      ${[0, 1, 2, 3].map((k) => `<path d="M206,${20 + k * 18} L216,${26 + k * 18} L206,${32 + k * 18}" fill="#fff"/>`).join("")}
-      ${Array.from({ length: 6 }, (_, k) => `<rect x="${226 + k * 10}" y="22" width="5" height="56" fill="#fff"/>`).join("")}
-      ${text(110, 8, "displaced area", { size: 9, fill: MUTED })}
-      ${text(330, 8, "landing threshold", { size: 9, fill: MUTED })}
+      ${arrows}${heads}
+      <rect x="188" y="12" width="7" height="76" fill="#fff"/>
+      ${Array.from({ length: 6 }, (_, k) => `<rect x="${206 + k * 10}" y="22" width="5" height="56" fill="#fff"/>`).join("")}
+      <line x1="290" y1="50" x2="460" y2="50" stroke="#fff" stroke-width="3" stroke-dasharray="24 16"/>
+      ${text(100, 8, "displaced area", { size: 9, fill: MUTED })}
+      ${text(192, 99, "threshold bar", { size: 9, fill: MUTED })}
+      ${text(330, 8, "landing threshold →", { size: 9, fill: MUTED })}
     `);
   }
 
@@ -390,31 +399,42 @@ const Diagrams = (() => {
   }
 
   /* ------------------------- untowered airport -------------------------- */
+  // Seen from above, runway 18-36. AIM 4-3-4: "mentally enlarge" the L at the
+  // approach end and it is the base and final legs. Both L's turn east here:
+  // left traffic for 18, right traffic for 36. Wind from the north → land 18.
   function segmentedCircle() {
+    const C = 120, R = 50;
     const segs = Array.from({ length: 12 }, (_, k) => {
       const a0 = (k * 30) * Math.PI / 180, a1 = (k * 30 + 18) * Math.PI / 180;
-      return `<path d="M${120 + 70 * Math.cos(a0)},${120 + 70 * Math.sin(a0)} A70,70 0 0 1 ${120 + 70 * Math.cos(a1)},${120 + 70 * Math.sin(a1)}" stroke="#fff" stroke-width="9" fill="none"/>`;
+      return `<path d="M${C + R * Math.cos(a0)},${C + R * Math.sin(a0)} A${R},${R} 0 0 1 ${C + R * Math.cos(a1)},${C + R * Math.sin(a1)}" stroke="#fff" stroke-width="7" fill="none"/>`;
     }).join("");
-    // wind cone seen from above: the mouth sits at the mast and faces the wind
+    // wind cone: the open end sits at the mast and faces the wind (north); the tail streams south
     const sock = [0, 1, 2, 3].map((k) => {
-      const x0 = 122 + k * 12, h0 = 12 - k * 2, h1 = 10 - k * 2;
-      return `<path d="M${x0},${120 - h0} L${x0 + 12},${120 - h1} L${x0 + 12},${120 + h1} L${x0},${120 + h0} Z" fill="${k % 2 ? "#fff" : WARN}"/>`;
+      const y0 = C + 2 + k * 9, w0 = 9 - k * 1.5, w1 = 7.5 - k * 1.5;
+      return `<path d="M${C - w0},${y0} L${C - w1},${y0 + 9} L${C + w1},${y0 + 9} L${C + w0},${y0} Z" fill="${k % 2 ? "#fff" : WARN}"/>`;
     }).join("");
-    const a = id("sc");
+    const L = (y1, y2, yEnd) => `<path d="M${C},${y1} L${C},${y2}" stroke="#fff" stroke-width="7"/>
+      <path d="M${C - 3.5},${yEnd} L${C + 26},${yEnd}" stroke="${YEL}" stroke-width="7"/>`;
+    const a = id("sc"), li = (y, t, o = {}) => text(256, y, t, { size: 11, fill: MUTED, anchor: "start", ...o });
     return svg(480, 240, `<defs>${arrowDefs(a, SKY)}</defs><rect width="240" height="240" rx="8" fill="#203124"/>${segs}
-      ${sock}<circle cx="120" cy="120" r="4" fill="#ccc"/>
-      <line x1="40" y1="120" x2="86" y2="120" stroke="${SKY}" stroke-width="2.5" marker-end="url(#${a})"/>
-      ${text(60, 112, "wind", { size: 10, fill: SKY })}
-      ${text(120, 230, "seen from above", { size: 10, fill: MUTED })}
-      ${text(256, 40, "Segmented circle", { size: 14, weight: 700, anchor: "start" })}
-      ${text(256, 66, "• wind indicator in the middle —", { size: 11, fill: MUTED, anchor: "start" })}
-      ${text(266, 81, "cone, tee or tetrahedron", { size: 11, fill: MUTED, anchor: "start" })}
-      ${text(256, 104, "• the cone's open end faces INTO the", { size: 11, fill: MUTED, anchor: "start" })}
-      ${text(266, 119, "wind: this one shows wind from the west", { size: 11, fill: MUTED, anchor: "start" })}
-      ${text(256, 142, "• landing strip indicators outside the", { size: 11, fill: MUTED, anchor: "start" })}
-      ${text(266, 157, "circle show the runway alignment", { size: 11, fill: MUTED, anchor: "start" })}
-      ${text(256, 180, "• L-shaped traffic pattern indicators show", { size: 11, fill: MUTED, anchor: "start" })}
-      ${text(266, 195, "the turn direction when it isn't left traffic", { size: 11, fill: MUTED, anchor: "start" })}`);
+      ${L(62, 22, 25)}${L(178, 218, 215)}
+      ${sock}<circle cx="${C}" cy="${C}" r="3.5" fill="#ccc"/>
+      <line x1="60" y1="40" x2="60" y2="84" stroke="${SKY}" stroke-width="2.5" marker-end="url(#${a})"/>
+      ${text(60, 32, "wind", { size: 10, fill: SKY })}
+      ${text(108, 34, "18", { size: 11, weight: 700, anchor: "end" })}${text(108, 214, "36", { size: 11, weight: 700, anchor: "end" })}
+      ${text(200, 232, "from above · north up", { size: 9, fill: MUTED })}
+      ${text(256, 24, "Segmented circle", { size: 14, weight: 700, anchor: "start" })}
+      ${li(46, "• wind cone: open end faces INTO")}
+      ${li(60, "  the wind — from the north here")}
+      ${li(80, "• white landing strip indicators:")}
+      ${li(94, "  the runway runs north–south")}
+      ${li(114, "• the L (short leg highlighted) is a")}
+      ${li(128, "  traffic pattern indicator. Enlarge")}
+      ${li(142, "  yours: it's your base + final")}
+      ${li(166, "Landing 18: base on the east side")}
+      ${li(180, "→ LEFT traffic", { fill: OK, weight: 700 })}
+      ${li(204, "Landing 36: base on the east side")}
+      ${li(218, "→ RIGHT traffic", { fill: WARN, weight: 700 })}`);
   }
 
   // The pattern for runway 9 with a dot flying it, so the turns read as LEFT turns.
@@ -429,7 +449,8 @@ const Diagrams = (() => {
       <line x1="160" y1="180" x2="340" y2="180" stroke="#fff" stroke-width="1.5" stroke-dasharray="10 8"/>
       ${text(250, 204, "RWY 9 — landing east", { size: 10, fill: INK })}
       <path d="${loop}" fill="none" stroke="${SKY}" stroke-width="2.5" stroke-dasharray="7 5" stroke-opacity=".8"/>
-      <path d="M260,90 L250,90 M60,135 L60,140 M300,180 L310,180 M420,135 L420,130" stroke="${SKY}" stroke-width="2.5" marker-end="url(#${m})"/>
+      ${["M232,90 L222,90", "M60,128 L60,138", "M290,180 L300,180", "M420,138 L420,128"].map((d) =>
+        `<path d="${d}" stroke="${SKY}" stroke-width="2.5" marker-end="url(#${m})"/>`).join("")}
       <circle r="6" fill="#fff"><animateMotion dur="9s" repeatCount="indefinite" path="${loop}"/></circle>
       <path d="M330,30 L268,86" stroke="${OK}" stroke-width="3" marker-end="url(#${a})"/>
       ${text(340, 22, "45° entry to midfield downwind", { size: 10, fill: OK })}
@@ -497,10 +518,294 @@ const Diagrams = (() => {
     `);
   }
 
+  /* ------------------------- lift, stall, spin -------------------------- */
+  // Streamlines whose dashes flow — faster over the top (lower pressure) than
+  // underneath — ending in downwash behind the wing. Fixed, unstalled AOA.
+  function liftFlow() {
+    const al = id("lf"), ad = id("ld"), aoa = 6;
+    let body = `<defs>${arrowDefs(al, OK)}${arrowDefs(ad, SKY)}</defs>`;
+    [-72, -48, -26, 30, 56].forEach((y0) => {
+      const above = y0 < 0;
+      let d = "";
+      for (let x = -230; x <= 230; x += 10) {
+        const bump = Math.exp(-(((x + 10) / 90) ** 2)) * (above ? -(10 + aoa * 0.9) : 4);
+        const tail = tilt(x, aoa) + (x > 0 ? (x / 230) * aoa * (above ? 1.6 : 1.2) : 0);
+        d += (x === -230 ? "M" : "L") + (230 + x) + "," + (120 + y0 + bump + tail).toFixed(1);
+      }
+      body += `<path d="${d}" fill="none" stroke="${SKY}" stroke-opacity=".75" stroke-width="2" stroke-dasharray="14 10">
+        <animate attributeName="stroke-dashoffset" from="24" to="0" dur="${above ? 0.45 : 0.9}s" repeatCount="indefinite"/></path>`;
+    });
+    body += `<g transform="translate(230,120) rotate(${aoa})">
+      <path d="M-100,0 C-100,-16 -62,-27 -12,-26 C40,-24 80,-9 104,1 C70,4 28,8 -12,8 C-62,8 -100,6 -100,0 Z"
+        fill="#59636f" stroke="${INK}" stroke-width="1.5"/></g>`;
+    body += text(230, 22, "faster air · LOWER pressure on top (Bernoulli)", { size: 12, fill: SKY, weight: 700 });
+    body += text(200, 200, "slower air · higher pressure underneath", { size: 12, fill: WARN, weight: 700 });
+    body += `<line x1="226" y1="92" x2="226" y2="34" stroke="${OK}" stroke-width="4" marker-end="url(#${al})"/>`;
+    body += text(238, 48, "LIFT", { size: 12, fill: OK, weight: 800, anchor: "start" });
+    body += `<path d="M352,140 Q392,150 420,176" fill="none" stroke="${SKY}" stroke-width="3" marker-end="url(#${ad})"/>`;
+    body += text(444, 200, "downwash", { size: 11, fill: SKY, anchor: "end" });
+    body += text(444, 214, "(Newton's 3rd law)", { size: 10, fill: MUTED, anchor: "end" });
+    return svg(460, 224, body);
+  }
+
+  // Stall vs spin, seen from above. The spin half autorotates to the LEFT —
+  // the inside (descending) wing is the more deeply stalled one.
+  function spin() {
+    const a = id("sp");
+    return svg(480, 262, `<defs>${arrowDefs(a, WARN)}</defs>
+      <style>.dg-split{stroke:${LINE};stroke-dasharray:4 5}</style>
+      <line class="dg-split" x1="220" y1="10" x2="220" y2="250"/>
+      ${text(110, 22, "STALL", { size: 15, weight: 800, fill: BAD })}
+      ${text(110, 38, "coordinated", { size: 11, fill: MUTED })}
+      ${planeTop(110, 124, 1.1, "#c0392b", "#c0392b")}
+      ${text(110, 202, "both wings past critical AOA —", { size: 11, fill: INK })}
+      ${text(110, 217, "equally. The nose drops; the", { size: 11, fill: INK })}
+      ${text(110, 232, "wings stay level.", { size: 11, fill: INK })}
+      ${text(350, 22, "SPIN = stall + yaw", { size: 15, weight: 800, fill: WARN })}
+      ${text(350, 38, "a left spin, seen from above", { size: 11, fill: MUTED })}
+      <path d="M402,86 A66,66 0 1 0 413,146" fill="none" stroke="${WARN}" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#${a})"/>
+      <g><animateTransform attributeName="transform" type="rotate" from="0 350 124" to="-360 350 124" dur="3.2s" repeatCount="indefinite"/>
+        ${planeTop(350, 124, 0.78, BAD, WARN)}</g>
+      <rect x="240" y="196" width="12" height="12" fill="${BAD}"/>
+      ${text(258, 206, "inside, descending wing: higher AOA,", { size: 11, anchor: "start" })}
+      ${text(258, 220, "more deeply stalled", { size: 11, anchor: "start" })}
+      <rect x="240" y="230" width="12" height="12" fill="${WARN}"/>
+      ${text(258, 240, "outside, rising wing: less stalled", { size: 11, anchor: "start" })}
+    `);
+  }
+
+  // Load factor in a level turn: n = 1 / cos(bank); stall speed grows with √n.
+  function loadFactor(bank = 60, hide = false) {
+    const X = (b) => 50 + b * (250 / 75), Y = (n) => 200 - n * 42;
+    const n = (b) => 1 / Math.cos(b * Math.PI / 180);
+    let dn = "", dv = "";
+    for (let b = 0; b <= 75; b += 1) {
+      dn += (b ? "L" : "M") + X(b).toFixed(1) + "," + Y(n(b)).toFixed(1);
+      dv += (b ? "L" : "M") + X(b).toFixed(1) + "," + Y(Math.sqrt(n(b))).toFixed(1);
+    }
+    const grid = [15, 30, 45, 60, 75].map((b) => `<line x1="${X(b)}" y1="200" x2="${X(b)}" y2="204" stroke="${MUTED}"/>` +
+      text(X(b), 216, b + "°", { size: 10, fill: MUTED })).join("") +
+      [1, 2, 3, 4].map((g) => `<line x1="50" y1="${Y(g)}" x2="300" y2="${Y(g)}" stroke="${LINE}" stroke-dasharray="2 4"/>` +
+      text(42, Y(g) + 4, g + "G", { size: 10, fill: MUTED, anchor: "end" })).join("");
+    const pt = (b, hidden) => {
+      const g = n(b), lab = hidden ? `${b}° → ? G` : `${b}° · ${g.toFixed(2)} G`;
+      return `<circle cx="${X(b)}" cy="${Y(g)}" r="5" fill="${hidden ? WARN : OK}"/>` +
+        text(X(b) - 8, Y(g) - 6, lab, { size: 11, weight: 700, fill: hidden ? WARN : INK, anchor: "end" }) +
+        `<circle cx="${X(b)}" cy="${Y(Math.sqrt(g))}" r="3.5" fill="${SKY}"/>` +
+        text(X(b) + 6, Y(Math.sqrt(g)) + 14, hidden ? "×?" : "×" + Math.sqrt(g).toFixed(2), { size: 10, fill: SKY, anchor: "start" });
+    };
+    const lift = Math.min(70, 34 * n(bank)), ar = id("lfa"), aw = id("lfw");
+    return svg(460, 236, `<defs>${arrowDefs(ar, OK)}${arrowDefs(aw, BAD)}</defs>
+      <line x1="50" y1="200" x2="304" y2="200" stroke="${MUTED}"/><line x1="50" y1="24" x2="50" y2="200" stroke="${MUTED}"/>
+      ${grid}
+      <path d="${dn}" fill="none" stroke="${INK}" stroke-width="2.5"/>
+      <path d="${dv}" fill="none" stroke="${SKY}" stroke-width="2" stroke-dasharray="6 4"/>
+      ${pt(30)}${pt(45)}${pt(bank, hide)}
+      ${text(175, 232, "bank angle, level turn", { size: 11, fill: MUTED })}
+      <line x1="318" y1="24" x2="338" y2="24" stroke="${INK}" stroke-width="2.5"/>${text(344, 28, "load factor", { size: 10, fill: INK, anchor: "start" })}
+      <line x1="318" y1="40" x2="338" y2="40" stroke="${SKY}" stroke-width="2" stroke-dasharray="6 4"/>${text(344, 44, "stall speed ×", { size: 10, fill: SKY, anchor: "start" })}
+      <g transform="translate(390,140)">
+        <g transform="rotate(${bank})"><g transform="scale(.7)">${planeFront()}</g>
+          <line x1="0" y1="-14" x2="0" y2="${-14 - lift}" stroke="${OK}" stroke-width="3.5" marker-end="url(#${ar})"/></g>
+        <line x1="0" y1="10" x2="0" y2="48" stroke="${BAD}" stroke-width="3.5" marker-end="url(#${aw})"/>
+      </g>
+      ${text(390, 214, `${bank}° bank`, { size: 11, weight: 700, fill: WARN })}
+      ${text(390, 228, "lift tilts — it has to grow", { size: 10, fill: MUTED })}
+    `);
+  }
+
+  /* --------------------------- the airplane ---------------------------- */
+  const badge = (x, y, l, c = OK) => `<circle cx="${x}" cy="${y}" r="9" fill="${c}"/>` +
+    text(x, y + 4, l, { size: 11, weight: 800, fill: "#111" });
+
+  // 91.205(b) mapped onto a 172S: ten letters apply, three belong to other airplanes.
+  function panel205() {
+    const word = "ATOMATOFLAMES", na = [3, 5, 8];
+    const chips = [...word].map((l, k) => {
+      const x = 20 + k * 37, off = na.includes(k);
+      return `<rect x="${x}" y="12" width="34" height="34" rx="6" fill="${off ? "#232a34" : "#1f6f43"}" stroke="${off ? LINE : OK}"/>` +
+        text(x + 17, 36, l, { size: 18, weight: 800, fill: off ? "#5d6774" : INK }) +
+        (off ? `<line x1="${x + 6}" y1="40" x2="${x + 28}" y2="18" stroke="#5d6774" stroke-width="2"/>` : "");
+    }).join("");
+    const eis = [["RPM", "T"], ["OIL PRES", "O"], ["OIL TEMP", "O"], ["FUEL L | R", "F"]].map(([t, l], k) =>
+      `<rect x="296" y="${118 + k * 25}" width="72" height="21" rx="3" fill="#1b2129"/>` +
+      text(302, 132 + k * 25, t, { size: 9, fill: INK, anchor: "start" }) + badge(386, 128 + k * 25, l)).join("");
+    return svg(520, 340, `${chips}
+      ${text(260, 66, "10 of the 13 apply to a 172S — the struck-out ones are for other engines and gear", { size: 11, fill: MUTED })}
+      <rect x="30" y="96" width="460" height="10" rx="5" fill="#2c323b"/>
+      <rect x="248" y="78" width="24" height="18" rx="3" fill="#59636f"/>${text(260, 91, "N", { size: 10, weight: 700 })}
+      ${badge(286, 86, "M")}${text(300, 90, "magnetic compass", { size: 10, fill: MUTED, anchor: "start" })}
+      <rect x="40" y="112" width="200" height="110" rx="6" fill="#0b0f14" stroke="${LINE}"/>
+      <path d="M78,112 L202,112 L202,164 L78,164 Z" fill="#1d4f7a"/><path d="M78,164 L202,164 L202,222 L78,222 Z" fill="#6b4a2b"/>
+      <rect x="48" y="122" width="26" height="90" rx="3" fill="#1b2129"/>${text(61, 170, "KT", { size: 9 })}
+      <rect x="206" y="122" width="26" height="90" rx="3" fill="#1b2129"/>${text(219, 170, "FT", { size: 9 })}
+      ${badge(61, 140, "A")}${badge(219, 140, "A")}
+      ${text(140, 238, "PFD — airspeed + altimeter tapes", { size: 10, fill: MUTED })}
+      ${text(140, 251, "(the standby gauges back them up)", { size: 10, fill: MUTED })}
+      <rect x="288" y="112" width="200" height="110" rx="6" fill="#0b0f14" stroke="${LINE}"/>
+      <rect x="292" y="114" width="104" height="106" rx="4" fill="#141920"/>
+      ${eis}
+      <path d="M410,190 L440,150 L470,175" fill="none" stroke="#3a6b46" stroke-width="2"/>
+      ${text(388, 238, "MFD — engine strip (EIS)", { size: 10, fill: MUTED })}
+      ${badge(40, 280, "A")}${text(54, 284, "anticollision light system", { size: 11, anchor: "start" })}
+      ${badge(258, 280, "E")}${text(272, 284, "ELT", { size: 11, anchor: "start" })}
+      ${badge(330, 280, "S")}${text(344, 284, "belts + front shoulder harnesses", { size: 11, anchor: "start" })}
+      ${text(260, 322, "M manifold pressure — altitude engines  ·  T coolant temp — liquid-cooled  ·  L gear — retractables", { size: 10, fill: "#7b8794" })}
+    `);
+  }
+
+  // AAVIATES intervals on one calendar. Calendar months run to the END of the month.
+  function inspections() {
+    const X = (m) => 150 + m * 13.6, done = 9 / 31;   // signed off 10 Mar 2026
+    const row = (y, l, name, end, c, note) =>
+      badge(18, y + 8, l, c) + text(32, y + 12, name, { size: 11, anchor: "start" }) +
+      `<rect x="${X(done)}" y="${y}" width="${X(end) - X(done)}" height="16" rx="3" fill="${c}" fill-opacity=".85"/>` +
+      text(end > 3 ? X(end) - 6 : X(end) + 6, y + 12, note, { size: 10, weight: 700, fill: end > 3 ? "#111" : c, anchor: end > 3 ? "end" : "start" });
+    const ticks = [0, 3, 6, 9, 12, 15, 18, 21, 24].map((m) =>
+      `<line x1="${X(m)}" y1="44" x2="${X(m)}" y2="226" stroke="${LINE}" stroke-dasharray="${m % 12 ? "2 6" : "0"}"/>` +
+      (m % 12 ? "" : text(X(m) + 2, 40, ["Mar '26", "Mar '27", "Mar '28"][m / 12], { size: 10, fill: MUTED, anchor: "start" }))).join("");
+    return svg(520, 300, `
+      ${text(12, 18, "Example: everything signed off 10 Mar 2026", { size: 12, weight: 700, anchor: "start" })}
+      ${ticks}
+      ${row(56, "V", "VOR check (IFR)", 1 + 9 / 30, SKY, "30 days")}
+      ${row(86, "A", "Annual", 13, WARN, "12 cal. mo. → 31 Mar '27")}
+      ${row(116, "E", "ELT inspection", 13, WARN, "12 cal. mo. → 31 Mar '27")}
+      ${row(146, "A", "Altimeter / pitot-static", 25, "#a29bfe", "24 cal. mo. → 31 Mar '28")}
+      ${row(176, "T", "Transponder", 25, "#a29bfe", "24 cal. mo. → 31 Mar '28")}
+      ${text(150, 216, "calendar months: due by the END of the month, not the day it was done", { size: 10, fill: MUTED, anchor: "start" })}
+      ${badge(18, 252, "I", OK)}${text(32, 256, "100-hour (for hire)", { size: 11, anchor: "start" })}
+      <rect x="${X(0)}" y="244" width="300" height="16" rx="3" fill="${OK}" fill-opacity=".85"/>
+      <rect x="${X(0) + 300}" y="244" width="30" height="16" rx="3" fill="none" stroke="${OK}" stroke-dasharray="3 3"/>
+      ${text(X(0) + 294, 256, "100 hr time in service", { size: 10, weight: 700, fill: "#111", anchor: "end" })}
+      ${text(X(0) + 315, 276, "+10 hr only to reach", { size: 10, fill: OK })}
+      ${text(X(0) + 315, 289, "the shop", { size: 10, fill: OK })}
+      ${text(150, 276, "hours, not months", { size: 10, fill: MUTED, anchor: "start" })}
+    `);
+  }
+
+  // ARROW: three documents in the airplane, two sections of the POH.
+  function pohMap() {
+    const a = id("pm");
+    const secs = ["General", "Limitations", "Emergency Procedures", "Normal Procedures", "Performance",
+      "Weight & Balance / Equipment List", "Airplane & Systems Description", "Handling, Service & Maintenance", "Supplements"];
+    const hot = { 1: "O", 5: "W" };
+    const rows = secs.map((t, k) => {
+      const y = 34 + k * 23, h = hot[k];
+      return `<rect x="262" y="${y}" width="206" height="20" rx="3" fill="${h ? "#123048" : "#1b2129"}" stroke="${h ? SKY : "none"}"/>` +
+        `<rect x="468" y="${y + 2}" width="8" height="16" rx="2" fill="${h ? SKY : "#59636f"}"/>` +
+        text(270, y + 14, `${k + 1}  ${t}`, { size: 10.5, fill: h ? INK : MUTED, anchor: "start", weight: h ? 700 : 400 });
+    }).join("");
+    const doc = (y, l, t, sub, dim) => `<g opacity="${dim ? 0.55 : 1}">
+      <rect x="10" y="${y}" width="200" height="40" rx="5" fill="#232a34" stroke="${LINE}"/>${badge(28, y + 20, l, dim ? MUTED : WARN)}
+      ${text(44, y + 17, t, { size: 11, weight: 700, anchor: "start" })}${text(44, y + 31, sub, { size: 10, fill: MUTED, anchor: "start" })}</g>`;
+    return svg(480, 252, `<defs>${arrowDefs(a, SKY)}</defs>
+      ${text(110, 18, "in the airplane", { size: 11, fill: MUTED })}
+      ${doc(28, "A", "Airworthiness cert.", "displayed for passengers")}
+      ${doc(76, "R", "Registration", "7 years federal")}
+      ${doc(124, "R", "Radio station license", "international flights only", true)}
+      ${text(365, 18, "POH / AFM", { size: 11, fill: MUTED })}
+      ${rows}
+      ${badge(28, 196, "O", SKY)}${text(44, 200, "operating limitations", { size: 11, weight: 700, anchor: "start" })}
+      ${badge(28, 228, "W", SKY)}${text(44, 232, "weight & balance", { size: 11, weight: 700, anchor: "start" })}
+      <path d="M170,196 Q220,196 220,80 Q220,67 258,67" fill="none" stroke="${SKY}" stroke-width="2" marker-end="url(#${a})"/>
+      <path d="M150,228 Q240,228 258,159" fill="none" stroke="${SKY}" stroke-width="2" marker-end="url(#${a})"/>
+      ${text(44, 212, "+ placards and instrument markings", { size: 9.5, fill: MUTED, anchor: "start" })}
+      ${text(44, 244, "this airplane's empty weight + CG", { size: 9.5, fill: MUTED, anchor: "start" })}
+    `);
+  }
+
+  /* ------------------------ stabilized-approach gate ------------------------ */
+  // The airplane flies down final; each CCLAPS item lights before the gate.
+  function gate() {
+    const T = 8, gx = 250, gateAt = (gx - 30) / (388 - 30);
+    const chips = [..."CCLAPS"].map((l, k) => {
+      const t = (0.08 + k * 0.08).toFixed(2), t2 = (+t + 0.01).toFixed(2);
+      return `<rect x="${20 + k * 34}" y="150" width="30" height="30" rx="5" fill="#232a34" stroke="${LINE}">
+        <animate attributeName="fill" values="#232a34;#232a34;#1f6f43;#1f6f43" keyTimes="0;${t};${t2};1" dur="${T}s" repeatCount="indefinite"/></rect>` +
+        text(35 + k * 34, 171, l, { size: 15, weight: 800 });
+    }).join("");
+    const g = gateAt.toFixed(2), g2 = (gateAt + 0.01).toFixed(2);
+    return svg(480, 236, `
+      <rect x="0" y="190" width="480" height="46" fill="#203124"/>
+      <rect x="378" y="186" width="96" height="8" fill="#3b4350"/>
+      <line x1="30" y1="30" x2="388" y2="186" stroke="${OK}" stroke-width="1.5" stroke-dasharray="8 6" stroke-opacity=".7"/>
+      <line x1="${gx}" y1="50" x2="${gx}" y2="190" stroke="${WARN}" stroke-width="2" stroke-dasharray="5 4"/>
+      ${text(gx + 8, 64, "stabilized gate", { size: 12, weight: 700, fill: WARN, anchor: "start" })}
+      ${text(gx + 8, 78, "e.g. 500 ft AGL VFR — your school sets it", { size: 10, fill: MUTED, anchor: "start" })}
+      ${text(470, 22, "anything missing at the gate → GO AROUND", { size: 11, weight: 700, fill: BAD, anchor: "end" })}
+      <g><animateMotion path="M30,30 L388,184" dur="${T}s" repeatCount="indefinite" rotate="auto"/>${plane(0, -9, 0.36)}</g>
+      ${chips}
+      <text x="122" y="214" fill="${OK}" font-size="13" font-weight="800" text-anchor="middle" font-family="Segoe UI, Roboto, sans-serif" opacity="0">
+        STABILIZED ✓ continue<animate attributeName="opacity" values="0;0;1;1" keyTimes="0;${g};${g2};1" dur="${T}s" repeatCount="indefinite"/></text>
+    `);
+  }
+
+  /* ------------------------ lost comms: acknowledge ------------------------ */
+  // AIM 4-2-13 (in flight: rock the wings by day) and 4-3-13 (on the ground:
+  // ailerons or rudder by day); at night, blink the landing or nav lights. Front views —
+  // the red nav light is on the airplane's left, so the viewer's RIGHT.
+  function acknowledge() {
+    const blink = `<animate attributeName="opacity" values="1;0.08;1" dur="1s" calcMode="discrete" repeatCount="indefinite"/>`;
+    const lights = `<g>${blink}<circle cx="72" cy="-14" r="5" fill="#ff3b4e"/><circle cx="-72" cy="-14" r="5" fill="#2ed573"/>
+      <circle cx="40" cy="-12" r="16" fill="#fff" fill-opacity=".22"/><circle cx="40" cy="-12" r="5" fill="#fff"/></g>`;
+    const ail = `<rect x="44" y="-17" width="22" height="5" fill="#a9b4c0">
+        <animateTransform attributeName="transform" type="translate" values="0,-5;0,5;0,-5" dur="1.4s" repeatCount="indefinite"/></rect>
+      <rect x="-66" y="-17" width="22" height="5" fill="#a9b4c0">
+        <animateTransform attributeName="transform" type="translate" values="0,5;0,-5;0,5" dur="1.4s" repeatCount="indefinite"/></rect>`;
+    const rock = `<animateTransform attributeName="transform" type="rotate" values="-14;14;-14" dur="1.6s" repeatCount="indefinite"/>`;
+    const cell = (x, y, night, ground, inner, cap) => `
+      <rect x="${x}" y="${y}" width="210" height="104" rx="8" fill="${night ? "#0a0f1a" : "#17324a"}"/>
+      ${ground ? `<rect x="${x}" y="${y + 74}" width="210" height="30" rx="0" fill="${night ? "#0f1a12" : "#203124"}"/>` : ""}
+      <g transform="translate(${x + 105},${ground ? y + 58 : y + 44}) scale(.62)">${inner}</g>
+      ${text(x + 105, y + 98, cap, { size: 11, weight: 700, fill: night ? YEL : INK })}`;
+    return svg(480, 260, `
+      ${text(155, 20, "DAY", { size: 12, weight: 800, fill: MUTED })}${text(375, 20, "NIGHT", { size: 12, weight: 800, fill: MUTED })}
+      <text transform="translate(26,82) rotate(-90)" fill="${MUTED}" font-size="11" font-weight="800" text-anchor="middle" font-family="Segoe UI, Roboto, sans-serif">IN FLIGHT</text>
+      <text transform="translate(26,196) rotate(-90)" fill="${MUTED}" font-size="11" font-weight="800" text-anchor="middle" font-family="Segoe UI, Roboto, sans-serif">ON GROUND</text>
+      ${cell(50, 30, false, false, `<g>${rock}${planeFront()}</g>`, "rock the wings")}
+      ${cell(270, 30, true, false, planeFront(lights), "flash landing / nav lights")}
+      ${cell(50, 144, false, true, planeFront(ail), "move ailerons or rudder")}
+      ${cell(270, 144, true, true, planeFront(lights), "flash landing / nav lights")}
+    `);
+  }
+
+  /* ------------------------- more taxiway markings ------------------------- */
+  // kind: "enhanced" (dashes either side of the centerline before a hold line)
+  //     | "ilsHold"  (the ladder: ILS critical area holding position)
+  //     | "edge"     (continuous vs dashed double yellow edge lines)
+  function marking(kind) {
+    const y2 = (x, dash) => [0, 7].map((d) => `<line x1="${x + d}" y1="0" x2="${x + d}" y2="220" stroke="${YEL}" stroke-width="3" ${dash ? 'stroke-dasharray="16 10"' : ""}/>`).join("");
+    if (kind === "edge") return svg(380, 220, `
+      <rect x="0" y="0" width="120" height="220" fill="#262b31"/>
+      <rect x="120" y="0" width="140" height="220" fill="#2c323b"/>
+      <rect x="260" y="0" width="120" height="220" fill="#353c46"/>
+      <line x1="190" y1="0" x2="190" y2="220" stroke="${YEL}" stroke-width="3"/>
+      ${y2(122, false)}${y2(251, true)}
+      ${text(155, 214, "taxiway", { size: 11, fill: MUTED })}
+      ${text(60, 110, "A", { size: 22, weight: 800, fill: MUTED })}${text(320, 110, "B", { size: 22, weight: 800, fill: MUTED })}
+      ${text(60, 214, "solid double", { size: 10, fill: MUTED })}${text(320, 214, "dashed double", { size: 10, fill: MUTED })}`);
+    const hold = (y) => `<rect x="126" y="${y}" width="108" height="4" fill="${YEL}"/><rect x="126" y="${y + 8}" width="108" height="4" fill="${YEL}"/>` +
+      [16, 24].map((d) => Array.from({ length: 6 }, (_, k) => `<rect x="${126 + k * 18}" y="${y + d}" width="10" height="4" fill="${YEL}"/>`).join("")).join("");
+    const base = `<rect x="0" y="170" width="380" height="50" fill="#3b4350"/>
+      <line x1="0" y1="196" x2="380" y2="196" stroke="#fff" stroke-width="3" stroke-dasharray="20 14"/>
+      <rect x="120" y="0" width="120" height="170" fill="#2c323b"/>
+      <line x1="180" y1="0" x2="180" y2="${kind === "ilsHold" ? 170 : 132}" stroke="${YEL}" stroke-width="3"/>
+      ${text(60, 214, "runway", { size: 11, fill: MUTED })}${text(60, 40, "taxiway", { size: 11, fill: MUTED })}`;
+    if (kind === "enhanced") return svg(380, 220, `${base}
+      ${[172, 188].map((x) => `<line x1="${x}" y1="30" x2="${x}" y2="126" stroke="${YEL}" stroke-width="2.5" stroke-dasharray="9 6"/>`).join("")}
+      ${hold(132)}`);
+    // ilsHold: the ladder sits farther from the runway than the runway hold line
+    const ladder = `<rect x="126" y="54" width="108" height="4" fill="${YEL}"/><rect x="126" y="72" width="108" height="4" fill="${YEL}"/>` +
+      [138, 176, 214].map((x) => `<rect x="${x}" y="58" width="3" height="14" fill="${YEL}"/><rect x="${x + 7}" y="58" width="3" height="14" fill="${YEL}"/>`).join("");
+    return svg(380, 220, `${base}${ladder}${hold(132)}
+      <path d="M262,64 L240,64" stroke="${WARN}" stroke-width="2"/>${text(268, 68, "this one?", { size: 12, weight: 700, fill: WARN, anchor: "start" })}`);
+  }
+
   return {
     CRIT, airfoil, clCurve, forces, torque, pfactor, slipstream, precession,
     overshoot, glidepath, lightGun, sign, holdShort, runway, displaced, closedRunway,
     segmentedCircle, untowered, fuelSystem, electrical,
+    liftFlow, spin, loadFactor, panel205, inspections, pohMap, gate, acknowledge, marking,
   };
 })();
 

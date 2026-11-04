@@ -202,7 +202,8 @@ const StudyDrill = (() => {
     } else {
       if (run.combo >= 2) {
         pill.classList.remove("bump", "big"); void pill.offsetWidth; pill.classList.add("broke");
-        setTimeout(() => { pill.classList.remove("broke"); if (run.combo < 2) pill.hidden = true; }, 450);
+        const r = run;
+        setTimeout(() => { pill.classList.remove("broke"); if (r.combo < 2) pill.hidden = true; }, 450);
       }
       run.combo = 0;
     }
@@ -730,7 +731,7 @@ const StudyDrill = (() => {
         box.innerHTML = "";
         const dots = qs.length > 1 ? qs.map((_, j) => `<i class="${j < k ? "done" : j === k ? "cur" : ""}"></i>`).join("") : "";
         const card = el(`<div class="s1-block s1-quiz">
-          <div class="s1-dots">${dots}</div>
+          ${dots ? `<div class="s1-dots">${dots}</div>` : ""}
           ${q.from ? `<p class="s1-muted">${esc(q.from)}</p>` : ""}
           <h3>${esc(q.q)}</h3>
           ${q.fig ? `<div class="s1-fig">${q.fig()}</div>` : ""}
@@ -1102,7 +1103,8 @@ const StudyDrill = (() => {
   // field is left alone (the acronym inputs have their own Enter handling).
   function onKey(e) {
     if (!root || root.hidden || e.ctrlKey || e.metaKey || e.altKey) return;
-    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    const t = e.target;
+    if (/^(TEXTAREA|SELECT)$/.test(t.tagName) || t.tagName === "INPUT" && !/^(checkbox|radio)$/.test(t.type)) return;
     if (/^[1-9]$/.test(e.key)) {
       const b = root.querySelectorAll(".s1-opt:not(:disabled), .s1-bucket:not(:disabled)")[+e.key - 1];
       if (b) { e.preventDefault(); b.focus({ preventScroll: true }); b.click(); }

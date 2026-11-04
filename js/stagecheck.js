@@ -84,11 +84,11 @@ const STAGE1_TOPICS = {
               "24 hours, regardless of BAC"],
           why: "All three conditions apply. Many schools set a stricter 12-hour rule — 8 is the legal floor." },
         { q: "You're about to fly solo. Which documents must you have on you?",
-          o: ["Student pilot certificate, medical, photo ID — and the logbook with the solo endorsement",
+          o: ["Student pilot certificate, medical and photo ID — with a current solo endorsement (the logbook itself only has to come on a solo cross-country)",
               "Just the student pilot certificate",
               "Medical and photo ID only",
               "Pilot certificate and the aircraft's registration"],
-          why: "The certificate, medical and ID are yours to carry; the endorsement is what makes the solo legal." },
+          why: "61.3 for the certificate, medical and ID; 61.87(n) for the endorsement. 61.51(i) requires carrying the logbook only on solo cross-countries — most schools want it every solo." },
         { q: "How long is a student's solo endorsement good for?",
           o: ["90 days", "30 days", "12 calendar months", "Until the private checkride"],
           why: "61.87(n): the instructor's solo endorsement is valid for 90 days." },
@@ -105,12 +105,12 @@ const STAGE1_TOPICS = {
           <tr><th>A</th><td><b>Annual</b></td><td>12 calendar months · signed off by an A&amp;P with an <b>IA</b> (Inspection Authorization) — an A&amp;P alone can't. N91FF is on a <b>phase</b> (progressive) inspection program instead (91.409(d)).</td></tr>
           <tr><th>A</th><td><b>ADs</b></td><td>Airworthiness Directives — <b>FAA, mandatory</b>. One-time, recurring, or emergency.<br>SAIB — <i>FAA advisory</i> · SB (Service Bulletin) — <i>manufacturer advisory</i>.</td></tr>
           <tr><th>V</th><td><b>VOR</b></td><td>Check within <b>30 days</b> (91.171) — required for IFR; the school applies it when the VOR is your primary means of navigation.</td></tr>
-          <tr><th>I</th><td><b>Inspection — 100 hr</b></td><td>Required when the airplane is used <b>for hire</b> (rental, instruction). May be overflown by up to <b>10 hours</b> only to reach a place it can be done; the overflight counts against the next 100.</td></tr>
+          <tr><th>I</th><td><b>Inspection — 100 hr</b></td><td>Required when the airplane carries anyone <b>for hire</b>, or is used for <b>flight instruction for hire</b> in an airplane the instructor provides — the school's airplanes (91.409(b)). Rental alone doesn't trigger it. May be overflown by up to <b>10 hours</b> only to reach a place it can be done; the overflight counts against the next 100.</td></tr>
           <tr><th>A</th><td><b>Altimeter / pitot-static</b></td><td><b>24 calendar months</b> (91.411) — for IFR in controlled airspace.</td></tr>
           <tr><th>T</th><td><b>Transponder</b></td><td><b>24 calendar months</b> (91.413).</td></tr>
           <tr><th>E</th><td><b>ELT</b></td><td>Inspect every <b>12 calendar months</b>; replace the battery after <b>1 hour</b> of cumulative use or <b>half its useful life</b> (91.207).</td></tr>
           <tr><th>S</th><td><b>Squawks</b></td><td>Discrepancies — check the open squawks on <b>Needle Nine</b> before every flight.</td></tr>
-        </table>` },
+        </table>`, fig: () => Diagrams.inspections() },
       { h: "Not airworthy, but needs to move?", html: `
         <p>A <b>special flight permit</b> (ferry permit, 14 CFR 21.197) lets an airplane that doesn't meet airworthiness
         requirements but is capable of safe flight fly to a repair shop. <b>Contact the FSDO.</b></p>` },
@@ -150,7 +150,7 @@ const STAGE1_TOPICS = {
           o: ["24 calendar months", "12 calendar months", "100 hours", "30 days"],
           why: "91.413 — same as the altimeter/pitot-static check." },
         { q: "Why does a school airplane need a 100-hour inspection at all?",
-          o: ["It's used for hire — rental and flight instruction", "Every airplane needs one",
+          o: ["It's used for flight instruction for hire, in an airplane the school provides", "Every airplane needs one",
               "Because it has a G1000", "Only if it's IFR certified"],
           why: "91.409(b): carrying anyone for hire, or flight instruction for hire in an airplane the instructor provides." },
         { q: "The airplane can't legally fly but is safe to move to the shop. Who do you call?",
@@ -171,7 +171,7 @@ const STAGE1_TOPICS = {
           <tr><th>R</th><td><b>Radio station license</b></td><td>FCC — only required for <b>international</b> flight.</td></tr>
           <tr><th>O</th><td><b>Operating limitations</b></td><td><b>POH Section 2</b>, plus placards and instrument markings.</td></tr>
           <tr><th>W</th><td><b>Weight &amp; balance</b></td><td><b>POH Section 6</b> — the actual empty weight and CG of <i>this</i> airplane. The comprehensive equipment list is in Section 6 too (bonus points).</td></tr>
-        </table>` },
+        </table>`, fig: () => Diagrams.pohMap() },
     ],
     drill: [
       { type: "acronym", word: "ARROW", items: [
@@ -220,7 +220,8 @@ const STAGE1_TOPICS = {
           <tr><th>E</th><td>ELT</td></tr>
           <tr><th>S</th><td>Safety belts (and front-seat shoulder harnesses)</td></tr>
         </table>
-        <p class="s1-note">Night adds <b>FLAPS</b> (91.205(c)): Fuses (spares, if no breakers) · Landing light (if for hire) · Anticollision · Position lights · Source of electrical power.</p>` },
+        <p class="s1-note">Night adds <b>FLAPS</b> (91.205(c)): Fuses (spares, if no breakers) · Landing light (if for hire) · Anticollision · Position lights · Source of electrical power.</p>`,
+        fig: () => Diagrams.panel205() },
     ],
     drill: [
       { type: "acronym", word: "ATOMATOFLAMES", items: [
@@ -242,15 +243,15 @@ const STAGE1_TOPICS = {
         { item: "Right fuel quantity gauge", flight: "Day VFR, local", req: true,
           why: "F — fuel gauge for each tank, 91.205(b). No-go." },
         { item: "Landing light", flight: "Day VFR, dual lesson", given: "The KOEL and TCDS don't require it for day VFR. No AD applies.", req: false,
-          why: "A landing light is only required at night when flying for hire (FLAPS). Deactivate or remove, placard INOP, record it — your call as PIC." },
+          why: "A landing light is only required at night when flying for hire (FLAPS). Deactivate or remove and placard INOP (a 43.9 entry if that took maintenance) — your call as PIC." },
         { item: "Landing light", flight: "Night, flight instruction for hire", req: true,
           why: "91.205(c)(4): at night, for hire, the landing light is required. No-go." },
-        { item: "Anticollision beacon", flight: "Day VFR — a 2008 C172S", req: true,
-          why: "A — anticollision lights are required on airplanes certificated after March 11, 1996. No-go." },
+        { item: "Anticollision (strobe) lights", flight: "Day VFR, local", req: true,
+          why: "A — 91.205(b)(11): an anticollision light system on airplanes certificated after March 11, 1996. No-go (a failure in flight lets you continue to where it can be fixed)." },
         { item: "Position (nav) lights", flight: "Day VFR, back well before sunset", given: "The KOEL and TCDS don't require them for day VFR. No AD applies.", req: false,
           why: "Position lights are in FLAPS — night only. Placard and go, and be on the ground before sunset." },
         { item: "Pitot heat", flight: "Day VFR, no visible moisture", given: "The KOEL and TCDS don't require it for day VFR. No AD applies.", req: false,
-          why: "Not in 91.205 for day VFR. Placard INOP, record it, PIC decides." },
+          why: "Not in 91.205 for day VFR. Placard INOP (record per 43.9 if deactivating it took maintenance), PIC decides." },
         { item: "Oil temperature gauge", flight: "Day VFR, local", req: true,
           why: "O — oil temperature gauge for an air-cooled engine. No-go." },
         { item: "Magnetic compass", flight: "Day VFR, local", req: true,
@@ -260,9 +261,9 @@ const STAGE1_TOPICS = {
       ] },
       { type: "quiz", qs: [
         { q: "An item isn't required by anything. What do you do before flight (91.213(d))?",
-          o: ["Remove or deactivate it, placard it \"Inoperative\", record it — and the PIC decides it's safe",
+          o: ["Remove or deactivate it and placard it \"Inoperative\" (recorded per 43.9 if it took maintenance) — and the PIC decides it's safe",
               "Nothing — just don't use it", "Get a special flight permit", "Call the FSDO"],
-          why: "Deactivation is maintenance, so it's recorded (43.9); the final say is the PIC's." },
+          why: "91.213(d)(3): removal is recorded per 43.9; deactivation is recorded too if it involves maintenance. The final say is the PIC's." },
         { q: "Where is the C172S's Kinds of Operations Equipment List?",
           o: ["In the POH", "In the TCDS", "On Needle Nine", "In the AIM"], why: "The KOEL is in the POH; the TCDS is a separate FAA document." },
         { q: "Your school doesn't have an MEL. Which rule do you use?",
@@ -282,7 +283,7 @@ const STAGE1_TOPICS = {
         <ul class="s1-list">
           <li><b>Who — 43.3(g):</b> a pilot certificate holder may do preventive maintenance on an aircraft they own or operate, if it isn't used under Part 121/129/135.</li>
           <li><b>What — Part 43 Appendix A, paragraph (c):</b> the list. Simple, small, no complex assembly. Tires, struts, wheel bearings, lubrication, safety wire, bulbs and lenses, spark plugs, batteries, filters, safety belts, side windows, prefabricated fuel lines…</li>
-          <li><b>Paperwork — 43.9:</b> a logbook entry with a description of the work, the date it was completed, your name, and your certificate number and type.</li>
+          <li><b>Paperwork — 43.9:</b> a logbook entry with a description of the work, the date it was completed, your name, and — to return it to service — your signature, certificate number and kind of certificate.</li>
         </ul>
         <p class="s1-note">If it isn't on the list, it isn't preventive maintenance — it's a job for a mechanic.</p>` },
     ],
@@ -304,7 +305,7 @@ const STAGE1_TOPICS = {
           why: "43.3(g). The list itself is Part 43 Appendix A, paragraph (c)." },
         { q: "Where's the list of what counts as preventive maintenance?", o: ["Part 43 Appendix A, paragraph (c)", "POH Section 8", "91.205", "AC 43.13"],
           why: "Appendix A(c) — 30-odd specific items." },
-        { q: "What goes in the logbook entry?", o: ["Description, date completed, your name, certificate number and type", "Just your signature", "The tach time only", "Nothing — preventive maintenance isn't recorded"],
+        { q: "What goes in the logbook entry?", o: ["Description, date completed, your name, signature, certificate number and kind", "Just your signature", "The tach time only", "Nothing — preventive maintenance isn't recorded"],
           why: "43.9 — it's maintenance, so it's recorded." },
       ] },
     ],
@@ -471,7 +472,7 @@ const STAGE1_TOPICS = {
   lift: {
     name: "Lift, stalls & spins", tag: "AERO", color: "#706fd3",
     learn: [
-      { h: "How a wing makes lift", fig: () => Diagrams.forces(), html: `
+      { h: "How a wing makes lift", fig: () => Diagrams.liftFlow(), html: `
         <ul class="s1-list">
           <li><b>Bernoulli:</b> the air over the curved upper surface speeds up, its pressure drops, and the higher pressure underneath pushes the wing up.</li>
           <li><b>Newton's third law:</b> the wing deflects air downward (downwash); the air pushes the wing up.</li>
@@ -486,7 +487,7 @@ const STAGE1_TOPICS = {
               It can happen at <b>any airspeed, any attitude, any power setting</b>. Recover: <b>reduce the AOA</b> (pitch forward), level the wings with coordinated controls, add power.</li>
           <li><b>Spin:</b> an <b>aggravated stall that results in autorotation</b> — both wings stalled, one deeper than the other, and the airplane yaws and rolls toward it. Needs <b>stall + yaw</b> (uncoordinated flight).</li>
           <li><b>Spin recovery (PARE):</b> <b>P</b>ower idle · <b>A</b>ilerons neutral · <b>R</b>udder full opposite the rotation · <b>E</b>levator briskly forward. Neutralize rudder when the rotation stops, then recover from the dive.</li>
-        </ul>` },
+        </ul>`, fig: () => Diagrams.spin() },
     ],
     drill: [
       { type: "quiz", qs: [
@@ -504,6 +505,15 @@ const STAGE1_TOPICS = {
           why: "Two descriptions of the same lift." },
         { q: "You increase the angle of attack, still below critical. What happens to lift?", o: ["It increases", "It decreases", "It stays the same", "The wing stalls"],
           why: "CL climbs with AOA until the critical angle — then it falls off.", fig: () => Diagrams.clCurve(10) },
+        { q: "Straight-and-level, unaccelerated flight. How do the four forces compare?", fig: () => Diagrams.forces(),
+          o: ["Lift equals weight and thrust equals drag", "Lift is greater than weight", "Thrust is greater than drag", "All four are equal to each other"],
+          why: "PHAK ch. 5: in steady flight the opposing forces are in equilibrium." },
+        { q: "Level turn at 60° of bank. What's the load factor?", fig: () => Diagrams.loadFactor(60, true),
+          o: ["2 G", "1.4 G", "1.15 G", "3 G"],
+          why: "n = 1 / cos(bank): 1.15 G at 30°, 1.41 G at 45°, 2 G at 60° (PHAK ch. 5)." },
+        { q: "In that 60° level turn, the stall speed is…", fig: () => Diagrams.loadFactor(60, true),
+          o: ["About 41% higher — it rises with the square root of the load factor", "Unchanged — stall speed is a fixed number", "Twice as high", "Lower, because the turn adds lift"],
+          why: "√2 ≈ 1.41. The same wing stalls at a higher speed when it has to carry twice the weight — why steep turns low and slow bite." },
       ] },
     ],
   },
@@ -559,7 +569,7 @@ const STAGE1_TOPICS = {
           <tr><th>P</th><td><b>Power</b> set</td></tr>
           <tr><th>S</th><td><b>Sink rate</b> not excessive</td></tr>
         </table>
-        <p class="s1-note">If any of them aren't true by your stabilized gate — <b>go around</b>.</p>` },
+        <p class="s1-note">If any of them aren't true by your stabilized gate — <b>go around</b>.</p>`, fig: () => Diagrams.gate() },
       { h: "\"How would you correct being ___ and ___ on final?\"", widget: "approachGrid", html: `
         <p>Think <b>energy</b>: altitude and airspeed trade against each other with <b>pitch</b>; <b>power</b> adds or removes energy.
         Tap a box.</p>` },
@@ -577,7 +587,7 @@ const STAGE1_TOPICS = {
         { q: "High and fast on final. Correction?", fig: () => Diagrams.glidepath("high", "fast"),
           o: ["Reduce power (to idle if needed), pitch to bleed the speed, add flaps if within Vfe — go around if it won't stabilize",
               "Add power and pitch down", "Pitch down to get back on the glidepath", "Hold it and let it sort itself out"],
-          why: "Too much energy on both counts — power is the only thing that removes energy." },
+          why: "Too much energy on both counts. Reducing power stops adding energy; drag — flaps, a slip — takes it away." },
         { q: "High and slow on final. Correction?", fig: () => Diagrams.glidepath("high", "slow"),
           o: ["Lower the nose — trade the extra altitude for airspeed — then set power for the glidepath",
               "Add power and raise the nose", "Reduce power and raise the nose", "Add flaps"],
@@ -590,8 +600,8 @@ const STAGE1_TOPICS = {
           o: ["Add power and raise the nose to the glidepath — and go around if it isn't fixed right away",
               "Pitch down for airspeed", "Raise the nose only", "Reduce power"],
           why: "The most dangerous corner: short of energy, close to the ground, close to a stall. Power first." },
-        { q: "What's the airspeed tolerance in CCLAPS?", o: ["+5 / −0 knots", "±5 knots", "±10 knots", "+10 / −5 knots"],
-          why: "Never slow — slow is the stall side." },
+        { q: "Per the school's CCLAPS, what's the airspeed tolerance on final?", o: ["+5 / −0 knots", "±5 knots", "±10 knots", "+15 / −0 knots"],
+          why: "Never slow — slow is the stall side. (The ACS allows +10/−5 on a normal approach; the school's gate is tighter.)" },
         { q: "PAPI shows four red lights. You are…", o: ["Well below the glidepath", "On the glidepath", "Slightly high", "Well above"],
           why: "\"Red over white, you're all right\" is the VASI; on a PAPI two white / two red is on path, all red is low.", fig: () => Diagrams.glidepath("low", "on") },
       ] },
@@ -619,7 +629,7 @@ const STAGE1_TOPICS = {
           <li>Stay <b>outside or above Class D</b> until you've worked out the direction and flow of traffic.</li>
           <li><b>Join the pattern</b> and watch the tower for light signals.</li>
           <li><b>Acknowledge:</b> in flight — <b>rock the wings</b> (day), <b>flash the landing or nav lights</b> (night). On the ground — <b>move the ailerons or rudder</b> (day), flash the lights (night).</li>
-        </ol>` },
+        </ol>`, fig: () => Diagrams.acknowledge() },
     ],
     drill: [
       { type: "quiz", qs: [
@@ -644,7 +654,7 @@ const STAGE1_TOPICS = {
         { q: "What does it mean?", fig: () => Diagrams.lightGun("alt", "steady", false),
           o: ["Exercise extreme caution", "Airport unsafe", "Return for landing", "Give way"], why: "Alternating red and green — same meaning on the ground and in the air." },
         { q: "Lost comms, daytime, in the pattern. How do you acknowledge a light signal?",
-          o: ["Rock the wings", "Flash the landing light", "Squawk ident", "Move the rudder"], why: "At night, flash the landing or nav lights." },
+          o: ["Rock the wings", "Flash the landing light", "Squawk ident", "Move the rudder"], why: "AIM 4-2-13. At night, flash the landing or nav lights; on the ground by day, move the ailerons or rudder (AIM 4-3-13)." },
         { q: "Which transponder code for lost comms?", o: ["7600", "7700", "7500", "1200"], why: "7500 hijack · 7600 radio failure · 7700 emergency." },
         { q: "Lost comms, VFR, inbound to a towered field. Where do you wait while working out the flow of traffic?",
           o: ["Outside or above the Class D", "In the pattern", "Over the runway at pattern altitude", "On the ground at a nearby field"],
@@ -692,7 +702,7 @@ const STAGE1_TOPICS = {
           <figure>${Diagrams.sign([sgn("mandatory", "9-27")])}<figcaption><b>Mandatory</b> — red, white letters. Runway holding position. Don't cross without a clearance.</figcaption></figure>
           <figure>${Diagrams.sign([sgn("noentry", "")])}<figcaption><b>No entry</b> — mandatory.</figcaption></figure>
           <figure>${Diagrams.sign([sgn("location", "B")])}<figcaption><b>Location</b> — black, yellow letters and border. <i>Where you are.</i></figcaption></figure>
-          <figure>${Diagrams.sign([sgn("location", "B"), sgn("direction", "← A")])}<figcaption><b>Direction</b> — yellow, black letters, arrow. <i>Where the taxiways go.</i></figcaption></figure>
+          <figure>${Diagrams.sign([sgn("direction", "← A"), sgn("location", "B")])}<figcaption><b>Direction</b> — yellow, black letters, arrow. <i>Where the taxiways go</i> — left turns sit left of the location sign, right turns right.</figcaption></figure>
           <figure>${Diagrams.sign([sgn("destination", "RAMP →")])}<figcaption><b>Destination</b> — yellow, black letters, arrow. <i>How to get to a place.</i></figcaption></figure>
           <figure>${Diagrams.sign([sgn("distance", "4")])}<figcaption><b>Runway distance remaining</b> — black, white number (thousands of feet).</figcaption></figure>
           <figure>${Diagrams.sign([sgn("rwyBoundary", "")])}<figcaption><b>Runway boundary</b> — faces you as you exit. Past it, you're clear.</figcaption></figure>
@@ -710,21 +720,31 @@ const STAGE1_TOPICS = {
           o: ["Runway holding position (mandatory)", "Runway location", "Direction to runway 9-27", "Runway distance remaining"], why: "Red with white letters = mandatory instruction." },
         { q: "What kind of sign?", fig: () => Diagrams.sign([sgn("location", "B")]),
           o: ["Location — you're on taxiway B", "Direction to taxiway B", "Destination B", "Hold short of B"], why: "Black with yellow letters and border = you are here." },
-        { q: "What does it tell you?", fig: () => Diagrams.sign([sgn("location", "A"), sgn("direction", "← C")]),
-          o: ["You're on A; taxiway C is to the left", "You're on C; A is to the left", "Turn left onto A", "Hold short of C"], why: "Location on the left of the array, direction sign next to it." },
+        { q: "What does it tell you?", fig: () => Diagrams.sign([sgn("direction", "← C"), sgn("location", "A")]),
+          o: ["You're on A; taxiway C is to the left", "You're on C; A is to the left", "Turn left onto A", "Hold short of C"],
+          why: "The black location sign says where you are. Direction signs for left turns go to its left, right turns to its right (AIM 2-3-10)." },
         { q: "What kind of sign?", fig: () => Diagrams.sign([sgn("noentry", "")]),
           o: ["No entry", "Hold short", "Closed runway", "ILS critical area"], why: "Mandatory sign — aircraft entry prohibited." },
         { q: "What does it tell you?", fig: () => Diagrams.sign([sgn("distance", "3")]),
           o: ["3,000 ft of runway remaining", "Taxiway 3", "Runway 3", "Exit in 3 seconds"], why: "Black with a white number, along the runway edge." },
         { q: "When you pass this sign while exiting the runway, you are…", fig: () => Diagrams.sign([sgn("rwyBoundary", "")]),
           o: ["Clear of the runway", "Entering the ILS critical area", "Required to hold", "On the runway"], why: "Runway boundary sign — it faces the runway side." },
-        { q: "Approaching these lines from the TAXIWAY, you see the solid lines first. You must…", fig: () => Diagrams.holdShort(),
-          o: ["Stop — hold short unless cleared onto or across the runway", "Continue — you may cross", "Stop only at night", "Stop only at towered airports"],
+        { q: "At a towered airport, approaching these lines from the TAXIWAY, you see the solid lines first. You must…", fig: () => Diagrams.holdShort(),
+          o: ["Stop — hold short unless cleared onto or across the runway", "Continue — you may cross", "Stop only at night", "Stop only if traffic is on final"],
           why: "Solid lines on your side = hold." },
         { q: "What may you do on a displaced threshold area?", fig: () => Diagrams.displaced(),
           o: ["Taxi, take off and roll out — but not land", "Land only", "Nothing at all", "Park"], why: "Arrows lead to the landing threshold." },
         { q: "Yellow X on a runway means…", fig: () => Diagrams.closedRunway(),
           o: ["Closed", "Displaced threshold", "Helipad", "Stopway"], why: "Closed runway or taxiway." },
+        { q: "Dashed yellow lines appear on both sides of the taxiway centerline. They warn you…", fig: () => Diagrams.marking("enhanced"),
+          o: ["A runway holding position marking is just ahead", "You're entering an ILS critical area", "The taxiway is closed", "The taxiway edge is unusable"],
+          why: "Enhanced taxiway centerline — up to 150 ft before a runway holding position marking (AIM 2-3-4)." },
+        { q: "What is the ladder-shaped marking?", fig: () => Diagrams.marking("ilsHold"),
+          o: ["ILS critical area holding position — hold here when ATC says \"hold short of the ILS critical area\"", "Runway holding position marking", "Taxiway edge marking", "Non-movement area boundary"],
+          why: "Two solid lines joined by pairs of short bars (AIM 2-3-5). It's farther from the runway than the hold-short line." },
+        { q: "Side B of this taxiway has DASHED double yellow edge lines. What's beyond them?", fig: () => Diagrams.marking("edge"),
+          o: ["Pavement aircraft may use — an apron, for example", "Pavement not meant for aircraft — don't cross", "A runway", "A closed taxiway"],
+          why: "AIM 2-3-4: continuous double lines = the pavement beyond isn't for aircraft; dashed = it is." },
         { q: "What kind of sign?", fig: () => Diagrams.sign([sgn("destination", "RAMP →")]),
           o: ["Destination — the ramp is to the right", "Location — you're on the ramp", "Direction to taxiway R", "Information"], why: "Yellow with black letters and an arrow, naming a place rather than a taxiway." },
       ] },
