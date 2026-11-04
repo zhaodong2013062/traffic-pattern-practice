@@ -840,7 +840,7 @@ const StudyDrill = (() => {
           <div class="s1-flowwrap">${inopFlowHTML(null)}</div>
           <div class="s1-buckets">
             <button class="s1-bucket" data-go="0">⛔ No-go — it's required</button>
-            <button class="s1-bucket" data-go="1">✅ Go — deactivate, placard, record, PIC decides</button>
+            <button class="s1-bucket" data-go="1">✅ Go — remove or deactivate, placard INOP, PIC decides</button>
           </div>${KEYS(2)}<div class="s1-why" hidden></div></div>`;
         box.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => {
           const go = b.dataset.go === "1", ok = go === !c.req;
@@ -905,7 +905,7 @@ const StudyDrill = (() => {
       ${node("q " + lit(1), "Required by the TCDS or the KOEL (POH)?", "yes → NO-GO")}
       ${node("q " + lit(2) + (stop === "205" ? " stop" : ""), "Required by 91.205 / another rule for this flight?", "A TOMATO FLAMES · FLAPS at night · yes → NO-GO")}
       ${node("q " + (stop === "go" ? "lit" : ""), "Required by an AD?", "yes → NO-GO")}
-      ${node("go " + (stop === "go" ? "lit" : ""), "GO", "Remove or deactivate · placard INOP · record it · PIC decides it's safe")}
+      ${node("go " + (stop === "go" ? "lit" : ""), "GO", "Remove or deactivate · placard INOP · log it if it was maintenance (43.9) · PIC decides it's safe")}
       ${stop === "205" ? node("nogo lit", "NO-GO", "Fix it — or a special flight permit from the FSDO") : ""}
     </div>`;
   }
