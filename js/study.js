@@ -11,11 +11,19 @@
             grid, inop flowchart, risk matrix, FRAT, personal minimums).
             Drill — the topic's activities run back to back and score.
 
-   Activity runners: acronym (tiles or type-it), quiz (first click counts),
-   match, sort, inop (go/no-go down the 91.213 flow), systems (the examiner
-   picks three — say what you know, then check yourself against the list).
+   Activity runners: acronym (tiles, type-it, or a timed rapid-fire round),
+   quiz (first click counts), match, sort, inop (go/no-go down the 91.213
+   flow), systems (the examiner picks three — say what you know, then check
+   yourself against the list).
 
-   Best scores persist in localStorage, as do the personal minimums.
+   Drills show a progress bar and a combo counter. Every missed quiz, sort and
+   inop card lands in a Leitner review deck ("Review my misses") and comes
+   back on a growing interval until it is answered right five times running.
+   The mock oral is a conversation with an examiner, optionally read aloud.
+   Keys: 1–9 answer, Enter / → next.
+
+   Best scores persist in localStorage, as do the personal minimums, the
+   review deck, the daily streak and the badges.
 
    API on window.StudyDrill: init() / activate() / deactivate() / start() /
    restart() / showHint()  (the last three are no-ops; the top-bar buttons
@@ -26,8 +34,14 @@ const StudyDrill = (() => {
   const $ = (id) => document.getElementById(id);
   const STORE = "c172-stage1-progress";
   const MINS = "c172-stage1-minimums";
+  const STATS = "c172-stage1-stats";    // streak, best combo, badges, rapid-fire times
+  const DECK = "c172-stage1-misses";    // review deck: card key -> { box, due, n }
+  const PREFS = "c172-stage1-prefs";    // examiner voice on/off
   let root = null;
   let progress = load(STORE, {});
+  let stats = load(STATS, {});
+  let deck = load(DECK, {});
+  let prefs = load(PREFS, {});
 
   function load(key, dflt) {
     try { return JSON.parse(localStorage.getItem(key)) || dflt; } catch (e) { return dflt; }
@@ -55,16 +69,161 @@ const StudyDrill = (() => {
     return Math.round(sum / ids.length);
   }
   function setTopbar() { $("progressText").textContent = `Stage 1 readiness ${readiness()}%`; }
+  const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pickOne = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  /* ========================== streak & badges =========================== */
+  const dayKey = (t) => new Date(t).toLocaleDateString("en-CA");   // local YYYY-MM-DD
+  // the streak is alive if the last study day was today or yesterday
+  const streakNow = () => [dayKey(Date.now()), dayKey(Date.now() - 864e5)].includes(stats.day) ? stats.streak || 0 : 0;
+  function studied() {
+    const today = dayKey(Date.now());
+    if (stats.day === today) return;
+    stats.streak = stats.day === dayKey(Date.now() - 864e5) ? (stats.streak || 0) + 1 : 1;
+    stats.day = today;
+    save(STATS, stats);
+    if (stats.streak >= 3) award("streak3");
+    if (stats.streak >= 7) award("streak7");
+  }
+
+  const BADGES = [
+    ["first", "🛫", "First flight", "Finish any drill"],
+    ["pave", "🧭", "PAVE master", "Three stars on every PAVE topic"],
+    ["ready", "🏆", "Checkride ready", "Three stars on every topic"],
+    ["oral", "🎤", "Perfect oral", "15 for 15 on a mock oral"],
+    ["combo10", "🔥", "On a roll", "A 10-answer combo"],
+    ["combo25", "☄️", "Unstoppable", "A 25-answer combo"],
+    ["quick", "⚡", "Quick draw", "A clean rapid-fire acronym"],
+    ["streak3", "📅", "Three in a row", "Study three days running"],
+    ["streak7", "🗓️", "Week streak", "Study seven days running"],
+    ["clean", "🧹", "Clean slate", "Empty the review deck"],
+  ];
+  function award(id) {
+    stats.badges = stats.badges || {};
+    if (stats.badges[id]) return;
+    stats.badges[id] = Date.now(); save(STATS, stats);
+    const b = BADGES.find((x) => x[0] === id);
+    toast(`<span class="s1-toast-ic">${b[1]}</span><span><small>Badge earned</small><b>${b[2]}</b></span>`);
+  }
+  function checkStars() {
+    const three = (id) => stars(progress[id]) === 3;
+    if (STAGE1_SECTIONS[0].topics.every(three)) award("pave");
+    if (Object.keys(STAGE1_TOPICS).every(three)) award("ready");
+  }
+
+  let toastQ = Promise.resolve();
+  function toast(html) {
+    // queued, so two badges at once don't stack on top of each other
+    toastQ = toastQ.then(() => new Promise((res) => {
+      const t = el(`<div class="s1-toast" role="status">${html}</div>`);
+      document.body.appendChild(t);
+      setTimeout(() => { t.classList.add("out"); setTimeout(() => { t.remove(); res(); }, 300); }, 2600);
+    }));
+  }
+
+  /* ============================ review deck ============================= */
+  // Leitner boxes: a miss goes to box 0 (due now); each right answer when it
+  // is due moves it up a box; right out of the last box and it is retired.
+  const BOX_DAYS = [0, 1, 3, 7, 14];
+  const cardKey = {
+    quiz: (q) => "q:" + q.q,
+    sort: (it, a) => "s:" + a.title + "|" + it.t,
+    inop: (c) => "i:" + c.item + "|" + c.flight,
+  };
+  function grade(key, ok) {
+    const m = deck[key], now = Date.now();
+    if (!ok) deck[key] = { box: 0, due: now, n: (m ? m.n : 0) + 1 };
+    else if (m && m.due <= now) {
+      if (m.box + 1 >= BOX_DAYS.length) delete deck[key];
+      else deck[key] = { ...m, box: m.box + 1, due: now + BOX_DAYS[m.box + 1] * 864e5 };
+    } else return;
+    save(DECK, deck);
+  }
+  // every gradeable card in the content, by key — looked up fresh each time so
+  // a saved miss survives edits to stagecheck.js (cards that vanish are skipped)
+  function cardIndex() {
+    const ix = {};
+    const add = (k, v) => { if (!ix[k]) ix[k] = v; };
+    Object.entries(STAGE1_TOPICS).forEach(([id, t]) => t.drill.forEach((a) => {
+      if (a.type === "quiz") a.qs.forEach((q) => add(cardKey.quiz(q), { kind: "quiz", topic: t.name, q }));
+      if (a.type === "sort") a.items.forEach((it) => add(cardKey.sort(it, a), { kind: "sort", topic: t.name, a, it }));
+      if (a.type === "inop") a.cases.forEach((c) => add(cardKey.inop(c), { kind: "inop", topic: t.name, c }));
+    }));
+    STAGE1_SYSTEMS.forEach((s) => (s.qs || []).forEach((q) => add(cardKey.quiz(q), { kind: "quiz", topic: "Systems · " + s.name, q })));
+    return ix;
+  }
+  function deckStatus() {
+    const ix = cardIndex(), now = Date.now();
+    const live = Object.entries(deck).filter(([k]) => ix[k]);
+    const due = live.filter(([, m]) => m.due <= now);
+    const next = live.length > due.length ? Math.min(...live.filter(([, m]) => m.due > now).map(([, m]) => m.due)) : null;
+    return { ix, live, due, next };
+  }
+
+  /* ======================= run: progress + combo ======================== */
+  // One drill in progress. Runners report each graded answer with hit() and
+  // each finished item with tick(); the header bar and the combo pill follow.
+  let run = null;
+  const live = () => run && run.head.isConnected;
+  function startRun(host, units, label) {
+    const head = el(`<div class="s1-runhead">
+      <div class="s1-runrow"><span class="s1-step">${label}</span>
+        <span class="s1-combo" hidden>🔥 <b>0</b><small>combo</small></span></div>
+      <div class="s1-bar"><i></i></div></div>`);
+    host.prepend(head);
+    run = { head, units: Math.max(1, units), done: 0, partStart: 0, combo: 0, best: 0 };
+    paint();
+    return run;
+  }
+  function paint() {
+    run.head.querySelector(".s1-bar i").style.width = (100 * Math.min(1, run.done / run.units)).toFixed(1) + "%";
+  }
+  function tick(n = 1) { if (live()) { run.done += n; paint(); } }
+  function grow(n) { if (live()) { run.units += n; paint(); } }
+  function hit(ok, key) {
+    if (key) grade(key, ok);
+    studied();
+    if (!live()) return;
+    const pill = run.head.querySelector(".s1-combo");
+    if (ok) {
+      run.combo++;
+      run.best = Math.max(run.best, run.combo);
+      if (run.combo > (stats.bestCombo || 0)) { stats.bestCombo = run.combo; save(STATS, stats); }
+      if (run.combo >= 10) award("combo10");
+      if (run.combo >= 25) award("combo25");
+      pill.hidden = run.combo < 2;
+      pill.querySelector("b").textContent = run.combo;
+      pill.classList.remove("bump", "big"); void pill.offsetWidth;
+      pill.classList.add(run.combo % 5 === 0 ? "big" : "bump");
+      if (run.combo % 5 === 0) {
+        const f = el(`<span class="s1-float">Combo ×${run.combo}!</span>`);
+        run.head.appendChild(f); setTimeout(() => f.remove(), 1100);
+      }
+    } else {
+      if (run.combo >= 2) {
+        pill.classList.remove("bump", "big"); void pill.offsetWidth; pill.classList.add("broke");
+        setTimeout(() => { pill.classList.remove("broke"); if (run.combo < 2) pill.hidden = true; }, 450);
+      }
+      run.combo = 0;
+    }
+  }
 
   /* ================================ HOME ================================ */
   function home() {
+    stopVoice();
+    run = null;
     setTopbar();
     const r = readiness(), C = 2 * Math.PI * 42;
+    const ds = deckStatus(), streak = streakNow();
+    const got = stats.badges || {}, nGot = BADGES.filter((b) => got[b[0]]).length;
+    const nextIn = ds.next ? Math.max(1, Math.ceil((ds.next - Date.now()) / 864e5)) : 0;
+    const reviewSub = ds.due.length ? `${ds.due.length} due now${ds.live.length > ds.due.length ? ` · ${ds.live.length - ds.due.length} later` : ""}`
+      : ds.live.length ? `Nothing due — next in ${nextIn} day${nextIn > 1 ? "s" : ""}` : "Misses land here";
     let html = `<div class="s1-home">
       <section class="s1-hero">
         <svg class="s1-ring" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="42" stroke="#313a46" stroke-width="9" fill="none"/>
-          <circle cx="50" cy="50" r="42" stroke="#2ed573" stroke-width="9" fill="none" stroke-linecap="round"
+          <circle class="s1-ring-arc" cx="50" cy="50" r="42" stroke="#2ed573" stroke-width="9" fill="none" stroke-linecap="round"
             stroke-dasharray="${(C * r / 100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/>
           <text x="50" y="55" text-anchor="middle" font-size="20" font-weight="800" fill="#e8edf2">${r}%</text>
         </svg>
@@ -73,10 +232,19 @@ const StudyDrill = (() => {
           <p>Learn each topic, then drill it until it's three stars. Acronyms marked <b>memorize</b> are word-for-word —
           the examiner will ask for them cold.</p>
           <div class="s1-hero-actions">
-            <button class="btn primary" data-act="mock">🎤 Mock oral — 15 questions</button>
+            <button class="btn primary" data-act="mock">🎤 Mock oral with the examiner</button>
             <button class="btn" data-act="reset">Reset progress</button>
           </div>
         </div>
+      </section>
+      <section class="s1-stats">
+        <div class="s1-stat ${streak ? "hot" : "cold"}"><span class="s1-stat-ic">🔥</span>
+          <span><b>${streak} day${streak === 1 ? "" : "s"}</b><small>${streak ? (stats.day === dayKey(Date.now()) ? "Streak — done for today" : "Streak — study today to keep it") : "Study today to start a streak"}</small></span></div>
+        <button class="s1-stat review ${ds.due.length ? "due" : "cold"}" data-act="review" ${ds.due.length ? "" : "disabled"}>
+          <span class="s1-stat-ic">🔁</span><span><b>Review my misses</b><small>${reviewSub}</small></span>
+          ${ds.due.length ? `<span class="s1-count">${ds.due.length}</span>` : ""}</button>
+        <div class="s1-stat ${nGot ? "" : "cold"}"><span class="s1-stat-ic">🏅</span>
+          <span><b>${nGot} of ${BADGES.length} badges</b><small>Best combo ${stats.bestCombo || 0}</small></span></div>
       </section>`;
     STAGE1_SECTIONS.forEach((sec) => {
       html += `<section class="s1-section"><h3>${sec.name} <span>${sec.sub}</span></h3>`;
@@ -93,13 +261,18 @@ const StudyDrill = (() => {
       });
       html += `</div></section>`;
     });
+    html += `<section class="s1-section"><h3>Badges <span>${nGot} of ${BADGES.length}</span></h3>
+      <div class="s1-badges">${BADGES.map(([id, ic, n, d]) =>
+        `<div class="s1-badge ${got[id] ? "got" : ""}" title="${esc(d)}"><span>${ic}</span><b>${n}</b><small>${d}</small></div>`).join("")}</div></section>`;
     html += `</div>`;
     root.innerHTML = html;
     root.querySelectorAll("[data-topic]").forEach((b) => b.addEventListener("click", () => topic(b.dataset.topic)));
     root.querySelector('[data-act="mock"]').addEventListener("click", mockOral);
+    root.querySelector('[data-act="review"]').addEventListener("click", review);
     root.querySelector('[data-act="reset"]').addEventListener("click", () => {
-      if (!confirm("Clear all Stage 1 stars?")) return;
-      progress = {}; save(STORE, progress); home();
+      if (!confirm("Clear all Stage 1 stars, the streak, badges and the review deck?")) return;
+      progress = {}; stats = {}; deck = {};
+      save(STORE, progress); save(STATS, stats); save(DECK, deck); home();
     });
     window.scrollTo(0, 0);
   }
@@ -113,6 +286,8 @@ const StudyDrill = (() => {
 
   /* ================================ TOPIC =============================== */
   function topic(id, tab = "learn") {
+    stopVoice();
+    run = null;
     const t = STAGE1_TOPICS[id];
     root.innerHTML = `<div class="s1-topic" style="--c:${t.color}">
       <div class="s1-topic-head">
@@ -131,7 +306,7 @@ const StudyDrill = (() => {
     root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => topic(id, b.dataset.tab)));
     const body = root.querySelector(".s1-body");
     if (tab === "learn") renderLearn(t, body, id);
-    else runDrill(t.drill, body, (pct) => finishDrill(id, pct, body));
+    else runDrill(t.drill, body, (pct, combo) => finishDrill(id, pct, body, combo));
     window.scrollTo(0, 0);
   }
 
@@ -148,11 +323,12 @@ const StudyDrill = (() => {
     body.appendChild(go);
   }
 
-  function finishDrill(id, pct, body) {
-    const best = Math.max(progress[id] || 0, pct);
+  function finishDrill(id, pct, body, combo) {
+    const prev = progress[id] || 0, best = Math.max(prev, pct);
     progress[id] = best; save(STORE, progress); setTopbar();
     const ids = Object.keys(STAGE1_TOPICS), next = ids[ids.indexOf(id) + 1];
-    result(body, pct, `Best: ${best}%`, [
+    const newBest = pct > prev && prev > 0 ? " · new best!" : "";
+    result(body, pct, `Best: ${best}%${newBest}${combo >= 2 ? ` · longest combo ${combo}` : ""}`, [
       ["Drill again", () => topic(id, "drill")],
       ["Review", () => topic(id, "learn")],
       next ? [`Next: ${STAGE1_TOPICS[next].name} →`, () => topic(next), true] : ["All topics", home, true],
@@ -173,10 +349,20 @@ const StudyDrill = (() => {
       card.querySelector(".s1-result-actions").appendChild(b);
     });
     body.appendChild(card);
+    // count the score up rather than printing it
+    const sc = card.querySelector(".s1-score");
+    if (!calm() && pct > 0) {
+      const t0 = performance.now();
+      const step = (t) => { const f = Math.min(1, (t - t0) / 700); sc.textContent = Math.round(pct * (1 - Math.pow(1 - f, 3))) + "%"; if (f < 1) requestAnimationFrame(step); };
+      sc.textContent = "0%"; requestAnimationFrame(step);
+    }
+    award("first");
+    checkStars();
     if (s === 3) confetti();
   }
 
   function confetti() {
+    if (calm()) return;
     const box = el(`<div class="s1-confetti"></div>`);
     const cols = ["#34ace0", "#2ed573", "#ffa502", "#ff4757", "#e056fd", "#f6c90e"];
     for (let k = 0; k < 40; k++) {
@@ -192,49 +378,187 @@ const StudyDrill = (() => {
   }
 
   /* ============================== MOCK ORAL ============================= */
+  // A conversation, not a quiz: the examiner works through the topics in
+  // stage-check order, leads into each question, and reacts to the answer.
+  const canSpeak = "speechSynthesis" in window && typeof SpeechSynthesisUtterance === "function";
+  function stopVoice() { if (canSpeak) try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } }
+  function say(html) {
+    if (!canSpeak || !prefs.voice) return;
+    const t = el(`<div>${html}</div>`);
+    t.querySelectorAll(".s1-fig, .s1-muted").forEach((x) => x.remove());
+    try { stopVoice(); speechSynthesis.speak(new SpeechSynthesisUtterance(t.textContent.replace(/\s+/g, " ").trim())); } catch (e) { /* ignore */ }
+  }
+
   function mockOral() {
+    const order = Object.keys(STAGE1_TOPICS);
     const pool = [];
     Object.entries(STAGE1_TOPICS).forEach(([id, t]) => t.drill.forEach((a) => {
-      if (a.type === "quiz") a.qs.forEach((q) => pool.push({ ...q, from: t.name }));
+      if (a.type === "quiz") a.qs.forEach((q) => pool.push({ ...q, from: t.name, ord: order.indexOf(id) }));
     }));
-    STAGE1_SYSTEMS.forEach((s) => s.qs.forEach((q) => pool.push({ ...q, from: "Systems · " + s.name })));
-    const qs = shuffle(pool).slice(0, 15);
+    const sysOrd = Math.max(0, order.indexOf("systems"));
+    STAGE1_SYSTEMS.forEach((s) => (s.qs || []).forEach((q) => pool.push({ ...q, from: "Systems · " + s.name, ord: sysOrd })));
+    // a random fifteen, then asked topic by topic the way the oral flows
+    const qs = shuffle(pool).slice(0, 15).sort((x, y) => x.ord - y.ord || (x.from < y.from ? -1 : x.from > y.from ? 1 : 0));
+    stopVoice();
     root.innerHTML = `<div class="s1-topic" style="--c:#34ace0">
       <div class="s1-topic-head"><button class="btn small" data-act="back">← Topics</button>
-      <span class="s1-tag">🎤</span><h2>Mock oral <span>15 questions from everything</span></h2></div>
+      <span class="s1-tag">🎤</span><h2>Mock oral <span>${qs.length} questions from everything</span></h2>
+      ${canSpeak ? `<button class="btn small s1-voice" data-act="voice" aria-pressed="${!!prefs.voice}">${prefs.voice ? "🔊 Voice on" : "🔈 Voice off"}</button>` : ""}</div>
+      <div class="s1-body"></div></div>`;
+    root.querySelector('[data-act="back"]').addEventListener("click", home);
+    const vb = root.querySelector('[data-act="voice"]');
+    if (vb) vb.addEventListener("click", () => {
+      prefs.voice = !prefs.voice; save(PREFS, prefs);
+      vb.textContent = prefs.voice ? "🔊 Voice on" : "🔈 Voice off"; vb.setAttribute("aria-pressed", prefs.voice);
+      if (!prefs.voice) stopVoice();
+    });
+    const body = root.querySelector(".s1-body");
+    body.innerHTML = `<div class="s1-chat" aria-live="polite"></div><div class="s1-replies"></div>`;
+    startRun(body, qs.length, "Mock oral");
+    const chat = body.querySelector(".s1-chat"), replies = body.querySelector(".s1-replies");
+    const misses = [];
+    let k = 0, right = 0, prevFrom = null;
+
+    const scroll = (n) => n.scrollIntoView({ block: "nearest", behavior: calm() ? "auto" : "smooth" });
+    // the examiner "types" for a moment before each line
+    const examiner = (html, then) => {
+      const typing = el(`<div class="s1-msg ex"><span class="s1-av">🧑‍✈️</span><div class="s1-bubble s1-typing"><i></i><i></i><i></i></div></div>`);
+      chat.appendChild(typing); scroll(typing);
+      setTimeout(() => {
+        if (!typing.isConnected) return;
+        typing.querySelector(".s1-bubble").outerHTML = `<div class="s1-bubble">${html}</div>`;
+        scroll(typing); say(html);
+        if (then) then();
+      }, calm() ? 0 : 550);
+    };
+    const me = (text, cls) => { const m = el(`<div class="s1-msg me ${cls}"><div class="s1-bubble">${esc(text)}</div></div>`); chat.appendChild(m); scroll(m); };
+    const button = (label, fn) => { replies.innerHTML = ""; const b = nextBtn(label, fn); replies.appendChild(b); scroll(b); };
+
+    const ask = () => {
+      replies.innerHTML = "";
+      if (k >= qs.length) return finish();
+      const q = qs[k];
+      const topicLead = q.from !== prevFrom
+        ? (k === 0 ? `Let's start with <b>${esc(q.from)}</b>.` : pickOne(["Let's move on to", "Switching to", "Now,"]) + ` <b>${esc(q.from)}</b>.`)
+        : pickOne(["Staying with that —", "Follow-up:", "Related question —", "Okay, next one."]);
+      prevFrom = q.from;
+      examiner(`<span class="s1-muted">${topicLead}</span><br>${esc(q.q)}${q.fig ? `<div class="s1-fig">${q.fig()}</div>` : ""}`, () => {
+        shuffle(q.o.map((t, j) => ({ t, ok: j === 0 }))).forEach((o) => {
+          const b = el(`<button class="s1-opt">${esc(o.t)}</button>`);
+          b.addEventListener("click", () => {
+            replies.querySelectorAll("button").forEach((x) => { x.disabled = true; });
+            if (o.ok) right++; else misses.push(q);
+            hit(o.ok, cardKey.quiz(q)); tick();
+            replies.innerHTML = "";
+            me(o.t, o.ok ? "ok" : "bad");
+            const reply = o.ok
+              ? `<b>${pickOne(["Good.", "Correct.", "That's right.", "Exactly."])}</b> ${esc(q.why || "")}`
+              : `<b>${pickOne(["Not quite.", "Hmm — no.", "Let's look at that again."])}</b> The answer I was after: <b>${esc(q.o[0])}</b>. ${esc(q.why || "")}`;
+            examiner(reply, () => { k++; button(k < qs.length ? "Next question →" : "Wrap up →", ask); });
+          });
+          replies.appendChild(b);
+        });
+        if (!k) replies.appendChild(el(KEYS(q.o.length)));
+      });
+    };
+
+    const finish = () => {
+      const pct = Math.round(100 * right / qs.length);
+      if (right === qs.length && qs.length >= 15) award("oral");
+      const line = pct >= 90 ? "That's a solid oral. I'd be comfortable sending you to the flight portion."
+        : pct >= 70 ? "Good overall — go back over the ones you missed before the real thing."
+        : "We'd stop here on a real stage check. Review the misses and we'll try again.";
+      examiner(`${line} <span class="s1-muted">(${right} of ${qs.length})</span>`, () => button("See the debrief →", () => {
+        stopVoice();
+        result(body, pct, `${right} of ${qs.length} right`, [["Another mock oral", mockOral, true], ["Topics", home]]);
+        if (misses.length) {
+          const list = el(`<div class="s1-block"><h3>Review these <span class="s1-muted">— they're in your review deck now</span></h3><ul class="s1-list"></ul></div>`);
+          misses.forEach((q) => list.querySelector("ul").appendChild(
+            el(`<li><span class="s1-muted">${esc(q.from)}</span><br>${esc(q.q)} — <b>${esc(q.o[0])}</b></li>`)));
+          body.appendChild(list);
+        }
+      }));
+    };
+
+    examiner(`Good morning. I'll ask you about ${qs.length} questions from across the stage — PAVE, systems, ADM, aerodynamics, approaches and airport ops. Take your time; it's fine to think out loud. Ready?`,
+      () => button("Ready →", ask));
+  }
+
+  /* ============================ REVIEW DECK ============================= */
+  function review() {
+    run = null;
+    const ds = deckStatus();
+    // most-missed and lowest-box first, capped so a session stays short
+    const due = ds.due.sort(([, a], [, b]) => a.box - b.box || b.n - a.n).slice(0, 20).map(([k]) => k);
+    root.innerHTML = `<div class="s1-topic" style="--c:#ffa502">
+      <div class="s1-topic-head"><button class="btn small" data-act="back">← Topics</button>
+      <span class="s1-tag">🔁</span><h2>Review my misses <span>${due.length} due</span></h2></div>
       <div class="s1-body"></div></div>`;
     root.querySelector('[data-act="back"]').addEventListener("click", home);
     const body = root.querySelector(".s1-body");
-    const misses = [];
-    RUNNERS.quiz({ qs, onMiss: (q) => misses.push(q) }, body, (right, total) => {
-      const pct = Math.round(100 * right / total);
-      result(body, pct, `${right} of ${total} right`, [["Another mock oral", mockOral, true], ["Topics", home]]);
-      if (misses.length) {
-        const list = el(`<div class="s1-block"><h3>Review these</h3><ul class="s1-list"></ul></div>`);
-        misses.forEach((q) => list.querySelector("ul").appendChild(
-          el(`<li><span class="s1-muted">${esc(q.from)}</span><br>${esc(q.q)} — <b>${esc(q.o[0])}</b></li>`)));
-        body.appendChild(list);
-      }
-    });
+    if (!due.length) { body.innerHTML = `<div class="s1-block"><p>Nothing due. Go drill something!</p></div>`; return; }
+    const stage = el(`<div></div>`);
+    body.appendChild(stage);
+    startRun(body, due.length, "Review");
+    const queue = due.slice(), again = new Set();
+    const ix = cardIndex();
+    let right = 0, first = 0;
+    const next = () => {
+      if (!queue.length) return finish();
+      const key = queue.shift(), c = ix[key];
+      if (!c) return next();
+      const m = deck[key] || { box: 0 };
+      stage.innerHTML = "";
+      stage.appendChild(el(`<p class="s1-from"><span>${esc(c.topic)}</span> <span class="s1-boxes" title="Leitner box">${BOX_DAYS.map((_, j) => `<i class="${j <= m.box ? "on" : ""}"></i>`).join("")}</span>${again.has(key) ? ` <b>again</b>` : ""}</p>`));
+      const box = el(`<div></div>`); stage.appendChild(box);
+      const act = c.kind === "quiz" ? { type: "quiz", qs: [c.q] }
+        : c.kind === "sort" ? { type: "sort", title: c.a.title, buckets: c.a.buckets, items: [c.it] }
+        : { type: "inop", cases: [c.c] };
+      // a miss comes round once more at the end; only the first try is scored
+      const wasAgain = again.has(key);
+      RUNNERS[c.kind](act, box, (r) => {
+        if (!wasAgain) { first++; right += r; }
+        if (!r && !wasAgain) { again.add(key); queue.push(key); grow(1); }
+        next();
+      });
+      window.scrollTo(0, 0);
+    };
+    const finish = () => {
+      const left = deckStatus();
+      const pct = Math.round(100 * right / Math.max(1, first));
+      result(body, pct, `${right} of ${first} right the first time · ${left.live.length} card${left.live.length === 1 ? "" : "s"} left in the deck`,
+        [["Topics", home, true], ...(left.due.length ? [["Review again", review]] : [])]);
+      if (!left.live.length) award("clean");
+    };
+    next();
   }
 
   /* ============================ DRILL RUNNER ============================ */
+  const UNITS = { acronym: (a) => a.items.length, quiz: (a) => a.qs.length, match: (a) => a.pairs.length,
+    sort: (a) => a.items.length, inop: (a) => a.cases.length, systems: () => 3 };
   function runDrill(acts, body, done) {
     let k = 0, right = 0, total = 0;
+    body.innerHTML = "";
+    const stage = el(`<div></div>`);
+    body.appendChild(stage);
+    startRun(body, acts.reduce((n, a) => n + (UNITS[a.type] ? UNITS[a.type](a) : 1), 0), "");
+    const r = run;
     const next = () => {
-      if (k >= acts.length) return done(Math.round(100 * right / Math.max(1, total)));
-      body.innerHTML = "";
-      const head = el(`<div class="s1-step">Part ${k + 1} of ${acts.length}</div>`);
-      body.appendChild(head);
-      const box = el(`<div></div>`);
-      body.appendChild(box);
+      if (k >= acts.length) return done(Math.round(100 * right / Math.max(1, total)), r.best);
+      r.head.querySelector(".s1-step").textContent = `Part ${k + 1} of ${acts.length}`;
+      r.partStart = r.done;
+      stage.innerHTML = "";
+      const box = el(`<div class="s1-part"></div>`);
+      stage.appendChild(box);
       const a = acts[k++];
-      RUNNERS[a.type](a, box, (r, t) => { right += r; total += t; next(); });
+      RUNNERS[a.type](a, box, (rr, t) => { right += rr; total += t; next(); });
       window.scrollTo(0, 0);
     };
     next();
   }
 
+  // the keyboard hint, shown only where there is a keyboard (CSS hides it on touch)
+  const KEYS = (n) => `<p class="s1-keys">Keys: <kbd>1</kbd>–<kbd>${n}</kbd> to answer · <kbd>Enter</kbd> for next</p>`;
   const nextBtn = (label, fn) => {
     const b = el(`<button class="btn primary wide s1-next">${label}</button>`);
     b.addEventListener("click", fn);
@@ -244,17 +568,22 @@ const StudyDrill = (() => {
   const RUNNERS = {
     /* ----------------------------- acronym ------------------------------ */
     acronym(a, box, done) {
-      let mode = "tiles";
+      let mode = "tiles", stop = () => {};
       const render = () => {
+        stop();
+        // switching modes restarts this part's share of the progress bar
+        if (live()) { run.done = run.partStart; paint(); }
         box.innerHTML = `<div class="s1-block s1-acro">
           <div class="s1-acro-top"><h3>Spell out <b>${a.word}</b></h3>
             <div class="s1-seg"><button data-m="tiles" class="${mode === "tiles" ? "on" : ""}">Tiles</button>
-            <button data-m="type" class="${mode === "type" ? "on" : ""}">Type it (harder)</button></div></div>
+            <button data-m="type" class="${mode === "type" ? "on" : ""}">Type it</button>
+            <button data-m="rapid" class="${mode === "rapid" ? "on" : ""}">⚡ Rapid fire</button></div></div>
           <div class="s1-slots"></div><div class="s1-tiles"></div><div class="s1-fb"></div></div>`;
         box.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.m; render(); }));
+        if (mode === "rapid") return rapid();
         const slots = box.querySelector(".s1-slots");
         a.items.forEach((it) => slots.appendChild(el(
-          `<div class="s1-slot"><b>${it.l}</b><span class="s1-slot-w">${mode === "type" ? `<input type="text" autocomplete="off" spellcheck="false">` : ""}</span></div>`)));
+          `<div class="s1-slot"><b>${it.l}</b><span class="s1-slot-w">${mode === "type" ? `<input type="text" autocomplete="off" spellcheck="false" autocapitalize="off">` : ""}</span></div>`)));
         mode === "tiles" ? tiles() : typed();
       };
 
@@ -271,11 +600,12 @@ const StudyDrill = (() => {
               b.disabled = true; b.classList.add("used");
               slotEls[n].querySelector(".s1-slot-w").textContent = it.w;
               slotEls[n].classList.remove("cur"); slotEls[n].classList.add("ok");
+              hit(true); tick();
               n++;
               if (n < a.items.length) slotEls[n].classList.add("cur");
               else finish(a.items.length - Math.min(miss, a.items.length), miss ? `${miss} wrong pick${miss > 1 ? "s" : ""}.` : "Clean — no misses.");
             } else {
-              miss++;
+              miss++; hit(false);
               b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake");
             }
           });
@@ -284,33 +614,107 @@ const StudyDrill = (() => {
       };
 
       const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const accepts = (it, raw) => {
+        const v = norm(raw), cands = [it.w, ...(it.alt || [])].map(norm);
+        return v.length >= 2 && cands.some((c) => c.startsWith(v.slice(0, Math.max(3, Math.min(v.length, 5)))) && v.length >= 3 || v.includes(c));
+      };
       const typed = () => {
         const inputs = [...box.querySelectorAll(".s1-slot input")];
         inputs[0].focus();
         inputs.forEach((inp, k) => inp.addEventListener("keydown", (e) => {
           if (e.key === "Enter") { e.preventDefault(); (inputs[k + 1] || check).focus(); if (!inputs[k + 1]) check.click(); }
         }));
-        const check = el(`<button class="btn primary wide s1-next">Check</button>`);
+        const check = el(`<button class="btn primary wide">Check</button>`);
         box.querySelector(".s1-acro").appendChild(check);
         check.addEventListener("click", () => {
           let right = 0;
           inputs.forEach((inp, k) => {
-            const it = a.items[k], v = norm(inp.value);
-            const cands = [it.w, ...(it.alt || [])].map(norm);
-            const ok = v.length >= 2 && cands.some((c) => c.startsWith(v.slice(0, Math.max(3, Math.min(v.length, 5)))) && v.length >= 3 || v.includes(c));
+            const it = a.items[k], ok = accepts(it, inp.value);
             inp.disabled = true;
             inp.parentElement.parentElement.classList.add(ok ? "ok" : "bad");
             if (!ok) inp.parentElement.appendChild(el(`<em>${esc(it.w)}</em>`));
             if (ok) right++;
+            hit(ok); tick();
           });
           check.remove();
           finish(right, `${right} of ${a.items.length} from memory.`);
         });
       };
 
+      // timed: one letter at a time, SECS each; Enter to submit, a wrong word
+      // can be retried until the clock runs out
+      const SECS = 8;
+      const rapid = () => {
+        const best = (stats.rapid || {})[a.word];
+        box.querySelector(".s1-slots").outerHTML = `<div class="s1-rapid">
+          <p class="s1-muted">Each letter flashes up with ${SECS} seconds on the clock. Type the word and hit Enter.
+          ${best ? `Your best clean run: <b>${best.toFixed(1)} s</b>.` : ""}</p>
+          <button class="btn primary wide" data-act="go">⚡ Start</button></div>`;
+        box.querySelector('[data-act="go"]').addEventListener("click", () => {
+          const R = box.querySelector(".s1-rapid");
+          R.innerHTML = `<div class="s1-rapid-trail">${a.items.map((it) => `<span>${it.l}</span>`).join("")}</div>
+            <div class="s1-rapid-letter"></div>
+            <div class="s1-clock"><i></i></div>
+            <input class="s1-rapid-in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Type the word · Enter">
+            <p class="s1-rapid-msg"></p>`;
+          const L = R.querySelector(".s1-rapid-letter"), bar = R.querySelector(".s1-clock i"), inp = R.querySelector("input");
+          const trail = R.querySelectorAll(".s1-rapid-trail span"), msg = R.querySelector(".s1-rapid-msg");
+          let n = 0, right = 0, t0 = 0, timer = 0, busy = false;
+          const start = performance.now();
+          stop = () => clearInterval(timer);
+          const show = () => {
+            if (n >= a.items.length) {
+              stop();
+              const secs = (performance.now() - start) / 1000;
+              inp.disabled = true;
+              let note = `${right} of ${a.items.length} in ${secs.toFixed(1)} s.`;
+              if (right === a.items.length) {
+                stats.rapid = stats.rapid || {};
+                if (!best || secs < best) { stats.rapid[a.word] = secs; save(STATS, stats); note += best ? " New best!" : ""; }
+                award("quick");
+              }
+              return finish(right, note);
+            }
+            trail.forEach((x, j) => x.classList.toggle("cur", j === n));
+            L.textContent = a.items[n].l;
+            L.classList.remove("flash"); void L.offsetWidth; L.classList.add("flash");
+            inp.value = ""; inp.focus(); msg.textContent = "";
+            t0 = performance.now(); busy = false;
+          };
+          const resolve = (ok) => {
+            busy = true;
+            const it = a.items[n];
+            trail[n].classList.remove("cur"); trail[n].classList.add(ok ? "ok" : "bad");
+            trail[n].title = it.w;
+            if (ok) right++;
+            hit(ok); tick();
+            msg.innerHTML = ok ? `<span class="s1-ok">✓ ${esc(it.w)}</span>` : `<span class="bad">⏱ ${esc(it.w)}</span>`;
+            n++;
+            setTimeout(() => { if (box.isConnected) show(); }, ok ? 350 : 1100);
+          };
+          inp.addEventListener("keydown", (e) => {
+            if (e.key !== "Enter" || busy) return;
+            e.preventDefault();
+            if (accepts(a.items[n], inp.value)) resolve(true);
+            else { inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake"); inp.select(); }
+          });
+          timer = setInterval(() => {
+            if (!box.isConnected) return stop();
+            if (busy) return;
+            const left = 1 - (performance.now() - t0) / (SECS * 1000);
+            bar.style.width = Math.max(0, left * 100) + "%";
+            bar.classList.toggle("low", left < 0.3);
+            if (left <= 0) resolve(false);
+          }, 50);
+          show();
+        });
+      };
+
       const finish = (right, msg) => {
+        stop();
         box.querySelector(".s1-tiles").innerHTML = "";
         box.querySelector(".s1-fb").innerHTML = `<p class="s1-ok">✓ ${msg}</p>`;
+        box.querySelector(".s1-seg").remove();
         box.querySelector(".s1-acro").appendChild(nextBtn("Next →", () => done(right, a.items.length)));
       };
       render();
@@ -324,13 +728,13 @@ const StudyDrill = (() => {
         if (k >= qs.length) return done(right, qs.length);
         const q = qs[k];
         box.innerHTML = "";
-        const dots = qs.map((_, j) => `<i class="${j < k ? "done" : j === k ? "cur" : ""}"></i>`).join("");
+        const dots = qs.length > 1 ? qs.map((_, j) => `<i class="${j < k ? "done" : j === k ? "cur" : ""}"></i>`).join("") : "";
         const card = el(`<div class="s1-block s1-quiz">
           <div class="s1-dots">${dots}</div>
           ${q.from ? `<p class="s1-muted">${esc(q.from)}</p>` : ""}
           <h3>${esc(q.q)}</h3>
           ${q.fig ? `<div class="s1-fig">${q.fig()}</div>` : ""}
-          <div class="s1-opts"></div><div class="s1-why" hidden></div></div>`);
+          <div class="s1-opts"></div>${KEYS(q.o.length)}<div class="s1-why" hidden></div></div>`);
         const opts = card.querySelector(".s1-opts");
         shuffle(q.o.map((t, j) => ({ t, ok: j === 0 }))).forEach((o) => {
           const b = el(`<button class="s1-opt">${esc(o.t)}</button>`);
@@ -338,13 +742,15 @@ const StudyDrill = (() => {
             opts.querySelectorAll("button").forEach((x) => { x.disabled = true; });
             const correct = [...opts.children].find((x) => x.dataset.ok);
             correct.classList.add("ok");
-            if (o.ok) right++;
+            if (o.ok) { right++; b.classList.add("picked"); }
             else { b.classList.add("bad"); if (a.onMiss) a.onMiss(q); }
+            hit(o.ok, cardKey.quiz(q)); tick();
+            card.querySelector(".s1-keys")?.remove();
             const why = card.querySelector(".s1-why");
             why.hidden = false;
             why.innerHTML = `<b>${o.ok ? "✓ Correct." : "✗ Not quite."}</b> ${esc(q.why || "")}`;
             why.className = "s1-why " + (o.ok ? "good" : "badwhy");
-            card.appendChild(nextBtn(k + 1 < qs.length ? "Next →" : "Finish", () => { k++; show(); }));
+            card.appendChild(nextBtn(k + 1 < qs.length || qs.length === 1 ? "Next →" : "Finish", () => { k++; show(); }));
           });
           if (o.ok) b.dataset.ok = "1";
           opts.appendChild(b);
@@ -376,12 +782,13 @@ const StudyDrill = (() => {
           if (sel.k === p.k) {
             [sel.b, b].forEach((x) => { x.classList.remove("sel"); x.classList.add("ok"); x.disabled = true; });
             sel = null; matched++;
+            hit(true); tick();
             if (matched === a.pairs.length) {
               box.querySelector(".s1-fb").innerHTML = `<p class="s1-ok">✓ All matched${miss ? ` · ${miss} miss${miss > 1 ? "es" : ""}` : " — no misses"}.</p>`;
               box.querySelector(".s1-block").appendChild(nextBtn("Next →", () => done(Math.max(0, a.pairs.length - miss), a.pairs.length)));
             }
           } else {
-            miss++;
+            miss++; hit(false);
             b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake", "badflash");
             setTimeout(() => b.classList.remove("badflash"), 500);
           }
@@ -398,19 +805,21 @@ const StudyDrill = (() => {
         if (k >= items.length) return done(right, items.length);
         const it = items[k];
         box.innerHTML = `<div class="s1-block s1-sort"><h3>${esc(a.title)}</h3>
-          <div class="s1-dots">${items.map((_, j) => `<i class="${j < k ? "done" : j === k ? "cur" : ""}"></i>`).join("")}</div>
+          ${items.length > 1 ? `<div class="s1-dots">${items.map((_, j) => `<i class="${j < k ? "done" : j === k ? "cur" : ""}"></i>`).join("")}</div>` : ""}
           <div class="s1-sort-card">${esc(it.t)}</div>
           <div class="s1-buckets">${a.buckets.map((b, j) => `<button class="s1-bucket" data-b="${j}">${esc(b)}</button>`).join("")}</div>
-          <div class="s1-why" hidden></div></div>`;
+          ${KEYS(a.buckets.length)}<div class="s1-why" hidden></div></div>`;
         box.querySelectorAll("[data-b]").forEach((b) => b.addEventListener("click", () => {
           const ok = +b.dataset.b === it.b;
           box.querySelectorAll("[data-b]").forEach((x) => { x.disabled = true; });
           box.querySelector(`[data-b="${it.b}"]`).classList.add("ok");
-          if (!ok) b.classList.add("bad"); else right++;
+          if (!ok) b.classList.add("bad"); else { right++; b.classList.add("picked"); }
+          hit(ok, cardKey.sort(it, a)); tick();
+          box.querySelector(".s1-keys")?.remove();
           const why = box.querySelector(".s1-why");
           why.hidden = false; why.className = "s1-why " + (ok ? "good" : "badwhy");
           why.innerHTML = `<b>${ok ? "✓" : "✗"} ${esc(a.buckets[it.b])}.</b> ${esc(it.why)}`;
-          box.querySelector(".s1-sort").appendChild(nextBtn(k + 1 < items.length ? "Next →" : "Finish", () => { k++; show(); }));
+          box.querySelector(".s1-sort").appendChild(nextBtn(k + 1 < items.length || items.length === 1 ? "Next →" : "Finish", () => { k++; show(); }));
         }));
       };
       show();
@@ -424,24 +833,26 @@ const StudyDrill = (() => {
         if (k >= cases.length) return done(right, cases.length);
         const c = cases[k];
         box.innerHTML = `<div class="s1-block s1-inop">
-          <div class="s1-dots">${cases.map((_, j) => `<i class="${j < k ? "done" : j === k ? "cur" : ""}"></i>`).join("")}</div>
+          ${cases.length > 1 ? `<div class="s1-dots">${cases.map((_, j) => `<i class="${j < k ? "done" : j === k ? "cur" : ""}"></i>`).join("")}</div>` : ""}
           <div class="s1-inop-item"><span class="s1-placard">INOP</span><div><b>${esc(c.item)}</b><br><span class="s1-muted">${esc(c.flight)}</span>
           ${c.given ? `<br><span class="s1-given">${esc(c.given)}</span>` : ""}</div></div>
           <div class="s1-flowwrap">${inopFlowHTML(null)}</div>
           <div class="s1-buckets">
             <button class="s1-bucket" data-go="0">⛔ No-go — it's required</button>
             <button class="s1-bucket" data-go="1">✅ Go — deactivate, placard, record, PIC decides</button>
-          </div><div class="s1-why" hidden></div></div>`;
+          </div>${KEYS(2)}<div class="s1-why" hidden></div></div>`;
         box.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => {
           const go = b.dataset.go === "1", ok = go === !c.req;
           box.querySelectorAll("[data-go]").forEach((x) => { x.disabled = true; });
           box.querySelector(`[data-go="${c.req ? 0 : 1}"]`).classList.add("ok");
-          if (!ok) b.classList.add("bad"); else right++;
+          if (!ok) b.classList.add("bad"); else { right++; b.classList.add("picked"); }
+          hit(ok, cardKey.inop(c)); tick();
+          box.querySelector(".s1-keys")?.remove();
           box.querySelector(".s1-flowwrap").innerHTML = inopFlowHTML(c.req ? "205" : "go");
           const why = box.querySelector(".s1-why");
           why.hidden = false; why.className = "s1-why " + (ok ? "good" : "badwhy");
           why.innerHTML = `<b>${ok ? "✓" : "✗"}</b> ${esc(c.why)}`;
-          box.querySelector(".s1-inop").appendChild(nextBtn(k + 1 < cases.length ? "Next item →" : "Finish", () => { k++; show(); }));
+          box.querySelector(".s1-inop").appendChild(nextBtn(k + 1 < cases.length || cases.length === 1 ? "Next item →" : "Finish", () => { k++; show(); }));
         }));
       };
       show();
@@ -450,12 +861,14 @@ const StudyDrill = (() => {
     /* ------------------------------ systems ----------------------------- */
     systems(a, box, done) {
       const pick = shuffle(STAGE1_SYSTEMS).slice(0, 3);
-      let k = 0, hit = 0, total = 0;
+      let k = 0, got = 0, total = 0;
       const show = () => {
         if (k >= pick.length) {
           // then a quick quiz on the same three
-          const qs = shuffle(pick.flatMap((s) => s.qs.map((q) => ({ ...q, from: s.name }))));
-          return RUNNERS.quiz({ qs }, box, (r, t) => done(hit + r, total + t));
+          const qs = shuffle(pick.flatMap((s) => (s.qs || []).map((q) => ({ ...q, from: s.name }))));
+          if (!qs.length) return done(got, total);
+          grow(qs.length);
+          return RUNNERS.quiz({ qs }, box, (r, t) => done(got + r, total + t));
         }
         const s = pick[k];
         box.innerHTML = `<div class="s1-block s1-sys">
@@ -471,7 +884,8 @@ const StudyDrill = (() => {
           pts.innerHTML = (s.fig ? `<div class="s1-fig">${s.fig()}</div>` : "") +
             s.points.map((p, j) => `<label class="s1-check"><input type="checkbox" data-j="${j}"> ${esc(p)}</label>`).join("");
           pts.appendChild(nextBtn(k + 1 < pick.length ? "Next system →" : "Quiz on these three →", () => {
-            hit += pts.querySelectorAll("input:checked").length; total += s.points.length;
+            got += pts.querySelectorAll("input:checked").length; total += s.points.length;
+            tick();
             k++; show();
           }));
         });
@@ -677,10 +1091,30 @@ const StudyDrill = (() => {
     home();
   }
   function deactivate() {
+    stopVoice();
+    run = null;
+    root.innerHTML = "";   // stops any rapid-fire clock and pending examiner line
     $("studyApp").hidden = true;
     $("progressText").textContent = "";
   }
-  function init() { root = $("studyApp"); }
+
+  // 1–9 pick the nth answer, Enter / → press the Next button. Typing in a
+  // field is left alone (the acronym inputs have their own Enter handling).
+  function onKey(e) {
+    if (!root || root.hidden || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (/^[1-9]$/.test(e.key)) {
+      const b = root.querySelectorAll(".s1-opt:not(:disabled), .s1-bucket:not(:disabled)")[+e.key - 1];
+      if (b) { e.preventDefault(); b.focus({ preventScroll: true }); b.click(); }
+    } else if (e.key === "Enter" || e.key === "ArrowRight") {
+      const n = [...root.querySelectorAll(".s1-next")].pop();
+      if (n) { e.preventDefault(); n.click(); }
+    }
+  }
+  function init() {
+    root = $("studyApp");
+    document.addEventListener("keydown", onKey);
+  }
 
   const noop = () => {};
   return { init, activate, deactivate, start: noop, restart: noop, showHint: noop };

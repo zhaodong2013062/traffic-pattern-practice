@@ -106,21 +106,55 @@ const Diagrams = (() => {
       `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="4" marker-end="url(#${a}${c.slice(1)})"/>` +
       text(lx, ly, label, { fill: c, weight: 700 });
     const defs = [OK, BAD, SKY, WARN].map((c) => arrowDefs(a + c.slice(1), c)).join("");
-    return svg(360, 220, `<defs>${defs}</defs>
-      ${plane(180, 110, 1.1)}
-      ${arr(180, 95, 180, 25, OK, "LIFT", 214, 34)}
-      ${arr(180, 125, 180, 200, BAD, "WEIGHT", 226, 196)}
-      ${arr(235, 110, 320, 110, SKY, "THRUST", 300, 98)}
-      ${arr(125, 110, 40, 110, WARN, "DRAG", 62, 98)}`);
+    return svg(360, 224, `<defs>${defs}</defs>
+      ${plane(180, 112, 1.1)}
+      ${arr(185, 88, 185, 18, OK, "LIFT", 218, 30)}
+      ${arr(180, 142, 180, 212, BAD, "WEIGHT", 230, 206)}
+      ${arr(248, 112, 340, 112, SKY, "THRUST", 312, 98)}
+      ${arr(112, 112, 22, 112, WARN, "DRAG", 46, 98)}`);
   }
 
-  // a simple side-view C172-ish silhouette, nose right
+  // Side view of a high-wing Skyhawk, nose right: strut-braced wing on the cabin
+  // roof, swept fin, fixed tricycle gear. Local origin mid-fuselage; wheels
+  // touch y = +23, so on the ground pass y = groundY − 23·s.
   function plane(x, y, s = 1) {
     return `<g transform="translate(${x},${y}) scale(${s})">
-      <path d="M-50,0 L40,-4 Q52,-2 52,2 Q50,8 38,8 L-38,6 L-52,-14 L-44,-14 L-34,0 Z" fill="#cfd8e3"/>
-      <rect x="-12" y="-10" width="34" height="4" rx="2" fill="#8a96a3"/>
-      <rect x="51" y="-8" width="3" height="18" fill="${MUTED}"/>
+      <line x1="56" y1="-17" x2="56" y2="17" stroke="${MUTED}" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+      <path d="M2,7 L7,19 M42,7 L42,19" stroke="#8a96a3" stroke-width="2.5"/>
+      <circle cx="7" cy="19" r="4" fill="#59636f"/><circle cx="42" cy="19.5" r="3.5" fill="#59636f"/>
+      <path d="M-50,-26 L-44,-26 L-34,-8 L-56,-3 Z" fill="#a9b4c0"/>
+      <path d="M52,-1 Q52,-7 45,-8 L31,-8 L21,-14 L-8,-14 L-50,-4 L-55,-3 L-55,1 L-10,8 L40,7 Q50,6 52,-1 Z" fill="#cfd8e3"/>
+      <path d="M53,-3 Q58,0 53,3 Z" fill="#8a96a3"/>
+      <path d="M19,-12 L27,-7 L20,-6 Z M17,-12 L-4,-12 L-4,-6 L17,-6 Z" fill="#203a52"/>
+      <rect x="-62" y="-4" width="20" height="3" rx="1.5" fill="#8a96a3"/>
+      <path d="M24,-14 Q23,-19 14,-19 L-10,-17.5 L-10,-14 Z" fill="#8a96a3"/>
+      <line x1="9" y1="6" x2="5" y2="-14" stroke="#8a96a3" stroke-width="1.6"/>
     </g>`;
+  }
+  // Top view, nose up (pilot's left is the viewer's left). wl / wr colour each wing.
+  function planeTop(x, y, s = 1, wl = "#8a96a3", wr = "#8a96a3") {
+    return `<g transform="translate(${x},${y}) scale(${s})">
+      <rect x="-14" y="-46" width="28" height="2.5" rx="1" fill="${MUTED}"/>
+      <path d="M-5,-38 Q0,-46 5,-38 L6,-10 L2,40 L-2,40 L-6,-10 Z" fill="#cfd8e3"/>
+      <rect x="-22" y="32" width="44" height="8" rx="2" fill="#a9b4c0"/>
+      <path d="M-4,-15 L-62,-14 L-62,-3 L-4,-3 Z" fill="${wl}"/>
+      <path d="M4,-15 L62,-14 L62,-3 L4,-3 Z" fill="${wr}"/>
+      <rect x="-4" y="-16" width="8" height="13" fill="#a9b4c0"/>
+    </g>`;
+  }
+  // Front view, facing the nose — the airplane's LEFT wing is the viewer's RIGHT.
+  function planeFront(inner = "") {
+    return `<path d="M-6,9 L-22,24 M6,9 L22,24" stroke="#8a96a3" stroke-width="2.5"/>
+      <circle cx="-22" cy="26" r="4" fill="#59636f"/><circle cx="22" cy="26" r="4" fill="#59636f"/>
+      <line x1="0" y1="12" x2="0" y2="24" stroke="#8a96a3" stroke-width="2.5"/><circle cx="0" cy="26" r="3.5" fill="#59636f"/>
+      <rect x="-1.5" y="-34" width="3" height="20" fill="#a9b4c0"/>
+      <rect x="-26" y="-4" width="52" height="3" rx="1.5" fill="#a9b4c0"/>
+      <path d="M-8,8 L-34,-13 M8,8 L34,-13" stroke="#8a96a3" stroke-width="1.6"/>
+      <rect x="-72" y="-17" width="144" height="5" rx="2.5" fill="#cfd8e3"/>
+      <ellipse cx="0" cy="0" rx="11" ry="13" fill="#cfd8e3"/>
+      <rect x="-8" y="-11" width="16" height="6" rx="2" fill="#203a52"/>
+      <circle cx="0" cy="3" r="17" fill="none" stroke="${MUTED}" stroke-opacity=".35"/>
+      <circle cx="0" cy="3" r="3" fill="#8a96a3"/>${inner}`;
   }
 
   /* ------------------------- turning tendencies ------------------------- */
@@ -140,16 +174,20 @@ const Diagrams = (() => {
       <path d="M60,128 A110,40 0 0 0 260,128" fill="none" stroke="${BAD}" stroke-width="3" marker-end="url(#${r})"/>
       ${text(160, 194, "reaction rolls the airplane LEFT", { fill: BAD, size: 12, weight: 700 })}`);
   }
+  // top view, nose up: thrust arrows point the way thrust does — forward
   function pfactor() {
-    const a = id("pf");
-    return svg(320, 200, `<defs>${arrowDefs(a, OK)}</defs>
-      ${rearView("")}
-      <circle cx="160" cy="101" r="70" fill="none" stroke="${SKY}" stroke-dasharray="5 5"/>
-      <line x1="225" y1="101" x2="225" y2="44" stroke="${OK}" stroke-width="4" marker-end="url(#${a})"/>
-      ${text(242, 60, "descending blade", { size: 10, fill: OK, anchor: "start" })}
-      ${text(242, 74, "bigger bite", { size: 10, fill: OK, anchor: "start" })}
-      <line x1="95" y1="101" x2="95" y2="80" stroke="${OK}" stroke-width="3" marker-end="url(#${a})"/>
-      ${text(86, 76, "ascending blade", { size: 10, fill: MUTED, anchor: "end" })}
+    const a = id("pf"), y = id("py");
+    return svg(320, 200, `<defs>${arrowDefs(a, OK)}${arrowDefs(y, BAD)}</defs>
+      ${planeTop(160, 112, 1.05)}
+      <line x1="146" y1="66" x2="146" y2="44" stroke="${OK}" stroke-width="3" marker-end="url(#${a})"/>
+      <line x1="174" y1="66" x2="174" y2="16" stroke="${OK}" stroke-width="5" marker-end="url(#${a})"/>
+      ${text(140, 40, "ascending blade", { size: 10, fill: MUTED, anchor: "end" })}
+      ${text(140, 53, "less thrust", { size: 10, fill: MUTED, anchor: "end" })}
+      ${text(182, 24, "descending blade (right)", { size: 10, fill: OK, anchor: "start" })}
+      ${text(182, 37, "bigger bite → more thrust", { size: 10, fill: OK, anchor: "start" })}
+      <path d="M128,92 Q108,70 118,50" fill="none" stroke="${BAD}" stroke-width="3" marker-end="url(#${y})"/>
+      ${text(240, 120, "top view, climbing", { size: 10, fill: MUTED })}
+      ${text(240, 134, "(high AOA)", { size: 10, fill: MUTED })}
       ${text(160, 190, "more thrust on the right → yaw LEFT", { fill: BAD, size: 12, weight: 700 })}`);
   }
   function slipstream() {
@@ -189,7 +227,7 @@ const Diagrams = (() => {
   function overshoot() {
     const a = id("ov"), g = id("og");
     const rwy = (x, n) => `<rect x="${x - 14}" y="40" width="28" height="160" fill="#3b4350"/>
-      <line x1="${x}" y1="50" x2="${x}" y2="190" stroke="#fff" stroke-dasharray="10 8" stroke-width="2"/>
+      <line x1="${x}" y1="50" x2="${x}" y2="164" stroke="#fff" stroke-dasharray="10 8" stroke-width="2"/>
       ${text(x, 186, n, { size: 11, weight: 800 })}
       <line x1="${x}" y1="200" x2="${x}" y2="360" stroke="${MUTED}" stroke-dasharray="3 6"/>`;
     return svg(420, 380, `<defs>${arrowDefs(a, BAD)}${arrowDefs(g, OK)}</defs>
@@ -223,10 +261,7 @@ const Diagrams = (() => {
       <rect x="340" y="186" width="130" height="8" fill="#3b4350"/>
       <line x1="40" y1="40" x2="380" y2="183" stroke="${OK}" stroke-width="2" stroke-dasharray="8 6"/>
       ${text(70, 32, "glidepath", { size: 11, fill: OK })}
-      <g transform="translate(${px},${py}) rotate(23)">
-        <path d="M-22,0 L18,-2 Q24,0 18,4 L-18,3 L-24,-7 L-19,-7 L-14,0 Z" fill="#cfd8e3"/>
-        <rect x="-4" y="-5" width="14" height="2" fill="#8a96a3"/>
-      </g>
+      <g transform="translate(${px},${py}) rotate(23)">${plane(0, 0, 0.42)}</g>
       ${vert !== "on" ? `<line x1="${px}" y1="${py}" x2="${px}" y2="${40 + (px - 40) * 0.42}" stroke="${WARN}" stroke-dasharray="3 3"/>` : ""}
       ${lights}
       ${text(409, 172, "PAPI", { size: 10, fill: MUTED })}
@@ -247,8 +282,8 @@ const Diagrams = (() => {
     if (color === "alt") beams = beam(C.red, "lg-alt-a") + beam(C.green, "lg-alt-b");
     else beams = beam(C[color], mode === "flash" ? "lg-flash" : "");
     const craft = onGround
-      ? `<rect x="0" y="190" width="460" height="40" fill="#203124"/>${plane(380, 178, 0.8)}`
-      : `<rect x="0" y="190" width="460" height="40" fill="#203124"/>${plane(380, 70, 0.8)}`;
+      ? `<rect x="0" y="190" width="460" height="40" fill="#203124"/>${plane(372, 172, 0.78)}`
+      : `<rect x="0" y="190" width="460" height="40" fill="#203124"/>${plane(372, 70, 0.78)}`;
     return svg(460, 230, `
       ${craft}
       <rect x="66" y="80" width="30" height="110" fill="#59636f"/>
@@ -256,7 +291,7 @@ const Diagrams = (() => {
       <rect x="58" y="56" width="46" height="18" fill="#203a52"/>
       ${beams}
       ${text(81, 210, "TOWER", { size: 10, fill: MUTED })}
-      ${text(400, 24, onGround ? "you: ON THE GROUND" : "you: IN FLIGHT", { size: 12, weight: 700, fill: WARN })}
+      ${text(450, 24, onGround ? "you: ON THE GROUND" : "you: IN FLIGHT", { size: 12, weight: 700, fill: WARN, anchor: "end" })}
     `);
   }
 
@@ -303,6 +338,7 @@ const Diagrams = (() => {
       <line x1="0" y1="195" x2="380" y2="195" stroke="#fff" stroke-width="3" stroke-dasharray="20 14"/>
       <rect x="120" y="0" width="120" height="150" fill="#2c323b"/>
       <line x1="180" y1="0" x2="180" y2="150" stroke="${YEL}" stroke-width="3"/>
+      ${[172, 188].map((x) => `<line x1="${x}" y1="22" x2="${x}" y2="104" stroke="${YEL}" stroke-width="2.5" stroke-dasharray="9 6"/>`).join("")}
       <rect x="126" y="112" width="108" height="4" fill="${YEL}"/>
       <rect x="126" y="120" width="108" height="4" fill="${YEL}"/>
       <g transform="translate(0,128)">${dash}</g><g transform="translate(0,136)">${dash}</g>
@@ -310,6 +346,9 @@ const Diagrams = (() => {
       ${text(300, 76, "(solid-line side)", { size: 11, fill: OK })}
       <path d="M250,84 L236,104" stroke="${OK}" stroke-width="2"/>
       ${text(60, 60, "taxiway", { size: 11, fill: MUTED })}
+      ${text(60, 106, "enhanced", { size: 10, fill: YEL })}${text(60, 119, "centerline:", { size: 10, fill: YEL })}
+      ${text(60, 132, "hold line ahead", { size: 10, fill: YEL })}
+      <path d="M100,108 L166,84" stroke="${YEL}" stroke-width="1" stroke-opacity=".6"/>
       ${text(60, 228, "runway", { size: 11, fill: MUTED })}
     `);
   }
@@ -356,31 +395,52 @@ const Diagrams = (() => {
       const a0 = (k * 30) * Math.PI / 180, a1 = (k * 30 + 18) * Math.PI / 180;
       return `<path d="M${120 + 70 * Math.cos(a0)},${120 + 70 * Math.sin(a0)} A70,70 0 0 1 ${120 + 70 * Math.cos(a1)},${120 + 70 * Math.sin(a1)}" stroke="#fff" stroke-width="9" fill="none"/>`;
     }).join("");
-    return svg(240, 240, `<rect width="240" height="240" fill="#203124"/>${segs}
-      <line x1="120" y1="160" x2="120" y2="70" stroke="#ccc" stroke-width="3"/>
-      <path d="M120,70 L172,80 L168,96 L120,90 Z" fill="${WARN}"/>
-      ${text(120, 230, "segmented circle + wind cone", { size: 11, fill: MUTED })}`);
+    // wind cone seen from above: the mouth sits at the mast and faces the wind
+    const sock = [0, 1, 2, 3].map((k) => {
+      const x0 = 122 + k * 12, h0 = 12 - k * 2, h1 = 10 - k * 2;
+      return `<path d="M${x0},${120 - h0} L${x0 + 12},${120 - h1} L${x0 + 12},${120 + h1} L${x0},${120 + h0} Z" fill="${k % 2 ? "#fff" : WARN}"/>`;
+    }).join("");
+    const a = id("sc");
+    return svg(480, 240, `<defs>${arrowDefs(a, SKY)}</defs><rect width="240" height="240" rx="8" fill="#203124"/>${segs}
+      ${sock}<circle cx="120" cy="120" r="4" fill="#ccc"/>
+      <line x1="40" y1="120" x2="86" y2="120" stroke="${SKY}" stroke-width="2.5" marker-end="url(#${a})"/>
+      ${text(60, 112, "wind", { size: 10, fill: SKY })}
+      ${text(120, 230, "seen from above", { size: 10, fill: MUTED })}
+      ${text(256, 40, "Segmented circle", { size: 14, weight: 700, anchor: "start" })}
+      ${text(256, 66, "• wind indicator in the middle —", { size: 11, fill: MUTED, anchor: "start" })}
+      ${text(266, 81, "cone, tee or tetrahedron", { size: 11, fill: MUTED, anchor: "start" })}
+      ${text(256, 104, "• the cone's open end faces INTO the", { size: 11, fill: MUTED, anchor: "start" })}
+      ${text(266, 119, "wind: this one shows wind from the west", { size: 11, fill: MUTED, anchor: "start" })}
+      ${text(256, 142, "• landing strip indicators outside the", { size: 11, fill: MUTED, anchor: "start" })}
+      ${text(266, 157, "circle show the runway alignment", { size: 11, fill: MUTED, anchor: "start" })}
+      ${text(256, 180, "• L-shaped traffic pattern indicators show", { size: 11, fill: MUTED, anchor: "start" })}
+      ${text(266, 195, "the turn direction when it isn't left traffic", { size: 11, fill: MUTED, anchor: "start" })}`);
   }
 
+  // The pattern for runway 9 with a dot flying it, so the turns read as LEFT turns.
   function untowered() {
-    const a = id("ut");
-    const call = (x, y, t) => `<circle cx="${x}" cy="${y}" r="5" fill="${WARN}"/>${text(x, y - 10, t, { size: 10, fill: WARN })}`;
-    return svg(480, 300, `<defs>${arrowDefs(a, SKY)}</defs>
-      <rect x="150" y="170" width="200" height="20" fill="#3b4350"/>
-      ${text(250, 184, "RWY 9 → landing east", { size: 10, fill: "#fff" })}
-      <path d="M350,180 L100,180 Q60,180 60,140 L60,120 Q60,90 100,90 L380,90 Q420,90 420,130 Q420,180 380,180 L350,180"
-        fill="none" stroke="${SKY}" stroke-width="2.5" stroke-dasharray="7 5"/>
+    const a = id("ut"), m = id("um");
+    const call = (x, y, t, ly = y - 10, lx = x, anchor = "middle") =>
+      `<circle cx="${x}" cy="${y}" r="5" fill="${WARN}"/>${text(lx, ly, t, { size: 10, fill: WARN, anchor })}`;
+    const loop = "M150,180 L350,180 L380,180 Q420,180 420,130 Q420,90 380,90 L100,90 Q60,90 60,120 L60,140 Q60,180 100,180 L150,180";
+    return svg(480, 300, `<defs>${arrowDefs(a, SKY)}
+        <marker id="${m}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="${SKY}"/></marker></defs>
+      <rect x="150" y="172" width="200" height="16" fill="#3b4350"/>
+      <line x1="160" y1="180" x2="340" y2="180" stroke="#fff" stroke-width="1.5" stroke-dasharray="10 8"/>
+      ${text(250, 204, "RWY 9 — landing east", { size: 10, fill: INK })}
+      <path d="${loop}" fill="none" stroke="${SKY}" stroke-width="2.5" stroke-dasharray="7 5" stroke-opacity=".8"/>
+      <path d="M260,90 L250,90 M60,135 L60,140 M300,180 L310,180 M420,135 L420,130" stroke="${SKY}" stroke-width="2.5" marker-end="url(#${m})"/>
+      <circle r="6" fill="#fff"><animateMotion dur="9s" repeatCount="indefinite" path="${loop}"/></circle>
       <path d="M330,30 L268,86" stroke="${OK}" stroke-width="3" marker-end="url(#${a})"/>
       ${text(340, 22, "45° entry to midfield downwind", { size: 10, fill: OK })}
       ${call(436, 60, "10 mi out")} ${call(300, 48, "entering")}
-      ${call(180, 90, "downwind")} ${call(60, 130, "base")}
-      ${call(110, 180, "final")} ${call(380, 196, "clear")}
-      ${text(240, 230, "left traffic unless marked · pattern ≈ 1,000 ft AGL", { size: 11, fill: MUTED })}
-      ${text(240, 250, "self-announce on CTAF: \"[Airport] traffic, Skyhawk 123, left downwind 9, [Airport]\"", { size: 10, fill: MUTED })}
-      ${text(240, 270, "depart straight out or a 45° turn after pattern altitude", { size: 10, fill: MUTED })}
+      ${call(180, 90, "downwind")} ${call(60, 128, "base", 132, 50, "end")}
+      ${call(110, 180, "final", 166)} ${call(390, 180, "clear", 204)}
+      ${text(240, 236, "left traffic unless marked · pattern ≈ 1,000 ft AGL", { size: 11, fill: MUTED })}
+      ${text(240, 256, "self-announce on CTAF: \"[Airport] traffic, Skyhawk 123, left downwind 9, [Airport]\"", { size: 10, fill: MUTED })}
+      ${text(240, 276, "depart straight out or a 45° turn after pattern altitude", { size: 10, fill: MUTED })}
     `);
   }
-
   /* ------------------------------ systems ------------------------------- */
   function flowBoxes(rows, w = 300) {
     const a = id("fb");
@@ -428,10 +488,10 @@ const Diagrams = (() => {
       ${box(130, 140, 200, "Main bus(es)", "lights · pitot heat · fuel pump …")}
       ${line(230, 112, 230, 138)}
       ${box(10, 210, 140, "Avionics bus", "AVIONICS BUS 1 / 2")}
-      ${box(310, 210, 140, "Essential bus", "PFD · AHRS · ADC · engine data")}
+      ${box(284, 210, 170, "Essential bus", "PFD · AHRS · ADC · engine data")}
       ${line(190, 182, 100, 208)}${line(270, 182, 360, 208)}
-      ${box(310, 262, 140, "Standby battery", "STBY BATT", BAD)}
-      ${line(380, 262, 380, 252)}
+      ${box(299, 262, 140, "Standby battery", "STBY BATT", BAD)}
+      ${line(369, 262, 369, 252)}
       ${text(80, 280, "Magnetos are NOT on the bus —", { size: 10, fill: WARN })}
       ${text(80, 294, "the engine runs with MASTER off", { size: 10, fill: WARN })}
     `);
