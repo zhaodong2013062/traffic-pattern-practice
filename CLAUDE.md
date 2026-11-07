@@ -3,14 +3,16 @@
 Guidance for working in this repository.
 
 ## What this is
-A **static, no-build** web app with three Cessna 172 drills, switched from the
-top bar:
+A **static, no-build** web app with three Cessna 172 drills and a stage-check
+review, switched from the top bar:
 - **Pattern** — the airport traffic pattern (takeoff → touchdown, plus a
   go-around branch).
 - **Emergencies** — the emergency-procedures checklists, one random scenario
   at a time.
 - **Maneuvers** — private-pilot phase-check maneuvers (slow flight, stalls,
   steep turns, ground reference, emergency descent), one at a time.
+- **Stage 1 Check** — the stage-check oral: PAVE, inspections, documents, inop
+  flow, systems, ADM, aerodynamics, stabilized approach, lost comms / airports.
 
 Pure HTML/CSS/vanilla JS — no framework, no bundler, no package.json. It opens
 directly in a browser and is hosted on GitHub Pages.
@@ -24,16 +26,20 @@ style.css         all styling
 js/sequence.js    SOURCE OF TRUTH (pattern) — PHASES, CONTROL_OPTIONS, SEQUENCE[], GOAROUND[]
 js/emergencies.js SOURCE OF TRUTH (emergencies) — EMERGENCY_GROUPS, EMER_CONTROL_OPTIONS, EMERGENCIES[]
 js/maneuvers.js   SOURCE OF TRUTH (maneuvers) — MANEUVER_PHASES, MAN_CONTROL_OPTIONS, preManeuver(), MANEUVERS[]
+js/diagrams.js    SVG figures for Stage 1; window.Diagrams (airfoil, lightGun, sign, glidepath, fuelSystem …)
+js/stagecheck.js  SOURCE OF TRUTH (Stage 1) — STAGE1_SECTIONS, STAGE1_TOPICS, STAGE1_SYSTEMS
 js/cockpit.js     SVG C172 panel; window.Cockpit API (render(el, mode)/setValues/highlight/flash/…)
 js/minimap.js     top-down pattern; window.Minimap API (render/moveTo/setLegActive/…)
 js/ui.js          shared chrome — value popover, feedback line, phase banner
 js/emergency.js   emergency drill controller (deck, picker, checklist card, debrief)
 js/maneuver.js    maneuver drill controller (menu, setup card, standards card, debrief)
+js/study.js       Stage 1 controller (home, learn/drill pages, activity runners, widgets, mock oral)
 js/app.js         mode switch + the pattern drill
 ```
 Load order in index.html matters:
-sequence → emergencies → maneuvers → cockpit → minimap → ui → emergency →
-maneuver → app.
+sequence → emergencies → maneuvers → diagrams → stagecheck → cockpit → minimap →
+ui → emergency → maneuver → study → app. (stagecheck builds some sign SVGs at
+load time, so diagrams must come first.)
 
 ## Interaction model (don't regress this)
 - Each step shows **only the conditions**. No hint about what to click.
@@ -131,11 +137,46 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
   (90 → 0 → −90 …) so the heading card spins the right way.
 - Simulated engine failure lives in Emergencies, not here.
 
+## Stage 1 Check mode
+- Its own full-width page (`#studyApp`); `body.study-mode` hides the cockpit
+  layout. Start/Restart/Scenarios are hidden in this mode.
+- Home: PAVE first, then the other sections, as topic cards with stars; a
+  readiness ring averages each topic's best score. "Mock oral" deals 15 random
+  quiz questions from every topic.
+- Each topic has **Learn** (blocks of html + an optional `fig` + an optional
+  `widget`) and **Drill** (activities run back to back and score). Best scores
+  and personal minimums persist in `localStorage`.
+- Activity types: `acronym` (tiles, or type-it with fuzzy matching via `alt`),
+  `quiz` (**first option is the correct one** — the runner shuffles; first
+  click counts), `match`, `sort`, `inop` (go/no-go down the 91.213(d) flow),
+  `systems` (three random systems: say it, then tick what you covered, then a
+  quiz on those three).
+- Acronyms the school says to memorize (IMSAFE, AAVIATES, ARROW,
+  ATOMATOFLAMES, NWKRAFT, CCLAPS) get an `acronym` drill.
+- Widgets live in `WIDGETS` in `study.js`: aoaLab, tendencies, approachGrid,
+  inopFlow, riskMatrix, frat, minimums, systemsBrowser. The risk matrix and
+  FRAT are labelled as examples — the school's own forms govern.
+- Inop cases never assert what the KOEL says: where it matters, the case's
+  `given` states it as part of the scenario.
+- Engagement layer (all in `study.js`, all localStorage-optional): a
+  review-my-misses deck on a growing schedule (cards keyed by question text
+  **plus its correct answer**, since many questions share wording like "What
+  does it mean?"), daily streak, badges, combo counter, keys 1–9 / Enter,
+  a Rapid fire acronym mode, and an examiner-chat mock oral with optional
+  text-to-speech. Rewording a question orphans its saved misses — harmless.
+- Typed answers allow one typo in the first five letters; short `alt`s must
+  match a whole word, so "ad" can't match inside "radio".
+- Diagrams are illustrative. Mind handedness: the prop turns clockwise from
+  the cockpit; in a top view with the nose left, the pilot's left is DOWN.
+
 ## Aviation accuracy
 Pattern numbers/procedures come from a CFI whiteboard, corroborated against the
 FAA Airplane Flying Handbook (Ch. 8) and AIM §4-3-3. Emergency checklists come
 from the school's C172S (G1000) emergency placard, corroborated against the
-C172S POH Section 3. If you change a procedure or speed/altitude/RPM, verify it
+C172S POH Section 3. Stage 1 content cites its regs at the top of
+`js/stagecheck.js`; systems numbers are POH figures as quoted in training
+material (the standby-battery 30 minutes is from a training bulletin — the POH
+says only "a limited time"). If you change a procedure or speed/altitude/RPM, verify it
 against an authoritative source — don't guess.
 
 Maneuver standards come from FAA-S-ACS-6C; procedures from the Airplane Flying
@@ -153,7 +194,8 @@ There's no test runner. Verify changes by driving the app in headless Chromium
 at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`). Serve the folder over
 http and click through both the full landing and the go-around branch, an
 emergency session (every scenario, the closed-book behaviour, and a mode
-round-trip back to pattern), and every maneuver (plus one `why` deduction), checking for console errors. Chromium's favicon
+round-trip back to pattern), every maneuver (plus one `why` deduction), and in Stage 1 every topic's Learn
+page and Drill plus the mock oral, checking for console errors. Chromium's favicon
 probe 404s — that one is not an app error. Cockpit groups have empty bbox centers, so dispatch click
 events on `[data-id="…"]` elements rather than using `.click()`.
 
