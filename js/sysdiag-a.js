@@ -212,18 +212,18 @@
     b += flow("M95,226 V240", mainCol, 1.0, L("avSw", m.elecBus)) + flow("M95,288 V306", mainCol, 1.0, L("avBus", m.avBus)) + flow("M95,346 V366", mainCol, 1.0, L("loadAv", m.avBus));
     b += flow("M255,226 V240", mainCol, 1.0, L("breakers", m.elecBus)) + flow("M255,274 V292", mainCol, 1.0, L("loadMain", m.elecBus));
     b += flow("M330,205 H360 V248 H390", mainCol, 1.0, L("essBus", m.elecBus));
-    const stbyLive = L("stbyBatt", s.stby === "arm" && !m.elecBus);
+    const stbyLive = L("stbyBatt", s.stby === "arm" && !m.elecBus && !opts.mask);
     b += flow("M465,118 V248", C.BAD, 1.0, stbyLive);
     b += flow("M465,248 V310", m.essSrc === "stby" ? C.BAD : mainCol, 1.0, L("loadEss", m.essBus));
 
     // alternator / battery / mags
     const chip = (ctl, val, x, y, w, label, on, col) => pill(ctl, val, x, y, w, 20, label, on, { onFill: col, size: 9, stroke: C.LINE, aria: label });
     b += p("battery", "Main battery", R(30, 24, 150, 52, { fill: "#2e2410", stroke: C.WARN }) + T(105, 42, "Main battery", { size: 12, weight: 700 }) +
-      T(48, 66, s.mainBatt === "flat" ? "FLAT" : "24 V", { size: 10, fill: s.mainBatt === "flat" ? C.BAD : C.MUTED, anchor: "start", weight: s.mainBatt === "flat" ? 800 : 400 }), [30, 24, 150, 52], !s.bat);
-    b += chip("mainBatt", s.mainBatt === "flat" ? "ok" : "flat", 116, 50, 56, s.mainBatt === "flat" ? "RECHARGE" : "RUN FLAT", s.mainBatt === "flat", C.BAD);
+      T(48, 66, s.mainBatt === "flat" && !opts.mask ? "FLAT" : "24 V", { size: 10, fill: s.mainBatt === "flat" && !opts.mask ? C.BAD : C.MUTED, anchor: "start", weight: s.mainBatt === "flat" && !opts.mask ? 800 : 400 }), [30, 24, 150, 52], !s.bat);
+    b += chip("mainBatt", s.mainBatt === "flat" ? "ok" : "flat", 116, 50, 56, s.mainBatt === "flat" && !opts.mask ? "RECHARGE" : "RUN FLAT", s.mainBatt === "flat" && !opts.mask, C.BAD);
     b += p("alternator", "Alternator", R(195, 24, 150, 52, { fill: "#10281a", stroke: C.OK }) + T(270, 42, "Alternator", { size: 12, weight: 700 }) +
-      T(213, 66, s.altFail ? "FAILED" : "28 V · 60 A", { size: 10, fill: s.altFail ? C.BAD : C.MUTED, anchor: "start", weight: s.altFail ? 800 : 400 }), [195, 24, 150, 52], !m.altOnline);
-    b += chip("altFail", s.altFail ? "false" : "true", 285, 50, 52, s.altFail ? "RESTORE" : "FAIL IT", !!s.altFail, C.BAD);
+      T(213, 66, s.altFail && !opts.mask ? "FAILED" : "28 V · 60 A", { size: 10, fill: s.altFail && !opts.mask ? C.BAD : C.MUTED, anchor: "start", weight: s.altFail && !opts.mask ? 800 : 400 }), [195, 24, 150, 52], !m.altOnline);
+    b += chip("altFail", s.altFail ? "false" : "true", 285, 50, 52, s.altFail && !opts.mask ? "RESTORE" : "FAIL IT", !!s.altFail && !opts.mask, C.BAD);
     b += p("mags", "Magnetos", R(390, 24, 150, 52, { fill: DARK, stroke: C.MUTED, dash: "5 4" }) + T(465, 42, "Magnetos", { size: 12, weight: 700 }) +
       small(465, 58, "NOT on the bus —", { fill: C.WARN }) + small(465, 70, "engine runs without it", { fill: C.WARN }), [390, 24, 150, 52]);
 
@@ -249,8 +249,8 @@
     b += p("stbyBatt", "Standby battery", R(390, 98, 150, 40, { fill: "#2a1418", stroke: C.BAD }) + T(465, 114, "Standby battery", { size: 12, weight: 700 }) + small(465, 130, s.stby === "arm" ? "armed — waiting" : "switched off"), [390, 98, 150, 40], s.stby !== "arm");
     b += p("stbySw", "Standby battery switch", R(390, 158, 150, 52) + T(465, 172, "STBY BATT", { size: 10, weight: 700, fill: C.MUTED }), [390, 158, 150, 52]);
     b += pill("stby", "arm", 398, 180, 64, 28, "ARM", s.stby === "arm", { onFill: C.OK }) + pill("stby", "off", 468, 180, 64, 28, "OFF", s.stby === "off", { onFill: C.MUTED });
-    b += bus("essBus", "Essential bus", m.essSrc === "stby" ? "on standby battery" : m.essSrc === "main" ? "fed by the main buses" : "no power", 390, 226, 150, 44, m.essBus, m.essSrc === "stby" ? C.BAD : mainCol);
-    b += bus("loadEss", "Essential loads", "PFD · AHRS · ADC · engine data", 390, 290, 150, 40, m.essBus, m.essSrc === "stby" ? C.BAD : mainCol);
+    b += bus("essBus", "Essential bus", opts.mask ? "" : m.essSrc === "stby" ? "on standby battery" : m.essSrc === "main" ? "fed by the main buses" : "no power", 390, 226, 150, 44, m.essBus, m.essSrc === "stby" && !opts.mask ? C.BAD : mainCol);
+    b += bus("loadEss", "Essential loads", "PFD · AHRS · ADC · engine data", 390, 290, 150, 40, m.essBus, m.essSrc === "stby" && !opts.mask ? C.BAD : mainCol);
     b += note(465, 356, "green = alternator", { fill: C.OK });
     b += note(465, 372, "amber = main battery", { fill: C.WARN });
     b += note(465, 388, "red = standby battery", { fill: C.BAD });
@@ -323,7 +323,7 @@
     const kx = 80, ky = 80;
     const ANG = { OFF: -100, R: -50, L: 0, BOTH: 50, START: 100 };
 
-    if (m.hot) b += R(170, 14, 360, 30, { fill: "#3a1218", stroke: C.BAD, sw: 2 }) + T(350, 34, "PROP IS LIVE — key OFF, a mag is still hot", { size: 13, weight: 800, fill: C.BAD, lbl: false });
+    if (m.hot && !opts.mask) b += R(170, 14, 360, 30, { fill: "#3a1218", stroke: C.BAD, sw: 2 }) + T(350, 34, "PROP IS LIVE — key OFF, a mag is still hot", { size: 13, weight: 800, fill: C.BAD, lbl: false });
 
     // harness (beneath plugs)
     const busY = { L: 261, R: 299 }, cxs = [185, 315];
@@ -358,7 +358,7 @@
       `<rect class="sx-hit" x="149" y="310" width="106" height="28" fill="transparent"/><rect class="sx-hit" x="279" y="310" width="106" height="28" fill="transparent"/>` +
       "";
     b += p("plugs", "Spark plugs", pl, [149, 222, 106, 28]);
-    b += T(250, 152, "two spark plugs in every cylinder: blue = left mag, amber = right mag", { size: 10, fill: C.MUTED, lbl: false });
+    b += T(250, 160, "two spark plugs in every cylinder: blue = left mag, amber = right mag", { size: 10, fill: C.MUTED, lbl: false });
 
     // magnetos
     const mag = (id, name, y, col, live, side) => p(id, name, R(400, y, 90, 30, { fill: "#1b2430", stroke: live ? col : C.LINE, sw: live ? 2.5 : 1.5 }) +
@@ -372,7 +372,7 @@
     const lead = (id, name, d, side, col, bx, by, hy) => {
       const broken = (side === "L" ? s.pleadL : s.pleadR) === "broken", gr = grounded(side);
       const lc = broken ? col : gr ? C.MUTED : col;
-      const zig = broken ? `<path d="M${bx - 8},${by - 8} l8,5 -8,6 8,6 -8,5" fill="none" stroke="${C.BAD}" stroke-width="2.5"/>` : "";
+      const zig = broken && !opts.mask ? `<path d="M${bx - 8},${by - 8} l8,5 -8,6 8,6 -8,5" fill="none" stroke="${C.BAD}" stroke-width="2.5"/>` : "";
       return p(id, name, line(d, lc, 3, { dash: gr ? "" : "" }) + zig +
         small(side === "L" ? bx + 8 : bx - 8, side === "L" ? 180 : 228, side === "L" ? "left P-lead" : "right P-lead", { anchor: side === "L" ? "start" : "end" }), [bx - 14, hy, 28, 60]);
     };
@@ -380,8 +380,8 @@
     b += lead("pleadR", "Right P-lead", "M88,106 V136 H520 V299 H490", "R", R_MAG, 520, 200, 170);
     // ground glyphs where the key shorts a grounded lead to ground
     const gnd = (x, y, dir) => `<path d="M${x},${y} v${dir * 8} M${x - 7},${y + dir * 8} h14 M${x - 4.5},${y + dir * 11} h9 M${x - 2},${y + dir * 14} h4" stroke="${C.BAD}" stroke-width="2" fill="none"/>`;
-    if (grounded("L")) b += gnd(200, 120, -1) + small(214, 106, "grounded", { anchor: "start", fill: C.BAD });
-    if (grounded("R")) b += gnd(200, 136, 1) + small(214, 152, "grounded", { anchor: "start", fill: C.BAD });
+    if (!opts.mask && grounded("L")) b += gnd(200, 120, -1) + small(214, 106, "grounded", { anchor: "start", fill: C.BAD });
+    if (!opts.mask && grounded("R")) b += gnd(200, 136, 1) + small(214, 144, "grounded", { anchor: "start", fill: C.BAD });
 
     // key switch
     b += p("key", "Ignition key switch", `<circle cx="${kx}" cy="${ky}" r="27" fill="${PANEL}" stroke="${C.INK}" stroke-width="2"/>` +

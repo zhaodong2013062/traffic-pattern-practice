@@ -1135,7 +1135,7 @@ const STAGE1_SYSTEMS = [
     labs: [
       { h: "Ice the pitot tube", start: { ram: "open", drain: "open", stat: "open", altStatic: false, heat: false, altFt: 3000, ias: 100 }, steps: [
         { do: "Block the ram hole. Leave the drain open.", when: { ram: "blocked", drain: "open", asiMode: "zero" }, see: "The pressure bleeds out the drain: the ASI falls toward zero." },
-        { do: "Now block the drain hole too.", when: { ram: "blocked", drain: "blocked", asiMode: "altimeter" }, see: "The pressure is trapped. As you climb the static falls and the ASI reads higher — it acts like an altimeter." },
+        { do: "Now block the drain hole too.", when: { ram: "blocked", drain: "blocked", asiMode: "altimeter" }, see: "The pressure is trapped, and it had already bled off, so the ASI sits near zero and ignores airspeed. Now move the altitude slider up: as the static pressure falls the ASI creeps higher — it acts like an altimeter." },
       ] },
       { h: "Block the static port and climb", start: { ram: "open", drain: "open", stat: "open", altStatic: false, altFt: 3000, ias: 100 }, steps: [
         { do: "Block the static port, then use the sliders to climb or descend.", when: { stat: "blocked", altMode: "frozen", vsiMode: "zero" }, see: "Altimeter frozen at the blocking altitude, VSI zero. The ASI reads low above that altitude and high below it." },
@@ -1243,7 +1243,7 @@ const STAGE1_SYSTEMS = [
       { t: "find", q: "What absorbs the shock on the nose gear?", part: "noseStrut", why: "The air/oil (oleo) strut; the mains are spring steel." },
       { t: "set", q: "Make the tightest left turn on the ramp.", start: { pedal: 0, brakeL: false, brakeR: false }, goal: { pedal: -1, brakeL: true },
         why: "Left pedal for the nosewheel and left toe brake." },
-      { t: "locate", q: "Click the shimmy damper.", id: "gear.damper", why: "On the nose gear strut." },
+      { t: "locate", q: "Where is the shimmy damper on the airplane?", id: "gear.damper", why: "On the nose gear strut." },
     ],
     qs: [
       { q: "How are the C172S brakes operated?", o: ["Hydraulic disc brakes, toe brakes on the rudder pedals", "Hand lever", "Cable drum brakes", "Electric"], why: "Each pedal has its own master cylinder." },
@@ -1276,7 +1276,7 @@ const STAGE1_SYSTEMS = [
         o: ["Still sounds — it's pneumatic", "Is silent", "Sounds only on battery power", "Sounds from the G1000"], apply: { master: false },
         why: "A reed horn, no electrical power needed." },
       { t: "find", q: "Click the stall warning inlet.", part: "inlet", why: "In the left wing leading edge." },
-      { t: "locate", q: "Click the stall warning inlet.", id: "environ.inlet", why: "In the leading edge of the left wing." },
+      { t: "locate", q: "Where is the stall warning inlet on the airplane?", id: "environ.inlet", why: "In the leading edge of the left wing." },
     ],
     qs: [
       { q: "Where does cabin heat come from?", o: ["A shroud around the exhaust muffler", "An electric heater", "Engine oil", "A combustion heater"], why: "Which is why CO is the risk." },

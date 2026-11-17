@@ -984,6 +984,14 @@ kbd { font: 11px/1 ui-monospace, monospace; padding: 2px 5px; border: 1px solid 
   .s3-canvas { height: clamp(200px, 38vh, 60vh); }
   .sx-pchip, .sx-pick, .sx-labbtn { min-height: 42px; }
   .sx-picks summary { min-height: 42px; }
+  /* 560-wide schematics shrink to ~6px text on a phone: keep them ~1:1 and let the figure pan sideways */
+  .sx-fig { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sx-fig > svg { min-width: 500px; }
+  .sx-hero-view .sx-fig > svg, .sx-loc .sx-fig > svg { min-width: 0; }
+  .sx-tools::after { content: "← diagram pans sideways →"; margin-left: auto; font-size: 11px; color: var(--muted); }
+  .sx-main:has(.sx-3d) .sx-tools::after { display: none; }
+  .sx-task .sx-host::before { content: "← swipe the diagram sideways →"; display: block; text-align: right; font-size: 11px; color: var(--muted); margin: 0 4px 4px; }
+  .sx-task .sx-host:has(.sx-loc)::before { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sx-part.bad { animation: none; }

@@ -135,7 +135,7 @@
   function pitotDraw(s, o) {
     o = o || {};
     const m = pitotModel(s);
-    const rB = s.ram === "blocked", dB = s.drain === "blocked", sB = s.stat === "blocked", alt = !!s.altStatic;
+    const rB = s.ram === "blocked", dB = s.drain === "blocked", sB = s.stat === "blocked" && !(o && o.mask), alt = !!s.altStatic;
     const ramLive = !rB, trapped = rB && dB, bled = rB && !dB;
     const staticLive = !sB || alt;
     let b = "";
@@ -221,7 +221,7 @@
     b += dial(o, "alt", "Altimeter", 280, 390, { mode: m.altMode, ticks: lTicks, unit: "ft ×100", aAct: altA(s.altFt), aInd: altA(m.altRead) });
     b += dial(o, "vsi", "Vertical speed indicator", 467, 390, { mode: m.vsiMode, ticks: vTicks, unit: "×100 fpm", aAct: vA(s.trend * 500), aInd: vA(m.vsiRead) });
 
-    const stat = (mode, txt) => ({ c: mode === "ok" ? C.OK : mode === "alt-static" ? C.WARN : C.BAD, t: txt });
+    const stat = (mode, txt) => ({ c: mode === "ok" ? C.OK : mode === "alt-static" ? C.WARN : C.BAD, t: o && o.mask ? "" : txt });   // masked diagnosis: the symptoms stay, the verdict does not
     const asiS = stat(m.asiMode, { ok: "agrees", zero: "falls to zero", altimeter: "acts like an altimeter", "static-err": s.altFt > tA + 50 ? "reads LOW (static err)" : s.altFt < tA - 50 ? "reads HIGH (static err)" : "right only at block alt", "alt-static": "reads slightly high" }[m.asiMode]);
     const altS = stat(m.altMode, { ok: "agrees", frozen: "FROZEN at " + fmt(tA) + " ft", "alt-static": "reads slightly high" }[m.altMode]);
     const vsiS = stat(m.vsiMode, { ok: "agrees", zero: "stuck at zero", "alt-static": "reads slightly high" }[m.vsiMode]);
@@ -696,7 +696,7 @@
     b += P(o, "elevator", "Elevator", ev(194) + ev(284) + L(186, 173, "elevator", { size: 11, anchor: "end" }) + (m.elevator !== "neutral" ? state(186, 188, m.elevator === "up" ? "UP ▲" : "DOWN ▼", "end") : "") + H(194, 144, 172, 30) + elevSection(s, m) + H(148, 200, 132, 124), [[194, 144, 172, 30], [148, 200, 132, 124]]);
     b += P(o, "trimTab", "Elevator trim tab", `<rect x="326" y="${s.trim > 0 ? 170 : s.trim < 0 ? 158 : 164}" width="26" height="6" rx="1" fill="${s.trim ? C.WARN : STEEL2}" ${stroke}/>` + L(362, 186, "trim tab", { size: 11, anchor: "start" }) + H(322, 156, 36, 30) + H(244, 250, 36, 36), [[322, 156, 36, 30], [248, 252, 32, 32]]);
     // ---- hardware row -----------------------------------------------------------------------------
-    b += T(95, 346, "yoke", { size: 12, fill: C.INK }) + T(240, 346, "rudder pedals", { size: 12, fill: C.INK }) + T(338, 346, "trim wheel", { size: 12, fill: C.INK }) + T(412, 346, "flap lever", { size: 12, fill: C.INK }) + T(519, 346, "flap motor", { size: 12, fill: C.INK });
+    b += L(95, 346, "yoke", { size: 12, fill: C.INK }) + L(240, 346, "rudder pedals", { size: 12, fill: C.INK }) + L(338, 346, "trim wheel", { size: 12, fill: C.INK }) + L(412, 346, "flap lever", { size: 12, fill: C.INK }) + L(519, 346, "flap motor", { size: 12, fill: C.INK });
     const ysc = 1 + s.pitch * 0.12;      // seen from behind, pulling the yoke brings it toward us
     b += `<g transform="translate(95 408) scale(${f(ysc)}) rotate(${s.roll * 38})"><circle r="40" fill="none" stroke="#8795a1" stroke-width="9"/><rect x="-6" y="-40" width="12" height="80" fill="#59636f"/><rect x="-40" y="-6" width="80" height="12" fill="#59636f"/><circle r="9" fill="#2a3340" stroke="#8795a1" stroke-width="2"/><circle cx="0" cy="-40" r="5" fill="${C.INK}"/></g>`;
     b += ctl("roll", -1, `<rect x="42" y="362" width="46" height="92" fill="${s.roll < 0 ? C.SKY : "none"}" fill-opacity=".12"/>`, "Yoke left", [42, 362, 46, 92]);
@@ -745,7 +745,7 @@
     const px = f(X(s.ias));
     st += `<path d="M${px} 529 L${f(px - 7)} 516 L${f(px + 7)} 516 Z" fill="${m.overVfe ? C.BAD : C.INK}"/>` + T(px, 510, s.ias + " KIAS" + (m.overVfe ? " — OVER Vfe" : ""), { size: 12, fill: m.overVfe ? C.BAD : C.INK, weight: 700 });
     b += P(o, "asiArc", "Airspeed white arc", st + H(30, 500, 500, 86), [30, 504, 500, 82]);
-    return wrap(560, 590, b, o);
+    return wrap(568, 590, `<g transform="translate(4 0)">${b}</g>`, o);   // 4-unit margin so the right-hand section panel and its ring are not clipped
   }
 
   // flap section: slotted flap hinged below the trailing edge
