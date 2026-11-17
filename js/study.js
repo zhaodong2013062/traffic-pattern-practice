@@ -123,6 +123,68 @@ const StudyDrill = (() => {
     }));
   }
 
+  /* ======================== typed-answer matching ======================== */
+  // Shared by the acronym type-it / rapid modes and the must-know recall.
+  const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  // at most one slip (wrong, missing, extra or swapped letter) between a and b
+  const near = (a, b) => {
+    if (Math.abs(a.length - b.length) > 1) return false;
+    let i = 0;
+    while (i < a.length && a[i] === b[i]) i++;
+    const rest = (x, y) => a.slice(x) === b.slice(y);
+    return rest(i, i) || rest(i + 1, i + 1) || rest(i + 1, i) || rest(i, i + 1) ||
+      (a[i] === b[i + 1] && a[i + 1] === b[i] && rest(i + 2, i + 2));
+  };
+  // the first five letters decide, one typo forgiven ("alchohol", "ilness").
+  // Short alternates ("ad", "t/o", "wx") must be the whole answer or a
+  // whole word of it — otherwise "radio" would pass for ADs.
+  const accepts = (it, raw) => {
+    const v = norm(raw), words = raw.toLowerCase().split(/[^a-z0-9]+/), p = v.slice(0, 5);
+    if (v.length < 2) return false;
+    return [it.w, ...(it.alt || [])].map(norm).some((c) => c.length < 4
+      ? v === c || words.includes(c) || (c.length === 3 && v.startsWith(c))
+      : (v.length >= 3 && c.startsWith(p)) || v.includes(c) ||
+        (p.length === 5 && [4, 5, 6].some((n) => near(p, c.slice(0, n)))));
+  };
+
+  // Recall (must-know) is stricter than the acronym matcher: its answers are
+  // phrases and numbers, so a bare prefix or a longer number must not pass.
+  //   · numbers match as whole numbers ("150" ≠ "50" ≠ "1500"; "2,700 RPM" ok)
+  //   · a short alt (<4 letters: "arm", "wet") must be the whole answer or a whole word
+  //   · a longer alt passes when contained ("lycoming io 360" ⊇ "io360"), or when the
+  //     answer is as long as it (≥70%) and agrees on the first five letters
+  //     give or take one typo, or is one slip from it, or one word is one slip
+  // → 0 wrong · 1 right · 2 right but only through typo forgiveness
+  const numTok = (raw) => raw.toLowerCase().replace(/(\d),(?=\d)/g, "$1").match(/\d+(?:\.\d+)?/g) || [];
+  function recallHit(cands, raw, group) {
+    const v = norm(raw);
+    if (!v) return 0;
+    const words = raw.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean), nums = numTok(raw), p = v.slice(0, 5);
+    let best = 0;
+    for (const alt of cands) {
+      const c = norm(alt);
+      if (!c) continue;
+      let r = 0;
+      if (/^\d+(\.\d+)?$/.test(alt.trim())) r = nums.includes(alt.trim()) ? 1 : 0;
+      else if (c.length < 4) r = v === c || words.includes(c) ? 1 : 0;
+      else if (v.includes(c)) r = 1;
+      else if (/\d/.test(c)) r = 0;   // a typo in a number is a different number ("56 gal" ≠ "53 gal")
+      else if (words.some((w) => w.length >= 3 && Math.abs(w.length - c.length) <= 1 && near(w, c))) r = 2;
+      else if (!group && v.length >= c.length * 0.7 && v.length >= 3 &&
+        (c.startsWith(p) || (p.length === 5 && [4, 5, 6].some((n) => near(p, c.slice(0, n))) ) || near(v, c))) r = 2;
+      if (r === 1) return 1;
+      best = r || best;
+    }
+    return best;
+  }
+  function recallMatch(it, raw) {
+    if (it.all) {
+      const hs = it.all.map((g) => recallHit(g, raw, true));
+      return hs.includes(0) ? 0 : Math.max(...hs);
+    }
+    return recallHit([...(it.alt || []), it.a], raw);
+  }
+
   /* ============================ review deck ============================= */
   // Leitner boxes: a miss goes to box 0 (due now); each right answer when it
   // is due moves it up a box; right out of the last box and it is retired.
@@ -134,6 +196,7 @@ const StudyDrill = (() => {
     sort: (it, a) => "s:" + a.title + "|" + it.t,
     inop: (c) => "i:" + c.item + "|" + c.flight,
     task: (sysId, t) => "x:" + sysId + "|" + t.q,
+    must: (sysId, m) => "m:" + sysId + "|" + m.q,
   };
   function grade(key, ok) {
     const m = deck[key], now = Date.now();
@@ -157,6 +220,7 @@ const StudyDrill = (() => {
     STAGE1_SYSTEMS.forEach((s) => {
       (s.qs || []).forEach((q) => add(cardKey.quiz(q), { kind: "quiz", topic: "Systems · " + s.name, q }));
       // lab tasks replay only where their simulator exists
+      (s.must || []).forEach((m) => add(cardKey.must(s.id, m), { kind: "recall", topic: "Systems · " + s.name + " · must know", item: { ...m, sys: s.id } }));
       if (hasDef(s.id)) (s.tasks || []).forEach((t) => add(cardKey.task(s.id, t), { kind: "task", topic: "Systems · " + s.name, sys: s, task: t }));
     });
     return ix;
@@ -295,7 +359,7 @@ const StudyDrill = (() => {
   }
 
   /* ================================ TOPIC =============================== */
-  function topic(id, tab = "learn") {
+  function topic(id, tab = "learn", opt) {
     stopVoice(); killViews();
     run = null;
     const t = STAGE1_TOPICS[id];
@@ -309,6 +373,7 @@ const StudyDrill = (() => {
       <div class="s1-tabs">
         <button class="s1-tab ${tab === "learn" ? "on" : ""}" data-tab="learn">📖 Learn</button>
         <button class="s1-tab ${tab === "drill" ? "on" : ""}" data-tab="drill">🎯 Drill</button>
+        ${id === "systems" ? `<button class="s1-tab ${tab === "recall" ? "on" : ""}" data-tab="recall">★ Must-know recall</button>` : ""}
       </div>
       <div class="s1-body"></div>
     </div>`;
@@ -316,6 +381,7 @@ const StudyDrill = (() => {
     root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => topic(id, b.dataset.tab)));
     const body = root.querySelector(".s1-body");
     if (tab === "learn") renderLearn(t, body, id);
+    else if (tab === "recall" && id === "systems") recallPage(id, body, opt || {});
     else runDrill(t.drill, body, (pct, combo) => finishDrill(id, pct, body, combo));
     window.scrollTo(0, 0);
   }
@@ -331,6 +397,42 @@ const StudyDrill = (() => {
     const go = el(`<button class="btn primary wide">Drill it 🎯</button>`);
     go.addEventListener("click", () => topic(id, "drill"));
     body.appendChild(go);
+  }
+
+  // Standalone must-know recall (Systems → ★ Must-know recall): every system's
+  // must-know items, shuffled — typed, or a timed rapid-fire round. Misses go
+  // to the review deck; this does not move the topic's drill stars.
+  const RECALL_RAPID_N = 10;
+  const mustAll = (only) => STAGE1_SYSTEMS.filter((s) => !only || s.id === only).flatMap((s) => (s.must || []).map((m) => ({ ...m, sys: s.id })));
+  function recallPage(id, body, opt) {
+    const start = (o) => {
+      const items = shuffle(mustAll(o.sys)).slice(0, o.rapid ? RECALL_RAPID_N : 999);
+      const sn = o.sys ? sysById(o.sys).name : "all systems";
+      body.innerHTML = "";
+      const stage = el(`<div class="s1-part"></div>`);
+      body.appendChild(stage);
+      startRun(body, items.length, o.rapid ? "⚡ Rapid fire" : "★ Must-know recall · " + sn);
+      RUNNERS.recall({ items, rapid: o.rapid, last: "See results →" }, stage, (r, t, note) => {
+        const pct = Math.round(100 * r / Math.max(1, t));
+        result(body, pct, `${r} of ${t} from memory${note ? " · " + note : ""} · misses are in your review deck`, [
+          ["Again", () => start(o)], ["Learn", () => topic(id, "learn")], ["Topics", home, true]]);
+      });
+      window.scrollTo(0, 0);
+    };
+    if (opt.go) return start(opt);
+    const best = (stats.rapid || {}).mustknow, n = mustAll().length;
+    body.innerHTML = `<div class="s1-block s1-rc-home">
+      <h3><span class="s1-rc-star">★</span> Must-know recall</h3>
+      <p>The facts the examiner expects word for word — engine make and model, fuel capacities, mag-check numbers, voltages, Vfe. Each one is typed from memory, not picked from a list.</p>
+      <div class="s1-rc-modes">
+        <button class="btn primary" data-go="all">All systems · ${n} prompts</button>
+        <button class="btn" data-go="rapid">⚡ Rapid fire · ${RECALL_RAPID_N} × 15 s${best ? ` · best ${best.toFixed(1)} s` : ""}</button></div>
+      <p class="s1-muted">Or just one system:</p>
+      <div class="s1-sysnav">${STAGE1_SYSTEMS.filter((s) => (s.must || []).length).map((s) => `<button class="s1-chip" data-go="${s.id}">${esc(s.name)} <small>${s.must.length}</small></button>`).join("")}</div></div>`;
+    body.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => {
+      const g = b.dataset.go;
+      start(g === "all" ? {} : g === "rapid" ? { rapid: true } : { sys: g });
+    }));
   }
 
   function finishDrill(id, pct, body, combo) {
@@ -408,8 +510,10 @@ const StudyDrill = (() => {
     }));
     const sysOrd = Math.max(0, order.indexOf("systems"));
     STAGE1_SYSTEMS.forEach((s) => (s.qs || []).forEach((q) => pool.push({ ...q, from: "Systems · " + s.name, ord: sysOrd })));
-    // a random fifteen, then asked topic by topic the way the oral flows
-    const qs = shuffle(pool).slice(0, 15).sort((x, y) => x.ord - y.ord || (x.from < y.from ? -1 : x.from > y.from ? 1 : 0));
+    // a random fifteen — twelve questions plus three typed must-know recalls — then
+    // asked topic by topic the way the oral flows
+    const mustPool = STAGE1_SYSTEMS.flatMap((s) => (s.must || []).map((m) => ({ q: m.q, a: m.a, must: m, sys: s.id, from: "Systems · " + s.name, ord: sysOrd })));
+    const qs = [...shuffle(pool).slice(0, 12), ...shuffle(mustPool).slice(0, 3)].sort((x, y) => x.ord - y.ord || (x.from < y.from ? -1 : x.from > y.from ? 1 : 0));
     stopVoice();
     root.innerHTML = `<div class="s1-topic" style="--c:#34ace0">
       <div class="s1-topic-head"><button class="btn small" data-act="back">← Topics</button>
@@ -454,6 +558,25 @@ const StudyDrill = (() => {
         : pickOne(["Staying with that —", "Follow-up:", "Related question —", "Okay, next one."]);
       prevFrom = q.from;
       examiner(`<span class="s1-muted">${topicLead}</span><br>${esc(q.q)}${q.fig ? `<div class="s1-fig">${q.fig()}</div>` : ""}`, () => {
+        if (q.must) {   // a must-know: answered by typing, not by picking
+          const f = el(`<form class="s1-rc-row"><input class="s1-rc-in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Answer from memory · Enter" aria-label="Your answer"><button class="btn primary">Answer</button></form>`);
+          replies.appendChild(f);
+          const inp = f.querySelector("input"); inp.focus();
+          f.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const v = inp.value.trim();
+            if (!v) return;
+            const lvl = recallMatch(q.must, v), ok = lvl > 0;
+            if (ok) right++; else misses.push(q);
+            hit(ok, cardKey.must(q.sys, q.must)); tick();
+            replies.innerHTML = "";
+            me(v, ok ? "ok" : "bad");
+            const reply = ok ? `<b>${pickOne(["Good.", "Correct.", "That's right."])}</b> ${esc(q.a)}${lvl === 2 ? ` <span class="s1-muted">(close enough — say it exactly on the day)</span>` : ""}`
+              : `<b>${pickOne(["Not quite.", "Hmm — no."])}</b> I was after: <b>${esc(q.a)}</b>. You should know that one cold.`;
+            examiner(reply, () => { k++; button(k < qs.length ? "Next question →" : "Wrap up →", ask); });
+          });
+          return;
+        }
         shuffle(q.o.map((t, j) => ({ t, ok: j === 0 }))).forEach((o) => {
           const b = el(`<button class="s1-opt">${esc(o.t)}</button>`);
           b.addEventListener("click", () => {
@@ -485,7 +608,7 @@ const StudyDrill = (() => {
         if (misses.length) {
           const list = el(`<div class="s1-block"><h3>Review these <span class="s1-muted">— they're in your review deck now</span></h3><ul class="s1-list"></ul></div>`);
           misses.forEach((q) => list.querySelector("ul").appendChild(
-            el(`<li><span class="s1-muted">${esc(q.from)}</span><br>${esc(q.q)} — <b>${esc(q.o[0])}</b></li>`)));
+            el(`<li><span class="s1-muted">${esc(q.from)}</span><br>${esc(q.q)} — <b>${esc(q.o ? q.o[0] : q.a)}</b></li>`)));
           body.appendChild(list);
         }
       }));
@@ -523,6 +646,7 @@ const StudyDrill = (() => {
       stage.appendChild(el(`<p class="s1-from"><span>${esc(c.topic)}</span> <span class="s1-boxes" title="Leitner box">${BOX_DAYS.map((_, j) => `<i class="${j <= m.box ? "on" : ""}"></i>`).join("")}</span>${again.has(key) ? ` <b>again</b>` : ""}</p>`));
       const box = el(`<div></div>`); stage.appendChild(box);
       const act = c.kind === "task" ? null : c.kind === "quiz" ? { type: "quiz", qs: [c.q] }
+        : c.kind === "recall" ? { type: "recall", items: [c.item] }
         : c.kind === "sort" ? { type: "sort", title: c.a.title, buckets: c.a.buckets, items: [c.it] }
         : { type: "inop", cases: [c.c] };
       // a miss comes round once more at the end; only the first try is scored
@@ -938,27 +1062,6 @@ const StudyDrill = (() => {
         });
       };
 
-      const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-      // at most one slip (wrong, missing, extra or swapped letter) between a and b
-      const near = (a, b) => {
-        if (Math.abs(a.length - b.length) > 1) return false;
-        let i = 0;
-        while (i < a.length && a[i] === b[i]) i++;
-        const rest = (x, y) => a.slice(x) === b.slice(y);
-        return rest(i, i) || rest(i + 1, i + 1) || rest(i + 1, i) || rest(i, i + 1) ||
-          (a[i] === b[i + 1] && a[i + 1] === b[i] && rest(i + 2, i + 2));
-      };
-      // the first five letters decide, one typo forgiven ("alchohol", "ilness").
-      // Short alternates ("ad", "t/o", "wx") must be the whole answer or a
-      // whole word of it — otherwise "radio" would pass for ADs.
-      const accepts = (it, raw) => {
-        const v = norm(raw), words = raw.toLowerCase().split(/[^a-z0-9]+/), p = v.slice(0, 5);
-        if (v.length < 2) return false;
-        return [it.w, ...(it.alt || [])].map(norm).some((c) => c.length < 4
-          ? v === c || words.includes(c) || (c.length === 3 && v.startsWith(c))
-          : (v.length >= 3 && c.startsWith(p)) || v.includes(c) ||
-            (p.length === 5 && [4, 5, 6].some((n) => near(p, c.slice(0, n)))));
-      };
       const typed = () => {
         const inputs = [...box.querySelectorAll(".s1-slot input")];
         inputs[0].focus();
@@ -1199,6 +1302,129 @@ const StudyDrill = (() => {
       show();
     },
 
+    /* ------------------------------ recall ------------------------------ */
+    // Must-know prompts, typed from memory. a = { sys? | items?, lead?, rapid?, last? }
+    // (items: [{ q, a, alt?, all?, sys }]) → done(right, total, note?). Graded with
+    // recallMatch; the canonical answer is always shown afterwards. Wrong answers
+    // can be self-graded ("I had it" — the matcher missed a wording) or "Missed it".
+    // Only the first submission counts; each item is a misses-deck card.
+    recall(a, box, done) {
+      const items = a.items || ((sysById(a.sys) || {}).must || []).map((m) => ({ ...m, sys: a.sys }));
+      let k = 0, right = 0;
+      const sysName = (it) => (sysById(it.sys) || {}).name || "";
+      const record = (it, ok) => { if (ok) right++; hit(ok, cardKey.must(it.sys, it)); tick(); };
+      const shell = (it, extra) => `<div class="s1-block s1-recall"><p class="s1-rc-from"><b>★ Must know</b> · ${esc(sysName(it))}${extra || ""}</p>`;
+      const input = (ph) => `<div class="s1-rc-row"><input class="s1-rc-in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${ph}" aria-label="Your answer">
+        <button class="btn primary" data-act="go">Check</button></div>`;
+
+      const show = () => {
+        if (k >= items.length) return done(right, items.length);
+        const it = items[k];
+        box.innerHTML = shell(it, items.length > 1 ? ` · ${k + 1} of ${items.length}` : "") +
+          (a.lead ? `<p class="s1-rc-lead">${esc(a.lead)}</p>` : "") +
+          `<h3 class="s1-rc-q">${esc(it.q)}</h3>${input("Type it from memory · Enter")}
+          <button type="button" class="s1-linkbtn" data-act="show">I don't know — show me</button><div class="s1-fb"></div></div>`;
+        const inp = box.querySelector("input"), fb = box.querySelector(".s1-fb"), blk = box.firstElementChild;
+        let locked = false;
+        const lockUI = () => { locked = true; inp.disabled = true; box.querySelectorAll("[data-act]").forEach((b) => b.remove()); };
+        const next = () => nextBtn(k + 1 < items.length ? "Next →" : (a.last || "Next →"), () => { k++; show(); });
+        const submit = () => {
+          if (locked) return;
+          const v = inp.value.trim();
+          if (!v) { inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake"); return; }
+          const lvl = recallMatch(it, v);
+          lockUI();
+          if (lvl) {
+            record(it, true);
+            inp.classList.add("ok");
+            fb.innerHTML = `<p class="s1-ok">✓ ${esc(it.a)}</p>${lvl === 2 ? `<p class="s1-muted">Close enough — mind the spelling; the examiner wants it exactly.</p>` : ""}`;
+            blk.appendChild(next());
+          } else {
+            inp.classList.add("bad");
+            fb.innerHTML = `<p class="bad">✗ Not what I was looking for.</p><p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p>
+              <p class="s1-muted">Be honest — did you have it, just worded differently?</p>
+              <div class="s1-rc-self"><button class="btn" data-self="1">I had it</button><button class="btn" data-self="0">Missed it</button></div>`;
+            fb.querySelectorAll("[data-self]").forEach((b) => b.addEventListener("click", () => {
+              record(it, b.dataset.self === "1");
+              k++; show();
+            }));
+            fb.querySelector("[data-self]").focus();
+          }
+        };
+        box.querySelector('[data-act="go"]').addEventListener("click", submit);
+        inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+        box.querySelector('[data-act="show"]').addEventListener("click", () => {
+          if (locked) return;
+          lockUI(); record(it, false);
+          fb.innerHTML = `<p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p><p class="s1-muted">It's in your review deck.</p>`;
+          blk.appendChild(next());
+        });
+        inp.focus();
+      };
+
+      // timed: SECS per prompt; a wrong guess can be retried until the clock runs out
+      const SECS = 15;
+      const rapid = () => {
+        const best = (stats.rapid || {}).mustknow;
+        box.innerHTML = `<div class="s1-block s1-recall"><h3>⚡ Rapid fire — must-know</h3>
+          <p class="s1-muted">${items.length} prompts, ${SECS} seconds each. Type the answer and hit Enter; a wrong guess can be retried until the clock runs out.
+          ${best ? `Your best clean run: <b>${best.toFixed(1)} s</b>.` : ""}</p>
+          <button class="btn primary wide" data-act="go">⚡ Start</button></div>`;
+        box.querySelector('[data-act="go"]').addEventListener("click", () => {
+          const R = box.firstElementChild;
+          R.innerHTML = `<p class="s1-rc-from"><b>★ Must know</b> · <span data-r="sys"></span> · <span data-r="n"></span></p>
+            <h3 class="s1-rc-q"></h3><div class="s1-clock"><i></i></div>${input("Type it · Enter")}<p class="s1-rapid-msg"></p>`;
+          const inp = R.querySelector("input"), bar = R.querySelector(".s1-clock i"), msg = R.querySelector(".s1-rapid-msg"), qEl = R.querySelector(".s1-rc-q");
+          R.querySelector('[data-act="go"]').addEventListener("click", () => attempt());
+          let t0 = 0, timer = 0, busy = false;
+          const start = performance.now();
+          const stop = () => clearInterval(timer);
+          const present = () => {
+            if (k >= items.length) {
+              stop(); inp.disabled = true;
+              const secs = (performance.now() - start) / 1000;
+              let note = `${right} of ${items.length} in ${secs.toFixed(1)} s`;
+              if (right === items.length && (!best || secs < best)) {
+                stats.rapid = stats.rapid || {}; stats.rapid.mustknow = secs; save(STATS, stats);
+                note += best ? " — new best!" : "";
+              }
+              return done(right, items.length, note);
+            }
+            const it = items[k];
+            R.querySelector('[data-r="sys"]').textContent = sysName(it);
+            R.querySelector('[data-r="n"]').textContent = `${k + 1} of ${items.length}`;
+            qEl.textContent = it.q;
+            inp.value = ""; inp.disabled = false; inp.focus(); msg.textContent = "";
+            t0 = performance.now(); busy = false;
+          };
+          const resolve = (ok) => {
+            busy = true; inp.disabled = true;
+            const it = items[k];
+            record(it, ok);
+            msg.innerHTML = ok ? `<span class="s1-ok">✓ ${esc(it.a)}</span>` : `<span class="bad">⏱ ${esc(it.a)}</span>`;
+            k++;
+            setTimeout(() => { if (box.isConnected) present(); }, ok ? 450 : 1500);
+          };
+          function attempt() {
+            if (busy) return;
+            if (recallMatch(items[k], inp.value)) resolve(true);
+            else { inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake"); inp.select(); }
+          }
+          inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); attempt(); } });
+          timer = setInterval(() => {
+            if (!box.isConnected) return stop();
+            if (busy) return;
+            const left = 1 - (performance.now() - t0) / (SECS * 1000);
+            bar.style.width = Math.max(0, left * 100) + "%";
+            bar.classList.toggle("low", left < 0.3);
+            if (left <= 0) resolve(false);
+          }, 50);
+          present();
+        });
+      };
+      a.rapid ? rapid() : show();
+    },
+
     /* ------------------------------ systask ----------------------------- */
     // a = { sys, tasks, tickOne?, last? } → done(points, units)
     systask(a, box, done) {
@@ -1231,8 +1457,10 @@ const StudyDrill = (() => {
         return shuffle([...(must ? [must] : []), ...rest].slice(0, n));
       });
       const qs = shuffle(pick.flatMap((s) => shuffle(s.qs || []).slice(0, 2).map((q) => ({ ...q, from: s.name }))));
-      // the bar starts at 3 units; make it the real count
-      grow(plan.reduce((n, ts) => n + (ts.length ? ts.reduce((m, t) => m + taskUnits(t), 0) : 1), 0) + qs.length - 3);
+      // 2–3 must-know prompts per system, typed from memory before the hands-on tasks
+      const pre = pick.map((s) => shuffle(s.must || []).slice(0, 2 + Math.floor(Math.random() * 2)).map((m) => ({ ...m, sys: s.id })));
+      // the bar starts at 3 units; make it the real count (one unit per recall prompt)
+      grow(plan.reduce((n, ts) => n + (ts.length ? ts.reduce((m, t) => m + taskUnits(t), 0) : 1), 0) + qs.length + pre.reduce((n, p) => n + p.length, 0) - 3);
       let k = 0, got = 0, total = 0;
       const show = () => {
         if (k >= pick.length) {
@@ -1242,12 +1470,22 @@ const StudyDrill = (() => {
         const s = pick[k], tasks = plan[k];
         const intro = `<div class="s1-examiner"><span>🧑‍✈️</span><p>"Pick one — ${pick.map((p, j) => j === k ? `<b>${p.name}</b>` : p.name).join(" · ")}.<br>
           Walk me through the <b>${s.name.toLowerCase()}</b> system."</p></div>`;
-        if (!tasks.length) return sayIt(s, intro);
+        const hands = () => {
+          if (!tasks.length) return sayIt(s, intro);
+          box.innerHTML = `<div class="s1-block s1-sys">${intro}
+            ${s.intro ? `<p class="s1-muted">${esc(s.intro)}</p>` : ""}
+            <p class="s1-muted">${tasks.length} task${tasks.length > 1 ? "s" : ""} on the live diagram — operate it, don't just recite it.</p></div>`;
+          box.firstElementChild.appendChild(nextBtn("Begin →", () => {
+            RUNNERS.systask({ sys: s, tasks, last: k + 1 < pick.length ? "Next system →" : "Quiz on these three →" }, box, (r, t) => { got += r; total += t; k++; show(); });
+          }));
+        };
+        if (!pre[k].length) return hands();
+        // recall first: the examiner wants the numbers cold before you touch the diagram
         box.innerHTML = `<div class="s1-block s1-sys">${intro}
-          ${s.intro ? `<p class="s1-muted">${esc(s.intro)}</p>` : ""}
-          <p class="s1-muted">${tasks.length} task${tasks.length > 1 ? "s" : ""} on the live diagram — operate it, don't just recite it.</p></div>`;
+          <p class="s1-muted">Before you start — ${pre[k].length} thing${pre[k].length > 1 ? "s" : ""} you should know cold, typed from memory.</p></div>`;
         box.firstElementChild.appendChild(nextBtn("Begin →", () => {
-          RUNNERS.systask({ sys: s, tasks, last: k + 1 < pick.length ? "Next system →" : "Quiz on these three →" }, box, (r, t) => { got += r; total += t; k++; show(); });
+          RUNNERS.recall({ items: pre[k], lead: `Before you start — the ${s.name.toLowerCase()}.`, last: tasks.length ? "On to the diagram →" : "Continue →" }, box,
+            (r, t) => { got += r; total += t; hands(); });
         }));
       };
       const sayIt = (s, intro) => {
@@ -1457,9 +1695,10 @@ const StudyDrill = (() => {
         return (P.length || nl) && P.every((p) => sn.p.includes(p)) && (!nl || sn.l.length >= nl);
       };
       w.innerHTML = `<div class="sx-lab">
+        <div class="s1-sysnav">${order.map((s) => `<button class="s1-chip" data-s="${s.id}">${s.core ? `<i class="sx-core" title="core system"></i>` : ""}${esc(s.name)}<b class="sx-tick"></b></button>`).join("")}</div>
+        <section class="sx-must" aria-label="Must know"></section>
         <section class="sx-hero" hidden><div class="sx-hero-view"></div>
           <details class="sx-picks"><summary>Pick a spot from a list instead</summary><div class="sx-pickbody">${pickListHTML()}</div></details></section>
-        <div class="s1-sysnav">${order.map((s) => `<button class="s1-chip" data-s="${s.id}">${s.core ? `<i class="sx-core" title="core system"></i>` : ""}${esc(s.name)}<b class="sx-tick"></b></button>`).join("")}</div>
         <div class="sx-cols">
           <div class="sx-main">
             <div class="sx-tools">
@@ -1541,6 +1780,29 @@ const StudyDrill = (() => {
           b.classList.toggle("on", !!cur && s.id === cur.s.id);
           b.querySelector(".sx-tick").textContent = fullyDone(s) ? " ✓" : "";
         });
+      }
+
+      /* ---- ★ Must know: flashcards above the lab (tap to reveal, show all, test me) ---- */
+      function renderMust() {
+        const s = cur.s, M = s.must || [], box = q(".sx-must");
+        box.hidden = !M.length;
+        if (!M.length) { box.innerHTML = ""; return; }
+        box.innerHTML = `<div class="sx-must-head"><h3><span class="sx-must-star">★</span> Must know <small>${esc(s.name)} — say it from memory, word for word</small></h3>
+          <div class="sx-must-acts"><button type="button" class="btn small" data-act="mk-all" aria-pressed="false">Show all</button>
+          <button type="button" class="btn small primary" data-act="mk-test">Test me ▸</button></div></div>
+          <div class="sx-must-grid">${M.map((m, i) => `<button type="button" class="sx-mk" data-i="${i}" aria-pressed="false">
+            <span class="sx-mk-q">${esc(m.q)}</span><span class="sx-mk-a">${esc(m.a)}</span><i class="sx-mk-hint">tap to reveal</i></button>`).join("")}</div>`;
+        const grid = box.querySelector(".sx-must-grid"), allBtn = box.querySelector('[data-act="mk-all"]');
+        grid.addEventListener("click", (e) => {
+          const c = e.target.closest(".sx-mk");
+          if (c) c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") !== "true");
+        });
+        allBtn.addEventListener("click", () => {
+          const on = allBtn.getAttribute("aria-pressed") !== "true";
+          allBtn.setAttribute("aria-pressed", on); allBtn.textContent = on ? "Hide all" : "Show all";
+          grid.querySelectorAll(".sx-mk").forEach((c) => c.setAttribute("aria-pressed", on));
+        });
+        box.querySelector('[data-act="mk-test"]').addEventListener("click", () => topic("systems", "recall", { sys: s.id, go: true }));
       }
 
       /* ---- Scenarios pane ---- */
@@ -1660,6 +1922,7 @@ const StudyDrill = (() => {
         qa(".sx-viewseg button").forEach((b) => b.classList.toggle("on", b.dataset.view === "2d"));
         if (id === "engine" && S3()) ready3d().then((ok) => { if (ok && alive() && cur.s.id === "engine") vs.hidden = false; });
         setPane(cur.pane);
+        renderMust();
         renderExplore(); chipState();
         if (part) selectPart(part);
       }

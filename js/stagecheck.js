@@ -19,8 +19,17 @@
               | { type: "systems" }
      In a quiz the FIRST option is the correct one; the runner shuffles.
    STAGE1_SYSTEMS    the systems the examiner picks three of. Each is
-     { id, name, core?, points, qs, fig?, intro, parts, labs, tasks }
+     { id, name, core?, points, must, qs, fig?, intro, parts, labs, tasks }
      core   the five the examiner leans on (fuel, electrical, pitot, ignition, engine)
+     must   the MUST-KNOW layer: facts to produce from memory, word for word (engine make, fuel
+            capacity, mag-check RPM…). [{ q, a, alt?, all? }] — `a` is the canonical answer shown
+            after answering; the student TYPES it (RUNNERS.recall, matcher in study.js).
+              alt  accepted typed forms (case, spaces, hyphens, punctuation and units ignored;
+                   numbers match as whole numbers, so "150" never passes for 50 or 1500)
+              all  multi-part answers: [[alts of key 1], [alts of key 2], …] — every group must
+                   appear, in any order (e.g. cool · lubricate · clean · seal)
+            Misses-deck key is "m:" + sysId + "|" + q. Keep q unique within a system, and use
+            only facts already taught in `points` / the labs.
      parts  { partId: { n, d, tip? } } — Explore cards; ids are the SysDiagrams def's part ids
      labs   [{ h, start?: statePatch, steps: [{ do, when, see }] }] — a step ticks when the
             student's own manipulation makes {...state, ...model(state)} match `when`
@@ -790,6 +799,14 @@ const STAGE1_SYSTEMS = [
       "Four cylinders, horizontally opposed",
       "Air-cooled, fuel-injected, normally aspirated, direct drive",
     ],
+    must: [
+      { q: "Engine make and model?", a: "Lycoming IO-360-L2A", alt: ["Lycoming IO-360-L2A", "IO-360-L2A", "IO-360", "IO360", "Lycoming IO-360", "Lycoming IO 360", "Lycoming IO360"] },
+      { q: "Engine horsepower?", a: "180 hp", alt: ["180"] },
+      { q: "That horsepower is rated at what RPM?", a: "2,700 RPM", alt: ["2700"] },
+      { q: "Cylinders and layout?", a: "4, horizontally opposed", all: [["4", "four"], ["opposed"]] },
+      { q: "Engine cooling?", a: "Air-cooled", alt: ["air", "air cooled", "aircooled"] },
+      { q: "Fuel delivery — and so what is missing?", a: "Fuel-injected — so no carb heat", alt: ["injected", "injection", "fuel injected", "fuel injection"] }
+    ],
     intro: "Four opposed cylinders turning the prop directly — injected, air-cooled, no carburetor to ice.",
     parts: {
       cylinder:    { n: "Cylinder", d: "Where the four strokes happen: intake, compression, power, exhaust. Two of the four cylinders sit on each side of the crankcase.", tip: "\"Walk me through the four strokes.\"" },
@@ -850,6 +867,9 @@ const STAGE1_SYSTEMS = [
       "Fixed pitch — a compromise between climb and cruise",
       "RPM is set with the throttle, read on the tach",
     ],
+    must: [
+      { q: "Propeller: make, number of blades, pitch?", a: "McCauley two-blade, fixed pitch", all: [["McCauley", "Mc Cauley"], ["two", "2"], ["fixed"]] }
+    ],
     intro: "A fixed-pitch prop is an airfoil on a spinning hub: the blade angle never changes, so RPM follows throttle and airspeed.",
     parts: {
       blade:   { n: "Prop blade", d: "A twisted airfoil. Its angle of attack falls as airspeed rises, so for a given throttle the RPM climbs in a dive and sags in a climb.", tip: "\"Why does RPM rise in a dive?\"" },
@@ -883,6 +903,14 @@ const STAGE1_SYSTEMS = [
       "Fuel shutoff valve (red push-pull knob), then the strainer",
       "Engine-driven pump → fuel/air control unit (servo) → distribution valve → injector nozzles",
       "100LL — blue. Sump the drains on every preflight",
+    ],
+    must: [
+      { q: "Total fuel capacity?", a: "56 gal", alt: ["56"] },
+      { q: "Usable fuel?", a: "53 gal", alt: ["53"] },
+      { q: "Fuel per tank?", a: "28 gal", alt: ["28"] },
+      { q: "Fuel grade and colour?", a: "100LL, blue", all: [["100LL"], ["blue"]] },
+      { q: "Fuel selector positions?", a: "LEFT · BOTH · RIGHT", all: [["left"], ["both"], ["right"]] },
+      { q: "Fuel selector for takeoff and landing?", a: "BOTH", alt: ["both"] }
     ],
     intro: "Gravity feeds the reservoir; from there pumps push fuel through a metering unit to four nozzles.",
     parts: {
@@ -952,6 +980,11 @@ const STAGE1_SYSTEMS = [
       "Check on every preflight — know the POH minimum and the school's fleet minimum",
       "Oil cooler; oil pressure and temperature on the EIS",
     ],
+    must: [
+      { q: "Oil capacity?", a: "8 quarts", alt: ["8"] },
+      { q: "The four jobs of engine oil?", a: "Cool, lubricate, clean, seal", all: [["cool"], ["lubricat", "lube"], ["clean"], ["seal"]] },
+      { q: "Oil sump type?", a: "Wet sump", alt: ["wet", "wet sump"] }
+    ],
     intro: "A wet-sump system: the oil lives in the engine's own sump and is pumped through a filter and a cooler.",
     parts: {
       sump:     { n: "Oil sump", d: "Wet sump: the 8-quart reservoir is the bottom of the engine itself.", tip: "What is the minimum you'll fly with?" },
@@ -985,6 +1018,13 @@ const STAGE1_SYSTEMS = [
       "Independent of the electrical system — the engine runs with the master off",
       "Redundancy plus more complete combustion",
       "A broken P-lead means a \"hot\" mag — the prop is always live",
+    ],
+    must: [
+      { q: "What provides ignition?", a: "Two magnetos (engine-driven, self-powered)", alt: ["two magnetos", "2 magnetos", "two mags", "2 mags", "magnetos", "magneto", "mags"] },
+      { q: "Spark plugs per cylinder?", a: "2", alt: ["2", "two"] },
+      { q: "Mag check RPM?", a: "1,800 RPM", alt: ["1800"] },
+      { q: "Maximum RPM drop on one mag?", a: "150 RPM", alt: ["150"] },
+      { q: "Maximum difference between the mags?", a: "50 RPM", alt: ["50"] }
     ],
     intro: "Two self-powered magnetos, two plugs per cylinder — the engine doesn't need the battery to run.",
     parts: {
@@ -1048,6 +1088,14 @@ const STAGE1_SYSTEMS = [
       "Split MASTER switch (BAT | ALT); avionics bus switches",
       "Essential bus feeds the PFD; standby battery takes over if main voltage drops (≥30 min per training material — the POH just says \"a limited time\")",
       "Circuit breakers; volts and amps on the EIS",
+    ],
+    must: [
+      { q: "System voltage?", a: "28 V", alt: ["28"] },
+      { q: "Battery voltage?", a: "24 V", alt: ["24"] },
+      { q: "Alternator output?", a: "28 V, 60 A", all: [["28"], ["60"]] },
+      { q: "LOW VOLTS annunciates at what voltage?", a: "24.5 V or below", alt: ["24.5"] },
+      { q: "STBY BATT switch positions?", a: "ARM · OFF · TEST", all: [["arm"], ["off"], ["test"]] },
+      { q: "What powers the PFD after a total main electrical failure?", a: "The standby battery, via the essential bus", all: [["standby", "stby", "stdby"], ["battery", "batt"]] }
     ],
     intro: "An alternator carries the loads and charges the battery; if both go, the standby battery keeps the essential bus alive.",
     parts: {
@@ -1116,6 +1164,12 @@ const STAGE1_SYSTEMS = [
       "Standby airspeed, altimeter and attitude indicator don't need electrical power",
       "Pitot blocked: ASI acts like an altimeter. Static blocked: altimeter freezes, ASI is wrong",
     ],
+    must: [
+      { q: "Where is the pitot tube?", a: "Under the left wing", alt: ["left wing", "under left wing"] },
+      { q: "Where is the static port?", a: "Left side of the fuselage", all: [["left"], ["fuselage", "side"]] },
+      { q: "Which instruments use the static system?", a: "Altimeter, airspeed, VSI", all: [["altimeter", "altitude"], ["airspeed", "asi"], ["vsi", "vertical"]] },
+      { q: "On alternate static, airspeed and altitude read…?", a: "Slightly high", alt: ["high", "slightly high"] }
+    ],
     intro: "Two pressures — ram (pitot) and static — and who uses which decides what a blockage does to each instrument.",
     parts: {
       pitotTube:  { n: "Pitot tube", d: "Under the left wing. The ram hole faces the airflow; it measures impact pressure for the airspeed indicator.", tip: "What's it look like on the walkaround? Covers off, heat tested." },
@@ -1179,6 +1233,11 @@ const STAGE1_SYSTEMS = [
       "Electric single-slot flaps, 0° to 30°",
       "Vfe: 110 KIAS for 10°, 85 KIAS for 10°–30°",
     ],
+    must: [
+      { q: "Flap type and range?", a: "Electric, single-slot, 0°–30°", all: [["electric"], ["single slot", "single-slot", "slot", "single"], ["30"]] },
+      { q: "Max flap speed (Vfe) with 10° flaps?", a: "110 KIAS", alt: ["110"] },
+      { q: "Max flap speed (Vfe) beyond 10°?", a: "85 KIAS", alt: ["85"] }
+    ],
     intro: "Cables move the three surfaces; the flaps are the one control that needs electrical power.",
     parts: {
       ailerons:  { n: "Ailerons", d: "Roll the airplane. Yoke left: left aileron up, right aileron down." },
@@ -1224,6 +1283,11 @@ const STAGE1_SYSTEMS = [
       "Nosewheel steered through the rudder pedals",
       "Hydraulic disc brakes on the main wheels, toe-operated; parking brake",
     ],
+    must: [
+      { q: "Landing gear type?", a: "Fixed tricycle", all: [["fixed"], ["tricycle", "nose wheel", "nosewheel"]] },
+      { q: "What are the brakes?", a: "Hydraulic disc, toe brakes on the mains", all: [["hydraulic"], ["disc", "toe", "mains", "main"]] },
+      { q: "Nose-gear shock absorber?", a: "Air/oil (oleo) strut", alt: ["oleo", "air oil", "air and oil", "oleo strut"] }
+    ],
     intro: "Fixed tricycle gear: spring steel under the mains, an oleo strut under the nose, and toe brakes on the pedals.",
     parts: {
       noseStrut: { n: "Nose strut", d: "Air/oil (oleo) strut that absorbs the nose gear's shock; the nosewheel is steered through the rudder pedals." },
@@ -1254,6 +1318,10 @@ const STAGE1_SYSTEMS = [
       "A cracked muffler can put carbon monoxide in the cabin — heat off, air on",
       "Stall warning: pneumatic reed horn, inlet in the left wing leading edge — no electrical power",
       "Sounds a few knots above the stall",
+    ],
+    must: [
+      { q: "Where does cabin heat come from?", a: "A shroud around the exhaust muffler", alt: ["muffler", "shroud", "exhaust"] },
+      { q: "Stall warning type?", a: "Pneumatic reed horn, inlet on the left wing leading edge — no electrical power", alt: ["pneumatic", "reed horn", "reed"] }
     ],
     intro: "Cabin heat is exhaust-warmed air; stall warning is a reed horn that needs no power.",
     parts: {
