@@ -244,7 +244,7 @@ const Systems3D = (() => {
       const mB = R.mat("prop", 0x20262d, { rough: 0.45 }), mTip = R.mat("prop", 0xf6c90e);
       for (const sg of [1, -1]) {
         const bl = grp(E.frontGrp, [1.3, 0, 0]);
-        bl.rotation.x = sg > 0 ? 0 : Math.PI;
+        bl.rotation.x = (sg > 0 ? 0 : Math.PI) + Math.PI / 4;   // parked at 45 degrees, not a vertical spike
         const blade = grp(bl);
         blade.rotation.y = 0.35;
         R.tag(R.mesh(new T.BoxGeometry(0.07, 2.0, 0.3), mB, blade, [0, 1.15, 0]), "prop.blade");
@@ -346,7 +346,7 @@ const Systems3D = (() => {
       if (k === 0) E.anchors["engine.piston"] = anc(pg, [0, 0.0, 0]);
       E.cyl.push({ k, side: sd, cg, ax, pg, rod, tint, crownMat, plug: null });
     }
-    E.strokeLabelAnchors = E.cyl.map((c) => anc(c.cg, [0, 0.4, c.side * 1.55]));
+    E.strokeLabelAnchors = E.cyl.map((c) => anc(c.cg, [0, 0.1, c.side * 1.46]));   // on the head cover
 
     /* --- fuel: servo, flow divider, injector lines --- */
     E.fuel = grp(g);
@@ -401,8 +401,8 @@ const Systems3D = (() => {
       E.acc.position.x = -1.15 - e * 0.5;
       E.magL.position.set(-e * 1.1, 0, -e * 0.15); E.magR.position.set(-e * 1.1, 0, e * 0.15);
       E.filt.position.set(-e * 1.1, 0, 0);
-      E.pulleyGrp.position.x = e * 0.5; E.altGrp.position.x = e * 0.5;
-      E.frontGrp.position.x = e * 1.5;
+      E.pulleyGrp.position.x = e * 0.7; E.altGrp.position.x = e * 0.7;
+      E.frontGrp.position.x = e * 2.0;
       E.starter.position.set(0, -e * 0.7, -e * 0.35);
       E.intake.position.y = -e * 0.55;
       E.exh[0].position.set(0, -e * 0.1, e * 1.25); E.exh[1].position.set(0, -e * 0.1, -e * 1.25);
@@ -669,6 +669,19 @@ const Systems3D = (() => {
     hint.style.cssText = "position:absolute;left:8px;bottom:6px;pointer-events:none;";
     wrap.append(canvas, labelBox, hint);
     el.appendChild(wrap);
+    // thin leader lines (label -> dot) live in one SVG under the labels
+    const SVGNS = "http://www.w3.org/2000/svg", leaders = document.createElementNS(SVGNS, "svg"), lead = [];
+    leaders.setAttribute("class", "s3-leaders");
+    leaders.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none;";
+    labelBox.appendChild(leaders);
+    const leaderAt = (i) => {
+      if (!lead[i]) {
+        const ln = document.createElementNS(SVGNS, "line"), dt = document.createElementNS(SVGNS, "circle");
+        ln.setAttribute("stroke-width", "1"); ln.setAttribute("stroke-linecap", "round"); dt.setAttribute("r", "3");
+        leaders.append(ln, dt); lead[i] = { ln, dt };
+      }
+      return lead[i];
+    };
     const ctx2 = canvas.getContext("2d");
 
     /* ---- scene ---- */
@@ -711,7 +724,15 @@ const Systems3D = (() => {
         l.style.cssText = "position:absolute;left:0;top:0;white-space:nowrap;pointer-events:none;";
         labelBox.appendChild(l); strokeEls.push(l);
       }
-      E.onStroke = (k, si) => { strokeEls[k].textContent = STROKES[si].n; strokeEls[k].dataset.stroke = STROKES[si].n.toLowerCase(); strokeEls[k].style.borderColor = "#" + STROKES[si].c.toString(16).padStart(6, "0"); };
+      // each stroke label wears its cylinder's colour (border, text, tinted fill) and is tied to the head by a leader
+      E.onStroke = (k, si) => {
+        const st = STROKES[si], hex = "#" + st.c.toString(16).padStart(6, "0"), rgb = [st.c >> 16 & 255, st.c >> 8 & 255, st.c & 255].join(",");
+        const l = strokeEls[k];
+        l.textContent = st.n; l.dataset.stroke = st.n.toLowerCase(); l.lw = 0;
+        l.style.borderColor = hex; l.style.color = "#fff";
+        l.style.background = `linear-gradient(rgba(${rgb},.38),rgba(${rgb},.38)),rgba(12,17,23,.9)`;
+        l.tint = hex;
+      };
       E.strokeIdx = [-1, -1, -1, -1];
     }
 
@@ -741,10 +762,75 @@ const Systems3D = (() => {
     let routeSys = null, beadList = [];
 
     const CAM = scene === "engine"
-      ? { az: -150, el: 38, dist: 8.5, min: 3.5, max: 18, tgt: [0.2, -0.1, 0], elMin: -80, elMax: 86 }
-      : { az: -50, el: 18, dist: 37, min: 9, max: 70, tgt: [0.5, 0.2, 0], elMin: 2, elMax: 86 };
+      ? { az: -150, el: 38, dist: 7.2, min: 3.5, max: 18, tgt: [0.2, -0.1, 0], elMin: -80, elMax: 86 }
+      : { az: -48, el: 19, dist: 37, min: 6, max: 70, tgt: [0.5, 0.2, 0], elMin: 2, elMax: 86 };   // airplane dist/min/max are refitted per aspect in size()
     const cs = { az: CAM.az, el: CAM.el, dist: CAM.dist };
     const tgt = new T.Vector3(...CAM.tgt);
+    // Where the camera likes to look when a system is focused (default: the hero three-quarter view from front-left).
+    const FOCUS_VIEW = { pitot: { az: -62, el: 16 }, ignition: { az: -36, el: 18 }, engine: { az: -36, el: 18 }, prop: { az: -30, el: 12 }, environ: { az: -36, el: 20 },
+      controls: { az: -128, el: 22 }, gear: { az: -46, el: 9 }, oil: { az: -36, el: 18 }, electrical: { az: -40, el: 20 } };
+    let camGoal = null, camAnim = false, camAuto = true, lastCamT = 0, heroGoal = null;
+
+    // Airplane framing samples: world-box corners of every airframe mesh (no ground, no overlays). Skin meshes double as occluders.
+    const framePts = [], skinMeshes = [];
+    if (A) {
+      A.root.updateMatrixWorld(true);
+      const bb = new T.Box3();
+      A.root.traverse((m) => {
+        if (!m.isMesh) return;
+        const en = R.entry(m.material);
+        if (!en || en.sys === "ground") return;
+        if (en.skin) skinMeshes.push(m);
+        bb.setFromObject(m);
+        for (let i = 0; i < 8; i++) framePts.push(new T.Vector3(i & 1 ? bb.max.x : bb.min.x, i & 2 ? bb.max.y : bb.min.y, i & 4 ? bb.max.z : bb.min.z));
+      });
+    }
+    // Smallest distance that keeps every point inside fw/fh of the half-frame, re-centring the target so the set is centred on screen.
+    function fitView(pts, az, el, fw, fh, c0) {
+      const a = az * D2R, e = el * D2R, dir = new T.Vector3(Math.cos(e) * Math.cos(a), Math.sin(e), Math.cos(e) * Math.sin(a));
+      const right = new T.Vector3().crossVectors(dir.clone().negate(), new T.Vector3(0, 1, 0)).normalize(), up = new T.Vector3().crossVectors(right, dir.clone().negate());
+      const tv = Math.tan(cam.fov * D2R / 2), th = tv * cam.aspect, t = c0.clone(), q = new T.Vector3();
+      const need = () => { let d = 1; for (const p of pts) { q.copy(p).sub(t); const z = q.dot(dir); d = Math.max(d, z + Math.abs(q.dot(right)) / (fw * th), z + Math.abs(q.dot(up)) / (fh * tv)); } return d; };
+      let d = need();
+      for (let it = 0; it < 5; it++) {
+        let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+        for (const p of pts) { q.copy(p).sub(t); const dep = Math.max(0.5, d - q.dot(dir)), nx = q.dot(right) / (dep * th), ny = q.dot(up) / (dep * tv); x0 = Math.min(x0, nx); x1 = Math.max(x1, nx); y0 = Math.min(y0, ny); y1 = Math.max(y1, ny); }
+        t.addScaledVector(right, (x0 + x1) / 2 * th * d).addScaledVector(up, (y0 + y1) / 2 * tv * d);
+        d = need();
+      }
+      return { az, el, dist: d, tgt: t };
+    }
+    function goalFor(sys) {
+      if (!A) return { az: CAM.az, el: CAM.el, dist: CAM.dist, tgt: new T.Vector3(...CAM.tgt) };
+      if (!heroGoal) {
+        const c = new T.Box3().setFromPoints(framePts).getCenter(new T.Vector3());
+        heroGoal = fitView(framePts, CAM.az, CAM.el, 0.93, 0.95, c);
+      }
+      const hs = sys ? ent.filter((e) => e.def.sys === sys) : [];
+      if (!hs.length) return heroGoal;
+      const v = FOCUS_VIEW[sys] || {}, pts = [], pad = 3.4, c = new T.Vector3();
+      hs.forEach((e) => { const p = worldOf(e).clone(); c.add(p); for (const [x, y, z] of [[1, 0, 0], [-1, 0, 0], [0, 1.3, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) pts.push(p.clone().add(new T.Vector3(x * pad, y * pad, z * pad))); });
+      c.divideScalar(hs.length);
+      const g = fitView(pts, v.az != null ? v.az : CAM.az, v.el != null ? v.el : CAM.el, 0.8, 0.82, c);
+      g.dist = Math.min(g.dist, heroGoal.dist * 1.1);
+      return g;
+    }
+    function toGoal(g, animate) {
+      camGoal = g; camAuto = true;
+      if (animate && !reduced) { camAnim = true; lastCamT = 0; dirty = true; need(); return; }
+      cs.az = g.az; cs.el = g.el; cs.dist = g.dist; tgt.copy(g.tgt); camAnim = false; invalidate();
+    }
+    function stepCam(t) {
+      const dt = lastCamT ? Math.min(0.1, (t - lastCamT) / 1000) : 0.016, k = 1 - Math.exp(-dt * 7);
+      lastCamT = t;
+      const g = camGoal;
+      let da = ((g.az - cs.az) % 360 + 540) % 360 - 180;
+      cs.az += da * k; cs.el += (g.el - cs.el) * k; cs.dist += (g.dist - cs.dist) * k; tgt.lerp(g.tgt, k);
+      if (Math.abs(da) < 0.1 && Math.abs(g.el - cs.el) < 0.1 && Math.abs(g.dist - cs.dist) < g.dist * 0.002 && tgt.distanceTo(g.tgt) < 0.02) {
+        cs.az = g.az; cs.el = g.el; cs.dist = g.dist; tgt.copy(g.tgt); camAnim = false;
+      }
+      dirty = true;
+    }
 
     const INTERIOR_FOCUS = ["fuel", "electrical", "pitot", "ignition", "oil", "engine", "environ"];
     function applyFocus() {
@@ -806,54 +892,116 @@ const Systems3D = (() => {
       w = cw; h = ch;
       if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; }
       cam.aspect = cw / ch; cam.updateProjectionMatrix();
-      dots.material.size = 12 * dpr; rings.material.size = 22 * dpr; beads.material.size = 5.5 * dpr;
+      if (A) {
+        heroGoal = null;
+        const hg = goalFor(null);
+        CAM.min = hg.dist * 0.2; CAM.max = hg.dist * 1.8;
+        if (camAuto) toGoal(goalFor(focus), false);     // reframe for the new aspect unless the viewer has taken the camera
+      }
+      dots.material.size = (scene === "engine" ? 9 : 12) * dpr; rings.material.size = (scene === "engine" ? 18 : 22) * dpr; beads.material.size = 5.5 * dpr;
       dirty = true;
     }
 
     /* ---- camera ---- */
     function placeCam() {
-      const a = cs.az * D2R, e = cs.el * D2R, aspectK = Math.max(1, 1.05 / cam.aspect);
-      const d = cs.dist * (scene === "airplane" ? aspectK : Math.max(1, 0.9 / cam.aspect) * (1 + 0.5 * explode));
+      const a = cs.az * D2R, e = cs.el * D2R;
+      const d = scene === "airplane" ? cs.dist : cs.dist * Math.max(1, 0.9 / cam.aspect) * (1 + 0.42 * explode);
       cam.position.set(tgt.x + d * Math.cos(e) * Math.cos(a), tgt.y + d * Math.sin(e), tgt.z + d * Math.cos(e) * Math.sin(a));
       cam.lookAt(tgt);
     }
 
     /* ---- render ---- */
     function project(v) { tmpV.copy(v).project(cam); return [(tmpV.x + 1) / 2 * w, (1 - tmpV.y) / 2 * h, tmpV.z]; }
+    // Is the hotspot hidden behind the airframe from here? Exterior systems: any skin in the way. Interior (x-ray) systems:
+    // only when the line of sight crosses the airframe twice (through the body to the far side).
+    const oray = new T.Raycaster(), od = new T.Vector3(), BG = new T.Color(0x10161d);
+    function isOccluded(wv) {
+      if (!skinMeshes.length) return false;
+      od.copy(wv).sub(cam.position);
+      const dist = od.length();
+      oray.set(cam.position, od.divideScalar(dist)); oray.near = 0; oray.far = dist - 0.5;
+      return oray.intersectObjects(skinMeshes, false).length >= (INTERIOR_FOCUS.includes(focus) ? 2 : 1);
+    }
+    // Screen-space label pass: higher priority first; each takes the first free slot (above, beside, below, then stacked further out).
+    function placeLabels(items) {
+      const placed = [], G = 2;
+      items.sort((a, b) => b.pri - a.pri || a.y - b.y);
+      for (const it of items) {
+        const { x, y, w: bw, h: bh } = it, gap = it.gap || 10, st = bh + G, c = [];
+        const up = (k) => [x - bw / 2, y - gap - bh - k * st], dn = (k) => [x - bw / 2, y + gap + k * st];
+        const rt = (k) => [x + gap + 2, y - bh / 2 + k * st], lf = (k) => [x - gap - 2 - bw, y - bh / 2 + k * st];
+        if (it.dir) {   // stroke labels: first choice is just beyond the head, away from the engine's centre, so they never cover the part
+          const rx = it.dir[0], ry = it.dir[1], r = gap + bw / 2 * Math.abs(rx) + bh / 2 * Math.abs(ry);
+          c.push([x + rx * r - bw / 2, y + ry * r - bh / 2]);
+        }
+        c.push(up(0), rt(0), lf(0), dn(0), up(1), rt(-1), lf(-1), rt(1), lf(1), dn(1));
+        for (let k = 2; k <= 6; k++) c.push(up(k), dn(k), rt(-k), lf(-k), rt(k), lf(k));
+        let best = null, bo = 1e9;
+        for (const q of c) {
+          const bx = Math.max(2, Math.min(w - bw - 2, q[0])), by = Math.max(2, Math.min(h - bh - 2, q[1]));
+          let ov = 0;
+          for (const p of placed) {
+            const ox = Math.min(bx + bw, p[0] + p[2]) - Math.max(bx, p[0]), oy = Math.min(by + bh, p[1] + p[3]) - Math.max(by, p[1]);
+            if (ox > 0 && oy > 0) ov += ox * oy;
+          }
+          if (ov < bo) { bo = ov; best = [bx, by]; if (!ov) break; }
+        }
+        it.bx = best[0]; it.by = best[1];
+        placed.push([it.bx, it.by, bw, bh]);
+      }
+    }
     function updateOverlays() {
       let nd = 0, nr = 0;
       const dc = dots.geometry.attributes.color.array, dp = dots.geometry.attributes.position.array;
       const rc = rings.geometry.attributes.color.array, rp = rings.geometry.attributes.position.array;
-      const showAll = false;
+      const items = [];
       for (const e of ent) {
-        const act = isActive(e), wv = worldOf(e), p = project(wv);
+        const act = isActive(e), wv = worldOf(e), p = project(wv), isSel = e.def.id === selected;
         e.sx = p[0]; e.sy2 = p[1]; e.act = act && p[2] < 1;
+        const behind = A && act && focus && !isSel && p[2] < 1 && isOccluded(wv);
         if (act) {
           const col = colorOf(e);
+          if (behind) col.lerp(BG, 0.62);      // behind the airframe: dot stays, dimmed
           dp[nd * 3] = wv.x; dp[nd * 3 + 1] = wv.y; dp[nd * 3 + 2] = wv.z;
           dc[nd * 3] = col.r; dc[nd * 3 + 1] = col.g; dc[nd * 3 + 2] = col.b; nd++;
-          const isSel = e.def.id === selected, mk = marks[e.def.id];
+          const mk = marks[e.def.id];
           if (isSel || mk) {
             rp[nr * 3] = wv.x; rp[nr * 3 + 1] = wv.y; rp[nr * 3 + 2] = wv.z;
             const rcCol = isSel ? new T.Color("#ffffff") : col;
             rc[nr * 3] = rcCol.r; rc[nr * 3 + 1] = rcCol.g; rc[nr * 3 + 2] = rcCol.b; nr++;
           }
         }
-        const show = labelsOn && act && p[2] < 1 && (e.def.id === selected || (focus ? e.def.sys === focus : showAll));
+        const show = labelsOn && act && p[2] < 1 && !behind && (isSel || (focus ? e.def.sys === focus : false));
+        e.el.classList.toggle("on", isSel);
         if (show) {
-          e.el.style.display = "block";
-          e.el.style.transform = `translate(${p[0].toFixed(1)}px,${p[1].toFixed(1)}px) translate(-50%,-135%)`;
+          if (!e.lw) { e.el.style.display = "block"; e.lw = e.el.offsetWidth || 70; e.lh = e.el.offsetHeight || 20; }
+          items.push({ el: e.el, x: p[0], y: p[1], w: e.lw, h: e.lh, pri: isSel ? 10 : 1, line: (AF && AF.SYSCOL[e.def.sys]) || "#b8c4d0" });
         } else e.el.style.display = "none";
-        e.el.classList.toggle("on", e.def.id === selected);
       }
       dots.geometry.setDrawRange(0, nd); rings.geometry.setDrawRange(0, nr);
       dots.geometry.attributes.position.needsUpdate = dots.geometry.attributes.color.needsUpdate = true;
       rings.geometry.attributes.position.needsUpdate = rings.geometry.attributes.color.needsUpdate = true;
+      const ec = scene === "engine" ? project(E.group.position) : null;
       if (scene === "engine") E.cyl.forEach((c, k) => {
-        const p = project(E.strokeLabelAnchors[k].getWorldPosition(tmpV.clone()));
-        strokeEls[k].style.transform = `translate(${p[0].toFixed(1)}px,${p[1].toFixed(1)}px) translate(-50%,-100%)`;
-        strokeEls[k].style.display = p[2] < 1 ? "block" : "none";
+        const l = strokeEls[k], p = project(E.strokeLabelAnchors[k].getWorldPosition(tmpV.clone()));
+        if (p[2] >= 1 || !labelsOn) { l.style.display = "none"; return; }
+        if (!l.lw) { l.style.display = "block"; l.lw = l.offsetWidth || 70; l.lh = l.offsetHeight || 20; }
+        items.push({ el: l, x: p[0], y: p[1], w: l.lw, h: l.lh, pri: 5, gap: 6, line: l.tint || "#9aa7b4", stroke: true, dir: (() => { const dx = p[0] - ec[0], dy = p[1] - ec[1], n = Math.hypot(dx, dy) || 1; return [dx / n, dy / n]; })() });
       });
+      placeLabels(items);
+      let li = 0;
+      for (const it of items) {
+        it.el.style.display = "block";
+        it.el.style.transform = `translate(${it.bx.toFixed(1)}px,${it.by.toFixed(1)}px)`;
+        const nx = Math.max(it.bx, Math.min(it.bx + it.w, it.x)), ny = Math.max(it.by, Math.min(it.by + it.h, it.y));
+        if (it.stroke || Math.hypot(nx - it.x, ny - it.y) > 14) {
+          const L = leaderAt(li++);
+          L.ln.setAttribute("x1", it.x.toFixed(1)); L.ln.setAttribute("y1", it.y.toFixed(1)); L.ln.setAttribute("x2", nx.toFixed(1)); L.ln.setAttribute("y2", ny.toFixed(1));
+          L.ln.setAttribute("stroke", it.stroke ? it.line : "rgba(214,224,236,.7)"); L.ln.style.display = "";
+          L.dt.setAttribute("cx", it.x.toFixed(1)); L.dt.setAttribute("cy", it.y.toFixed(1)); L.dt.setAttribute("fill", it.stroke ? it.line : "none"); L.dt.style.display = it.stroke ? "" : "none";
+        }
+      }
+      for (let i = li; i < lead.length; i++) { lead[i].ln.style.display = "none"; lead[i].dt.style.display = "none"; }
     }
     function updateBeads(t) {
       const bp = beads.geometry.attributes.position.array, bc = beads.geometry.attributes.color.array;
@@ -881,16 +1029,18 @@ const Systems3D = (() => {
     }
 
     /* ---- loop ---- */
-    const loopWanted = () => playing || fading || (beadList.length > 0 && !reduced);
+    const tick = () => { if (o.onTick) { try { o.onTick(crank); } catch (e) { } } };
+    const loopWanted = () => playing || fading || camAnim || (beadList.length > 0 && !reduced);
     function frame(t) {
       raf = 0;
       if (destroyed || !visible) return;
       if (playing) {
         const dt = lastT ? Math.min(0.1, (t - lastT) / 1000) : 0.016;
         crank = (crank + dt * 110) % 720; E.update(explode, crank, cut); dirty = true;
-        if (o.onTick && t - lastTick > 90) { lastTick = t; try { o.onTick(crank); } catch (e) { } }
+        if (t - lastTick > 90) { lastTick = t; tick(); }
       }
       lastT = t;
+      if (camAnim) stepCam(t);
       if (fading) stepFade();
       if (dirty || beadList.length) { render(t); dirty = false; }
       if (loopWanted()) raf = requestAnimationFrame(frame); else lastT = 0;
@@ -905,6 +1055,7 @@ const Systems3D = (() => {
     canvas.addEventListener("pointerdown", (e) => {
       canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId);
       ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      camAnim = false; camAuto = false;      // the viewer takes the camera
       if (ptrs.size === 1) { moved = 0; downT = performance.now(); canvas.style.cursor = "grabbing"; }
       if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); dist0 = cs.dist; moved = 99; }
     });
@@ -929,10 +1080,11 @@ const Systems3D = (() => {
     };
     canvas.addEventListener("pointerup", up);
     canvas.addEventListener("pointercancel", up);
-    canvas.addEventListener("wheel", (e) => { e.preventDefault(); cs.dist *= Math.exp(e.deltaY * 0.0012); clampCam(); invalidate(); }, { passive: false });
+    canvas.addEventListener("wheel", (e) => { e.preventDefault(); camAnim = false; camAuto = false; cs.dist *= Math.exp(e.deltaY * 0.0012); clampCam(); invalidate(); }, { passive: false });
     canvas.addEventListener("dblclick", () => resetCamera());
     canvas.addEventListener("keydown", (e) => {
       const k = e.key;
+      camAnim = false; camAuto = false;
       if (k === "ArrowLeft") cs.az -= 8; else if (k === "ArrowRight") cs.az += 8; else if (k === "ArrowUp") cs.el += 6; else if (k === "ArrowDown") cs.el -= 6;
       else if (k === "+" || k === "=") cs.dist *= 0.9; else if (k === "-") cs.dist *= 1.1; else if (k === "0") resetCamera(); else return;
       e.preventDefault(); clampCam(); invalidate();
@@ -987,9 +1139,9 @@ const Systems3D = (() => {
     document.addEventListener("visibilitychange", onVis);
 
     /* ---- API ---- */
-    function resetCamera() { cs.az = CAM.az; cs.el = CAM.el; cs.dist = CAM.dist; invalidate(); }
+    function resetCamera() { toGoal(goalFor(null), true); }
     const view = {
-      setFocus(sys) { focus = sys || null; applyFocus(); },
+      setFocus(sys) { focus = sys || null; applyFocus(); if (A) toGoal(goalFor(focus), true); },
       select(id) { selected = id && byId[id] ? id : null; invalidate(); },
       mark(m) { for (const k of Object.keys(marks)) delete marks[k]; Object.assign(marks, m || {}); invalidate(); },
       set(key, val) {
@@ -999,8 +1151,8 @@ const Systems3D = (() => {
         else if (scene === "engine") {
           if (key === "explode") { explode = Math.max(0, Math.min(1, +val || 0)); E.update(explode, crank, cut); invalidate(); }
           else if (key === "cut") { cut = !!val; applyCut(); }
-          else if (key === "crank") { crank = ((+val || 0) % 720 + 720) % 720; E.update(explode, crank, cut); invalidate(); }
-          else if (key === "play") { playing = !!val; lastT = 0; if (playing) need(); }
+          else if (key === "crank") { crank = ((+val || 0) % 720 + 720) % 720; E.update(explode, crank, cut); invalidate(); tick(); }
+          else if (key === "play") { playing = !!val; lastT = 0; lastTick = 0; if (playing) need(); else tick(); }
         }
       },
       get(key) { return key === "crank" ? crank : key === "explode" ? explode : key === "cut" ? cut : key === "play" ? playing : key === "xray" ? xray : undefined; },
