@@ -868,3 +868,203 @@ kbd { font: 11px/1 ui-monospace, monospace; padding: 2px 5px; border: 1px solid 
 @media (prefers-reduced-motion: reduce) {
   .study *, .study *::before, .study *::after, .s1-toast { animation: none !important; transition: none !important; }
 }
+
+/* ============================ systems lab (.sx-*) ========================== */
+.sx-lab { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.sx-lab .s1-sysnav { margin-bottom: 0; }
+.sx-core { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--c, var(--accent)); margin-right: 6px; vertical-align: middle; }
+.s1-chip.on .sx-core { background: #04222e; }
+.sx-tick { color: var(--ok); }
+.s1-chip.on .sx-tick { color: #04222e; }
+.sx-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.sx-main, .sx-side { min-width: 0; }
+.sx-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.sx-tools .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.sx-tools .btn[hidden], .sx-viewseg[hidden] { display: none; }
+
+/* the stage: live SVG, control strip, readout */
+.sx-stage { background: #11161c; border: 1px solid var(--line); border-radius: 12px; padding: 8px; min-width: 0; }
+.sx-fig svg { display: block; width: 100%; height: auto; max-width: 100%; }
+.sx-static .s1-list { margin-top: 10px; }
+.sx-strip { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: flex-end; padding: 10px 4px 4px; border-top: 1px solid var(--line); margin-top: 8px; }
+.sx-cg { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.sx-cl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+.sx-strip .s1-seg button { min-height: 42px; padding: 6px 12px; font-size: 13px; }
+.sx-tg { min-height: 42px; padding: 6px 14px; font-size: 13px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.sx-tg.on, .sx-tg[aria-pressed="true"] { background: color-mix(in srgb, var(--c, var(--accent)) 25%, var(--panel-2)); color: var(--ink); border-color: var(--c, var(--accent)); font-weight: 700; }
+.sx-rg { min-width: 150px; flex: 1 1 150px; }
+.sx-rg input[type=range] { width: 100%; min-height: 42px; accent-color: var(--c, var(--accent)); }
+.sx-rg output { font-size: 12px; color: var(--ink); margin-top: -8px; }
+.sx-strip button:disabled, .sx-strip input:disabled { opacity: .5; cursor: default; }
+.sx-readout { margin: 8px 4px 2px; padding: 8px 10px; border-radius: 8px; background: #141920; border-left: 3px solid var(--accent); font-size: 14px; line-height: 1.45; min-height: 2.6em; }
+.sx-masked .sx-strip, .sx-masked .sx-readout { display: none; }
+.sx-locked .sx-ctl { cursor: default; }
+.sx-help, .sx-step { margin: 6px 0; font-size: 13px; color: var(--muted); }
+.sx-step { font-weight: 700; color: var(--c, var(--accent)); }
+.sx-actions:not(:empty) { margin-top: 4px; }
+.sx-task .s1-opts { margin-top: 12px; }
+
+/* SVG parts (class names come from SysDiagrams.kit) */
+.sx-part, .sx-ctl { cursor: pointer; outline: none; }
+.sx-part .sx-hit { transition: fill .12s; }
+.sx-part:hover .sx-hit { fill: rgba(52, 172, 224, .16); stroke: #34ace0; stroke-width: 1.5; }
+.sx-part:focus-visible .sx-hit, .sx-ctl:focus-visible { stroke: #fff; stroke-width: 2; stroke-dasharray: 5 3; fill: rgba(255, 255, 255, .08); }
+.sx-part.sel .sx-hit { fill: rgba(52, 172, 224, .22); stroke: #34ace0; stroke-width: 2; }
+.sx-part.sel { filter: drop-shadow(0 0 3px rgba(52, 172, 224, .9)); }
+.sx-part.ok .sx-hit { fill: rgba(46, 213, 115, .2); stroke: #2ed573; stroke-width: 2; }
+.sx-part.ok { filter: drop-shadow(0 0 3px rgba(46, 213, 115, .8)); }
+.sx-part.bad .sx-hit { fill: rgba(255, 71, 87, .22); stroke: #ff4757; stroke-width: 2; }
+.sx-part.bad { filter: drop-shadow(0 0 3px rgba(255, 71, 87, .8)); transform-box: fill-box; transform-origin: center; animation: sxShake .4s; }
+.sx-part.hint .sx-hit { fill: rgba(246, 201, 14, .16); stroke: #f6c90e; stroke-width: 2; stroke-dasharray: 5 3; }
+.sx-part.done .sx-hit { stroke: rgba(46, 213, 115, .55); stroke-width: 1.5; stroke-dasharray: 2 3; }
+.sx-part.sx-dead { opacity: .5; }
+.sx-ctl:hover { filter: brightness(1.3) drop-shadow(0 0 3px rgba(52, 172, 224, .9)); }
+.sx-flow, .sx-lbl { pointer-events: none; }
+.sx-lbl { user-select: none; }
+.sx-nolabels .sx-lbl { display: none; }
+@keyframes sxShake { 20% { transform: translateX(-4px); } 60% { transform: translateX(4px); } 100% { transform: none; } }
+
+/* side column */
+.sx-tabs { width: 100%; margin-bottom: 10px; }
+.sx-tabs button { flex: 1; min-height: 38px; }
+.sx-count { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+.sx-count b { color: var(--ink); }
+.sx-card { background: #141920; border: 1px solid var(--line); border-top: 3px solid var(--c, var(--accent)); border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.5; min-height: 70px; }
+.sx-card h4 { margin: 0 0 4px; font-size: 16px; }
+.sx-card p { margin: 0 0 6px; }
+.sx-tip { color: #cdeafe; font-size: 13px; }
+.sx-plist, .sx-labs, .sx-pbtns { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.sx-pchip, .sx-pick, .sx-labbtn {
+  background: var(--panel-2); color: var(--ink); border: 1px solid var(--line); border-radius: 999px;
+  padding: 7px 12px; font-size: 13px; cursor: pointer; min-height: 36px;
+}
+.sx-pchip:hover, .sx-pick:hover, .sx-labbtn:hover { background: #2c3543; }
+.sx-pchip.seen { border-color: rgba(46, 213, 115, .5); }
+.sx-pchip.seen::after { content: " ✓"; color: var(--ok); font-size: 11px; }
+.sx-pchip.on, .sx-labbtn.on { border-color: var(--accent); background: #11324a; }
+.sx-labbtn { border-radius: 9px; text-align: left; }
+.sx-labbtn.done { border-color: rgba(46, 213, 115, .55); }
+.sx-steps { list-style: none; counter-reset: sx; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.sx-steps li { counter-increment: sx; position: relative; padding: 8px 10px 8px 38px; border: 1px solid var(--line); border-radius: 9px; background: #141920; font-size: 14px; line-height: 1.45; opacity: .65; }
+.sx-steps li::before { content: counter(sx); position: absolute; left: 10px; top: 8px; width: 20px; height: 20px; border-radius: 50%; background: var(--line); font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.sx-steps li.cur { opacity: 1; border-color: var(--accent); }
+.sx-steps li.cur::before { background: var(--accent); color: #04222e; }
+.sx-steps li.ok { opacity: 1; border-color: rgba(46, 213, 115, .55); background: #0f2e1d; }
+.sx-steps li.ok::before { content: "✓"; background: var(--ok); color: #04210f; }
+.sx-see { display: block; margin-top: 4px; color: #c9f7dd; font-size: 13px; }
+
+/* airplane hero + the list that stands in for the 3D canvas */
+.sx-hero { background: #11161c; border: 1px solid var(--line); border-radius: 12px; padding: 8px; }
+.sx-hero[hidden], .sx-hero-view[hidden] { display: none; }
+.sx-picks { margin-top: 8px; font-size: 13px; }
+.sx-picks summary { cursor: pointer; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
+.sx-pgroup h5 { margin: 10px 0 0; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+.sx-loc { min-height: 60px; }
+
+/* 3D (class names come from systems3d.js) */
+.s3-wrap { position: relative; width: 100%; overflow: hidden; border-radius: 10px; background: radial-gradient(ellipse at 50% 30%, #1b2430, #0b0f14); }
+.s3-canvas { display: block; width: 100%; height: clamp(220px, 46vh, 420px); max-height: 60vh; touch-action: none; cursor: grab; }
+.s3-canvas:active { cursor: grabbing; }
+.s3-label { position: absolute; transform: translate(-50%, -120%); padding: 1px 6px; border-radius: 6px; font-size: 11px; line-height: 1.4; white-space: nowrap; pointer-events: none; color: var(--muted); background: rgba(14, 17, 22, .7); opacity: .7; }
+.s3-label.on { color: #04222e; background: var(--accent); opacity: 1; font-weight: 700; }
+.s3-hint { margin: 6px 4px; font-size: 11.5px; color: var(--muted); pointer-events: none; }
+.s3-wrap .s3-hint { position: absolute; left: 8px; bottom: 4px; margin: 0; }
+.s3-note { margin: 4px 4px 8px; font-size: 12px; color: var(--muted); font-style: italic; }
+
+@media (max-width: 880px) {
+  .sx-cols { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .sx-stage { padding: 6px; }
+  .sx-strip { gap: 8px; }
+  .sx-strip .s1-seg { width: auto; }
+  .sx-strip .s1-seg button { flex: 0 1 auto; }
+  .sx-tools .btn, .sx-tabs button { min-height: 42px; }
+  .sx-viewseg { width: auto; }
+  .s3-canvas { height: clamp(200px, 38vh, 60vh); }
+  .sx-pchip, .sx-pick, .sx-labbtn { min-height: 42px; }
+  .sx-picks summary { min-height: 42px; }
+  /* 560-wide schematics shrink to ~6px text on a phone: keep them ~1:1 and let the figure pan sideways */
+  .sx-fig { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .sx-fig > svg { min-width: 500px; }
+  .sx-hero-view .sx-fig > svg, .sx-loc .sx-fig > svg { min-width: 0; }
+  .sx-tools::after { content: "← diagram pans sideways →"; margin-left: auto; font-size: 11px; color: var(--muted); }
+  .sx-main:has(.sx-3d) .sx-tools::after { display: none; }
+  .sx-task .sx-host::before { content: "← swipe the diagram sideways →"; display: block; text-align: right; font-size: 11px; color: var(--muted); margin: 0 4px 4px; }
+  .sx-task .sx-host:has(.sx-loc)::before { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sx-part.bad { animation: none; }
+  .sx-part .sx-hit { transition: none; }
+}
+/* the 2D airplane locator stands in for the canvas: same height budget */
+.sx-hero-view svg { max-height: 60vh; width: auto; max-width: 100%; margin: 0 auto; display: block; }
+
+/* ===================== ★ must know (flashcards + recall) ==================== */
+.sx-must {
+  --gold: #f6c90e;
+  background: linear-gradient(135deg, #2a2410 0%, #1a1f27 60%); border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line));
+  border-left: 5px solid var(--gold); border-radius: 12px; padding: 12px 14px 14px;
+  box-shadow: 0 0 0 1px rgba(246, 201, 14, .08), 0 6px 22px rgba(246, 201, 14, .06);
+}
+.sx-must[hidden] { display: none; }
+.sx-must-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.sx-must-head h3 { margin: 0; font-size: 20px; letter-spacing: .3px; color: var(--gold); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.sx-must-head h3 small { font-size: 12.5px; font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.sx-must-star { font-size: 24px; line-height: 1; filter: drop-shadow(0 0 6px rgba(246, 201, 14, .6)); }
+.sx-must-acts { display: flex; gap: 8px; }
+.sx-must-acts .btn[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); }
+.sx-must-acts .btn.primary { background: var(--gold); border-color: var(--gold); color: #241d04; font-weight: 800; }
+.sx-must-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.sx-mk {
+  position: relative; text-align: left; display: flex; flex-direction: column; gap: 5px; min-height: 84px;
+  background: #151a21; color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px 20px; cursor: pointer;
+  transition: border-color .15s, background .15s, transform .08s;
+}
+.sx-mk:hover { border-color: var(--gold); background: #1b2028; }
+.sx-mk:active { transform: scale(.985); }
+.sx-mk-q { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.sx-mk-a { font-size: 17px; font-weight: 800; line-height: 1.25; color: var(--gold); filter: blur(7px); user-select: none; transition: filter .2s; }
+.sx-mk-hint { position: absolute; right: 9px; bottom: 5px; font-style: normal; font-size: 10.5px; letter-spacing: .5px; text-transform: uppercase; color: var(--muted); }
+.sx-mk[aria-pressed="true"] { border-color: rgba(246, 201, 14, .6); background: #231f10; }
+.sx-mk[aria-pressed="true"] .sx-mk-a { filter: none; user-select: text; }
+.sx-mk[aria-pressed="true"] .sx-mk-hint { visibility: hidden; }
+
+/* recall runner */
+.s1-recall .s1-rc-from { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); }
+.s1-recall .s1-rc-from b { color: #f6c90e; }
+.s1-rc-lead { margin: 0 0 4px; color: var(--muted); font-size: 14px; }
+.s1-rc-q { margin: 0 0 12px; font-size: 22px; line-height: 1.3; }
+.s1-rc-row { display: flex; gap: 8px; align-items: stretch; }
+.s1-rc-in {
+  flex: 1; min-width: 0; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 9px; padding: 11px 13px; font-size: 17px;
+}
+.s1-rc-in:focus { outline: 2px solid #f6c90e; outline-offset: 1px; }
+.s1-rc-in.ok { border-color: var(--ok); background: #0f2e1d; }
+.s1-rc-in.bad { border-color: var(--bad); background: #34151a; }
+.s1-recall .s1-fb { margin-top: 10px; min-height: 8px; }
+.s1-recall .s1-fb p { margin: 4px 0; }
+.s1-rc-ans { font-size: 18px; }
+.s1-rc-ans b { color: #8ff0bd; }
+.s1-rc-self { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.s1-linkbtn { background: none; border: 0; padding: 10px 0 2px; color: var(--muted); text-decoration: underline; cursor: pointer; font-size: 13px; }
+.s1-recall .s1-clock { max-width: none; margin: 0 0 12px; }
+.s1-rc-modes { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.s1-rc-star { color: #f6c90e; }
+.s1-chip small { color: var(--muted); margin-left: 4px; }
+.s1-tab[data-tab="recall"].on { border-bottom-color: #f6c90e; }
+.s1-msg.me .s1-rc-row, .s1-replies .s1-rc-row { max-width: 520px; }
+
+@media (max-width: 560px) {
+  .sx-must { padding: 10px 10px 12px; }
+  .sx-must-head h3 { font-size: 18px; }
+  .sx-must-acts { width: 100%; }
+  .sx-must-acts .btn { flex: 1; }
+  .sx-must-grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .sx-mk { min-height: 92px; padding: 8px 9px 20px; }
+  .sx-mk-a { font-size: 15px; }
+  .s1-rc-q { font-size: 19px; }
+  .s1-rc-row { flex-direction: column; }
+  .s1-rc-self .btn { flex: 1; }
+}

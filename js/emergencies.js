@@ -53,7 +53,7 @@ const EMER_CONTROL_OPTIONS = {
   fuel:        ["BOTH", "LEFT", "RIGHT", "OFF"],
   magnetos:    ["BOTH", "START", "OFF", "CHECK (L / R / BOTH)"],
   master:      ["ON", "OFF"],
-  stbybatt:    ["ARM", "ON", "OFF"],
+  stbybatt:    ["ARM", "OFF", "TEST"],
   avionics:    ["ON", "OFF"],
   allswitches: ["All OFF (except magnetos)", "All ON"],
   breakers:    ["CHECK", "PULL ALL", "RESET ALL"],

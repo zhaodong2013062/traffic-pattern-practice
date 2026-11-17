@@ -27,6 +27,11 @@ js/sequence.js    SOURCE OF TRUTH (pattern) — PHASES, CONTROL_OPTIONS, SEQUENC
 js/emergencies.js SOURCE OF TRUTH (emergencies) — EMERGENCY_GROUPS, EMER_CONTROL_OPTIONS, EMERGENCIES[]
 js/maneuvers.js   SOURCE OF TRUTH (maneuvers) — MANEUVER_PHASES, MAN_CONTROL_OPTIONS, preManeuver(), MANEUVERS[]
 js/diagrams.js    SVG figures for Stage 1; window.Diagrams (airfoil, lightGun, sign, glidepath, fuelSystem …)
+js/sysdiag-core.js  SysDiagrams registry + drawing kit for the interactive systems labs
+js/sysdiag-a.js   lab simulators: fuel, electrical, ignition, oil
+js/sysdiag-b.js   lab simulators: pitot, engine, prop, controls, gear, environ
+js/sysdiag-air.js 2D three-view airplane locator (3D fallback) + SysDiagrams.hotspots table
+js/systems3d.js   window.Systems3D — procedural 3D C172 + exploded IO-360 (three.js, lazy-loaded)
 js/stagecheck.js  SOURCE OF TRUTH (Stage 1) — STAGE1_SECTIONS, STAGE1_TOPICS, STAGE1_SYSTEMS
 js/cockpit.js     SVG C172 panel; window.Cockpit API (render(el, mode)/setValues/highlight/flash/…)
 js/minimap.js     top-down pattern; window.Minimap API (render/moveTo/setLegActive/…)
@@ -37,9 +42,11 @@ js/study.js       Stage 1 controller (home, learn/drill pages, activity runners,
 js/app.js         mode switch + the pattern drill
 ```
 Load order in index.html matters:
-sequence → emergencies → maneuvers → diagrams → stagecheck → cockpit → minimap →
-ui → emergency → maneuver → study → app. (stagecheck builds some sign SVGs at
-load time, so diagrams must come first.)
+sequence → emergencies → maneuvers → diagrams → sysdiag-core → sysdiag-a →
+sysdiag-b → sysdiag-air → systems3d → stagecheck → cockpit → minimap → ui →
+emergency → maneuver → study → app. (stagecheck builds some sign SVGs at load
+time, so diagrams must come first; sysdiag-air defines the hotspot table that
+systems3d reads.)
 
 ## Interaction model (don't regress this)
 - Each step shows **only the conditions**. No hint about what to click.
@@ -149,8 +156,23 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
 - Activity types: `acronym` (tiles, or type-it with fuzzy matching via `alt`),
   `quiz` (**first option is the correct one** — the runner shuffles; first
   click counts), `match`, `sort`, `inop` (go/no-go down the 91.213(d) flow),
-  `systems` (three random systems: say it, then tick what you covered, then a
-  quiz on those three).
+  `systems` (the examiner picks three, ≥1 core: typed must-know recall, then
+  graded tasks on the live lab, then a quiz on those three), `recall` (typed
+  must-know answers).
+- **Systems labs.** Each system is a simulator registered on `SysDiagrams`:
+  `init()`, `controls`, `parts`, optional `set()` reducer, pure `model(state)`
+  and pure `draw(state, opts)` → SVG (no DOM, no timers). `mountLab` in
+  `study.js` drives any of them; content (`parts` cards, `labs`, `tasks`,
+  `must`) lives in `STAGE1_SYSTEMS`. Task types: `find`, `order`, `set`,
+  `predict` (`mask` hides the fault — defs must honour `opts.mask`), `locate`
+  (on the airplane, ids `"sys.part"`). Misses-deck keys: `x:` tasks, `m:`
+  must-know. Every part/key a task or lab names must exist in the def — check
+  with a contract script after any edit.
+- **3D is where things are; 2D is how they behave.** three.js r128 is injected
+  from cdnjs (with SRI) only when the Systems lab opens; no WebGL / no CDN →
+  `mount` resolves null and the 2D locator shows. Handedness in 3D: +X forward,
+  +Y up, +Z pilot's right; pitot, static port, stall inlet on the left (−Z).
+  Call `view.destroy()` whenever leaving a view.
 - Acronyms the school says to memorize (IMSAFE, AAVIATES, ARROW,
   ATOMATOFLAMES, NWKRAFT, CCLAPS) get an `acronym` drill.
 - Widgets live in `WIDGETS` in `study.js`: aoaLab, tendencies, approachGrid,
@@ -195,7 +217,11 @@ at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`). Serve the folder over
 http and click through both the full landing and the go-around branch, an
 emergency session (every scenario, the closed-book behaviour, and a mode
 round-trip back to pattern), every maneuver (plus one `why` deduction), and in Stage 1 every topic's Learn
-page and Drill plus the mock oral, checking for console errors. Chromium's favicon
+page and Drill plus the mock oral, checking for console errors. For the
+Systems lab also complete every lab scenario, a drill with every task type, the
+must-know recall, and the 3D views (launch Chromium with
+`--use-gl=swiftshader --enable-unsafe-swiftshader`) plus the 2D fallback with
+the CDN request aborted. Chromium's favicon
 probe 404s — that one is not an app error. Cockpit groups have empty bbox centers, so dispatch click
 events on `[data-id="…"]` elements rather than using `.click()`.
 

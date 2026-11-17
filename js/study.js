@@ -13,11 +13,13 @@
 
    Activity runners: acronym (tiles, type-it, or a timed rapid-fire round),
    quiz (first click counts), match, sort, inop (go/no-go down the 91.213
-   flow), systems (the examiner picks three — say what you know, then check
-   yourself against the list).
+   flow), systems (the examiner picks three — each worked as graded tasks on a
+   live simulator, then a quiz) and systask (find / order / set / predict /
+   locate on that simulator). The Systems Learn page is the same simulators
+   mounted by mountLab(), under a 3D airplane when three.js is available.
 
-   Drills show a progress bar and a combo counter. Every missed quiz, sort and
-   inop card lands in a Leitner review deck ("Review my misses") and comes
+   Drills show a progress bar and a combo counter. Every missed quiz, sort,
+   inop and systems-task card lands in a Leitner review deck ("Review my misses") and comes
    back on a growing interval until it is answered right five times running.
    The mock oral is a conversation with an examiner, optionally read aloud.
    Keys: 1–9 answer, Enter / → next.
@@ -121,6 +123,68 @@ const StudyDrill = (() => {
     }));
   }
 
+  /* ======================== typed-answer matching ======================== */
+  // Shared by the acronym type-it / rapid modes and the must-know recall.
+  const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  // at most one slip (wrong, missing, extra or swapped letter) between a and b
+  const near = (a, b) => {
+    if (Math.abs(a.length - b.length) > 1) return false;
+    let i = 0;
+    while (i < a.length && a[i] === b[i]) i++;
+    const rest = (x, y) => a.slice(x) === b.slice(y);
+    return rest(i, i) || rest(i + 1, i + 1) || rest(i + 1, i) || rest(i, i + 1) ||
+      (a[i] === b[i + 1] && a[i + 1] === b[i] && rest(i + 2, i + 2));
+  };
+  // the first five letters decide, one typo forgiven ("alchohol", "ilness").
+  // Short alternates ("ad", "t/o", "wx") must be the whole answer or a
+  // whole word of it — otherwise "radio" would pass for ADs.
+  const accepts = (it, raw) => {
+    const v = norm(raw), words = raw.toLowerCase().split(/[^a-z0-9]+/), p = v.slice(0, 5);
+    if (v.length < 2) return false;
+    return [it.w, ...(it.alt || [])].map(norm).some((c) => c.length < 4
+      ? v === c || words.includes(c) || (c.length === 3 && v.startsWith(c))
+      : (v.length >= 3 && c.startsWith(p)) || v.includes(c) ||
+        (p.length === 5 && [4, 5, 6].some((n) => near(p, c.slice(0, n)))));
+  };
+
+  // Recall (must-know) is stricter than the acronym matcher: its answers are
+  // phrases and numbers, so a bare prefix or a longer number must not pass.
+  //   · numbers match as whole numbers ("150" ≠ "50" ≠ "1500"; "2,700 RPM" ok)
+  //   · a short alt (<4 letters: "arm", "wet") must be the whole answer or a whole word
+  //   · a longer alt passes when contained ("lycoming io 360" ⊇ "io360"), or when the
+  //     answer is as long as it (≥70%) and agrees on the first five letters
+  //     give or take one typo, or is one slip from it, or one word is one slip
+  // → 0 wrong · 1 right · 2 right but only through typo forgiveness
+  const numTok = (raw) => raw.toLowerCase().replace(/(\d),(?=\d)/g, "$1").match(/\d+(?:\.\d+)?/g) || [];
+  function recallHit(cands, raw, group) {
+    const v = norm(raw);
+    if (!v) return 0;
+    const words = raw.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean), nums = numTok(raw), p = v.slice(0, 5);
+    let best = 0;
+    for (const alt of cands) {
+      const c = norm(alt);
+      if (!c) continue;
+      let r = 0;
+      if (/^\d+(\.\d+)?$/.test(alt.trim())) r = nums.includes(alt.trim()) ? 1 : 0;
+      else if (c.length < 4) r = v === c || words.includes(c) ? 1 : 0;
+      else if (v.includes(c)) r = 1;
+      else if (/\d/.test(c)) r = 0;   // a typo in a number is a different number ("56 gal" ≠ "53 gal")
+      else if (words.some((w) => w.length >= 3 && Math.abs(w.length - c.length) <= 1 && near(w, c))) r = 2;
+      else if (!group && v.length >= c.length * 0.7 && v.length >= 3 &&
+        (c.startsWith(p) || (p.length === 5 && [4, 5, 6].some((n) => near(p, c.slice(0, n))) ) || near(v, c))) r = 2;
+      if (r === 1) return 1;
+      best = r || best;
+    }
+    return best;
+  }
+  function recallMatch(it, raw) {
+    if (it.all) {
+      const hs = it.all.map((g) => recallHit(g, raw, true));
+      return hs.includes(0) ? 0 : Math.max(...hs);
+    }
+    return recallHit([...(it.alt || []), it.a], raw);
+  }
+
   /* ============================ review deck ============================= */
   // Leitner boxes: a miss goes to box 0 (due now); each right answer when it
   // is due moves it up a box; right out of the last box and it is retired.
@@ -131,6 +195,8 @@ const StudyDrill = (() => {
     quiz: (q) => "q:" + q.q + "|" + q.o[0],
     sort: (it, a) => "s:" + a.title + "|" + it.t,
     inop: (c) => "i:" + c.item + "|" + c.flight,
+    task: (sysId, t) => "x:" + sysId + "|" + t.q,
+    must: (sysId, m) => "m:" + sysId + "|" + m.q,
   };
   function grade(key, ok) {
     const m = deck[key], now = Date.now();
@@ -151,7 +217,12 @@ const StudyDrill = (() => {
       if (a.type === "sort") a.items.forEach((it) => add(cardKey.sort(it, a), { kind: "sort", topic: t.name, a, it }));
       if (a.type === "inop") a.cases.forEach((c) => add(cardKey.inop(c), { kind: "inop", topic: t.name, c }));
     }));
-    STAGE1_SYSTEMS.forEach((s) => (s.qs || []).forEach((q) => add(cardKey.quiz(q), { kind: "quiz", topic: "Systems · " + s.name, q })));
+    STAGE1_SYSTEMS.forEach((s) => {
+      (s.qs || []).forEach((q) => add(cardKey.quiz(q), { kind: "quiz", topic: "Systems · " + s.name, q }));
+      // lab tasks replay only where their simulator exists
+      (s.must || []).forEach((m) => add(cardKey.must(s.id, m), { kind: "recall", topic: "Systems · " + s.name + " · must know", item: { ...m, sys: s.id } }));
+      if (hasDef(s.id)) (s.tasks || []).forEach((t) => add(cardKey.task(s.id, t), { kind: "task", topic: "Systems · " + s.name, sys: s, task: t }));
+    });
     return ix;
   }
   function deckStatus() {
@@ -213,7 +284,7 @@ const StudyDrill = (() => {
 
   /* ================================ HOME ================================ */
   function home() {
-    stopVoice();
+    stopVoice(); killViews();
     run = null;
     setTopbar();
     const r = readiness(), C = 2 * Math.PI * 42;
@@ -288,8 +359,8 @@ const StudyDrill = (() => {
   }
 
   /* ================================ TOPIC =============================== */
-  function topic(id, tab = "learn") {
-    stopVoice();
+  function topic(id, tab = "learn", opt) {
+    stopVoice(); killViews();
     run = null;
     const t = STAGE1_TOPICS[id];
     root.innerHTML = `<div class="s1-topic" style="--c:${t.color}">
@@ -302,6 +373,7 @@ const StudyDrill = (() => {
       <div class="s1-tabs">
         <button class="s1-tab ${tab === "learn" ? "on" : ""}" data-tab="learn">📖 Learn</button>
         <button class="s1-tab ${tab === "drill" ? "on" : ""}" data-tab="drill">🎯 Drill</button>
+        ${id === "systems" ? `<button class="s1-tab ${tab === "recall" ? "on" : ""}" data-tab="recall">★ Must-know recall</button>` : ""}
       </div>
       <div class="s1-body"></div>
     </div>`;
@@ -309,6 +381,7 @@ const StudyDrill = (() => {
     root.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => topic(id, b.dataset.tab)));
     const body = root.querySelector(".s1-body");
     if (tab === "learn") renderLearn(t, body, id);
+    else if (tab === "recall" && id === "systems") recallPage(id, body, opt || {});
     else runDrill(t.drill, body, (pct, combo) => finishDrill(id, pct, body, combo));
     window.scrollTo(0, 0);
   }
@@ -324,6 +397,42 @@ const StudyDrill = (() => {
     const go = el(`<button class="btn primary wide">Drill it 🎯</button>`);
     go.addEventListener("click", () => topic(id, "drill"));
     body.appendChild(go);
+  }
+
+  // Standalone must-know recall (Systems → ★ Must-know recall): every system's
+  // must-know items, shuffled — typed, or a timed rapid-fire round. Misses go
+  // to the review deck; this does not move the topic's drill stars.
+  const RECALL_RAPID_N = 10;
+  const mustAll = (only) => STAGE1_SYSTEMS.filter((s) => !only || s.id === only).flatMap((s) => (s.must || []).map((m) => ({ ...m, sys: s.id })));
+  function recallPage(id, body, opt) {
+    const start = (o) => {
+      const items = shuffle(mustAll(o.sys)).slice(0, o.rapid ? RECALL_RAPID_N : 999);
+      const sn = o.sys ? sysById(o.sys).name : "all systems";
+      body.innerHTML = "";
+      const stage = el(`<div class="s1-part"></div>`);
+      body.appendChild(stage);
+      startRun(body, items.length, o.rapid ? "⚡ Rapid fire" : "★ Must-know recall · " + sn);
+      RUNNERS.recall({ items, rapid: o.rapid, last: "See results →" }, stage, (r, t, note) => {
+        const pct = Math.round(100 * r / Math.max(1, t));
+        result(body, pct, `${r} of ${t} from memory${note ? " · " + note : ""} · misses are in your review deck`, [
+          ["Again", () => start(o)], ["Learn", () => topic(id, "learn")], ["Topics", home, true]]);
+      });
+      window.scrollTo(0, 0);
+    };
+    if (opt.go) return start(opt);
+    const best = (stats.rapid || {}).mustknow, n = mustAll().length;
+    body.innerHTML = `<div class="s1-block s1-rc-home">
+      <h3><span class="s1-rc-star">★</span> Must-know recall</h3>
+      <p>The facts the examiner expects word for word — engine make and model, fuel capacities, mag-check numbers, voltages, Vfe. Each one is typed from memory, not picked from a list.</p>
+      <div class="s1-rc-modes">
+        <button class="btn primary" data-go="all">All systems · ${n} prompts</button>
+        <button class="btn" data-go="rapid">⚡ Rapid fire · ${RECALL_RAPID_N} × 15 s${best ? ` · best ${best.toFixed(1)} s` : ""}</button></div>
+      <p class="s1-muted">Or just one system:</p>
+      <div class="s1-sysnav">${STAGE1_SYSTEMS.filter((s) => (s.must || []).length).map((s) => `<button class="s1-chip" data-go="${s.id}">${esc(s.name)} <small>${s.must.length}</small></button>`).join("")}</div></div>`;
+    body.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => {
+      const g = b.dataset.go;
+      start(g === "all" ? {} : g === "rapid" ? { rapid: true } : { sys: g });
+    }));
   }
 
   function finishDrill(id, pct, body, combo) {
@@ -393,6 +502,7 @@ const StudyDrill = (() => {
   }
 
   function mockOral() {
+    killViews();
     const order = Object.keys(STAGE1_TOPICS);
     const pool = [];
     Object.entries(STAGE1_TOPICS).forEach(([id, t]) => t.drill.forEach((a) => {
@@ -400,8 +510,10 @@ const StudyDrill = (() => {
     }));
     const sysOrd = Math.max(0, order.indexOf("systems"));
     STAGE1_SYSTEMS.forEach((s) => (s.qs || []).forEach((q) => pool.push({ ...q, from: "Systems · " + s.name, ord: sysOrd })));
-    // a random fifteen, then asked topic by topic the way the oral flows
-    const qs = shuffle(pool).slice(0, 15).sort((x, y) => x.ord - y.ord || (x.from < y.from ? -1 : x.from > y.from ? 1 : 0));
+    // a random fifteen — twelve questions plus three typed must-know recalls — then
+    // asked topic by topic the way the oral flows
+    const mustPool = STAGE1_SYSTEMS.flatMap((s) => (s.must || []).map((m) => ({ q: m.q, a: m.a, must: m, sys: s.id, from: "Systems · " + s.name, ord: sysOrd })));
+    const qs = [...shuffle(pool).slice(0, 12), ...shuffle(mustPool).slice(0, 3)].sort((x, y) => x.ord - y.ord || (x.from < y.from ? -1 : x.from > y.from ? 1 : 0));
     stopVoice();
     root.innerHTML = `<div class="s1-topic" style="--c:#34ace0">
       <div class="s1-topic-head"><button class="btn small" data-act="back">← Topics</button>
@@ -446,6 +558,25 @@ const StudyDrill = (() => {
         : pickOne(["Staying with that —", "Follow-up:", "Related question —", "Okay, next one."]);
       prevFrom = q.from;
       examiner(`<span class="s1-muted">${topicLead}</span><br>${esc(q.q)}${q.fig ? `<div class="s1-fig">${q.fig()}</div>` : ""}`, () => {
+        if (q.must) {   // a must-know: answered by typing, not by picking
+          const f = el(`<form class="s1-rc-row"><input class="s1-rc-in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Answer from memory · Enter" aria-label="Your answer"><button class="btn primary">Answer</button></form>`);
+          replies.appendChild(f);
+          const inp = f.querySelector("input"); inp.focus();
+          f.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const v = inp.value.trim();
+            if (!v) return;
+            const lvl = recallMatch(q.must, v), ok = lvl > 0;
+            if (ok) right++; else misses.push(q);
+            hit(ok, cardKey.must(q.sys, q.must)); tick();
+            replies.innerHTML = "";
+            me(v, ok ? "ok" : "bad");
+            const reply = ok ? `<b>${pickOne(["Good.", "Correct.", "That's right."])}</b> ${esc(q.a)}${lvl === 2 ? ` <span class="s1-muted">(close enough — say it exactly on the day)</span>` : ""}`
+              : `<b>${pickOne(["Not quite.", "Hmm — no."])}</b> I was after: <b>${esc(q.a)}</b>. You should know that one cold.`;
+            examiner(reply, () => { k++; button(k < qs.length ? "Next question →" : "Wrap up →", ask); });
+          });
+          return;
+        }
         shuffle(q.o.map((t, j) => ({ t, ok: j === 0 }))).forEach((o) => {
           const b = el(`<button class="s1-opt">${esc(o.t)}</button>`);
           b.addEventListener("click", () => {
@@ -477,7 +608,7 @@ const StudyDrill = (() => {
         if (misses.length) {
           const list = el(`<div class="s1-block"><h3>Review these <span class="s1-muted">— they're in your review deck now</span></h3><ul class="s1-list"></ul></div>`);
           misses.forEach((q) => list.querySelector("ul").appendChild(
-            el(`<li><span class="s1-muted">${esc(q.from)}</span><br>${esc(q.q)} — <b>${esc(q.o[0])}</b></li>`)));
+            el(`<li><span class="s1-muted">${esc(q.from)}</span><br>${esc(q.q)} — <b>${esc(q.o ? q.o[0] : q.a)}</b></li>`)));
           body.appendChild(list);
         }
       }));
@@ -489,7 +620,7 @@ const StudyDrill = (() => {
 
   /* ============================ REVIEW DECK ============================= */
   function review() {
-    run = null;
+    run = null; killViews();
     const ds = deckStatus();
     // most-missed and lowest-box first, capped so a session stays short
     const due = ds.due.sort(([, a], [, b]) => a.box - b.box || b.n - a.n).slice(0, 20).map(([k]) => k);
@@ -514,16 +645,19 @@ const StudyDrill = (() => {
       stage.innerHTML = "";
       stage.appendChild(el(`<p class="s1-from"><span>${esc(c.topic)}</span> <span class="s1-boxes" title="Leitner box">${BOX_DAYS.map((_, j) => `<i class="${j <= m.box ? "on" : ""}"></i>`).join("")}</span>${again.has(key) ? ` <b>again</b>` : ""}</p>`));
       const box = el(`<div></div>`); stage.appendChild(box);
-      const act = c.kind === "quiz" ? { type: "quiz", qs: [c.q] }
+      const act = c.kind === "task" ? null : c.kind === "quiz" ? { type: "quiz", qs: [c.q] }
+        : c.kind === "recall" ? { type: "recall", items: [c.item] }
         : c.kind === "sort" ? { type: "sort", title: c.a.title, buckets: c.a.buckets, items: [c.it] }
         : { type: "inop", cases: [c.c] };
       // a miss comes round once more at the end; only the first try is scored
       const wasAgain = again.has(key);
-      RUNNERS[c.kind](act, box, (r) => {
+      const after = (r) => {
         if (!wasAgain) { first++; right += r; }
         if (!r && !wasAgain) { again.add(key); queue.push(key); grow(1); }
         next();
-      });
+      };
+      if (c.kind === "task") RUNNERS.systask({ sys: c.sys, tasks: [c.task], tickOne: true }, box, (p, u) => after(p >= u ? 1 : 0));
+      else RUNNERS[c.kind](act, box, after);
       window.scrollTo(0, 0);
     };
     const finish = () => {
@@ -538,7 +672,8 @@ const StudyDrill = (() => {
 
   /* ============================ DRILL RUNNER ============================ */
   const UNITS = { acronym: (a) => a.items.length, quiz: (a) => a.qs.length, match: (a) => a.pairs.length,
-    sort: (a) => a.items.length, inop: (a) => a.cases.length, systems: () => 3 };
+    sort: (a) => a.items.length, inop: (a) => a.cases.length, systems: () => 3,
+    systask: (a) => a.tasks.reduce((n, t) => n + taskUnits(t), 0) };
   function runDrill(acts, body, done) {
     let k = 0, right = 0, total = 0;
     body.innerHTML = "";
@@ -567,6 +702,317 @@ const StudyDrill = (() => {
     b.addEventListener("click", fn);
     return b;
   };
+
+  /* ========================== SYSTEMS LAB: mountLab ========================= */
+  // One generic controller over any SysDiagrams def. Learn and Drill both mount
+  // it; the def owns geometry and sim logic, this owns events, the control
+  // strip, the readout and redraws. Defs and Systems3D are looked up lazily so
+  // the chunks can load (or be missing) in any order.
+  const SD = () => (typeof SysDiagrams !== "undefined" ? SysDiagrams : null);
+  const S3 = () => window.Systems3D || null;
+  const hasDef = (id) => { const d = SD(); return !!(d && d.has(id)); };
+  const sysById = (id) => STAGE1_SYSTEMS.find((s) => s.id === id);
+
+  // 3D views in flight, so leaving the page can always release their WebGL state
+  const liveViews = new Set();
+  const track = (v) => { if (v) liveViews.add(v); return v; };
+  function dropView(v) { if (!v) return; liveViews.delete(v); try { v.destroy(); } catch (e) { /* already gone */ } }
+  function killViews() { [...liveViews].forEach(dropView); }
+
+  // load three.js once; resolves false when 3D can't run (caller shows 2D)
+  let p3 = null;
+  function ready3d() {
+    if (!p3) p3 = (async () => {
+      try {
+        const t = S3();
+        if (!t || (t.supported && !t.supported())) return false;
+        return !!(await t.load());
+      } catch (e) { return false; }
+    })();
+    return p3;
+  }
+
+  // every airplane hotspot as {id:"sys.part", sys, part}: the 3D module's list,
+  // else the 2D locator's parts, else whatever the content has parts for
+  function hotspots() {
+    let ids = [];
+    try { const t = S3(); if (t && t.ids) ids = t.ids("airplane") || []; } catch (e) { ids = []; }
+    if (!ids.length && hasDef("airplane")) {
+      ids = SD().get("airplane").parts.map((p) => { const i = p.indexOf("."); return { id: p, sys: p.slice(0, i), part: p.slice(i + 1) }; });
+    }
+    if (!ids.length) STAGE1_SYSTEMS.forEach((s) => Object.keys(s.parts || {}).forEach((p) => ids.push({ id: s.id + "." + p, sys: s.id, part: p })));
+    return ids;
+  }
+  const partName = (h) => { const s = sysById(h.sys); return (s && s.parts && s.parts[h.part] && s.parts[h.part].n) || h.part; };
+  // accessible stand-in for the 3D canvas: one button per hotspot, grouped by system
+  function pickListHTML() {
+    const by = {};
+    hotspots().forEach((h) => (by[h.sys] = by[h.sys] || []).push(h));
+    return STAGE1_SYSTEMS.filter((s) => by[s.id]).map((s) => `<div class="sx-pgroup"><h5>${esc(s.name)}</h5><div class="sx-pbtns">${
+      by[s.id].map((h) => `<button type="button" class="sx-pick" data-pick="${esc(h.id)}">${esc(partName(h))}</button>`).join("")}</div></div>`).join("");
+  }
+
+  // start / apply / lab patches are raw merges: they set fault keys (altFail, epump…) the reducer would refuse
+  const patchState = (D, def, st, patch) => ({ ...st, ...(patch || {}) });
+
+  function mountLab(host, sysId, o = {}) {
+    const sys = sysById(sysId), D = SD(), def = D && D.has(sysId) ? D.get(sysId) : null;
+    const L = { def, sys, fallback: !def };
+    if (!def) {
+      // no simulator registered: the static figure and the key points still teach
+      host.innerHTML = `<div class="sx-stage sx-static">${sys && sys.fig ? `<div class="s1-fig">${sys.fig()}</div>` : ""}
+        <ul class="s1-list">${((sys && sys.points) || []).map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>`;
+      const nop = () => L;
+      return Object.assign(L, { state: {}, model: () => ({}), set: nop, patch: nop, load: nop, reset: nop, redraw: nop, onPart: nop, onChange: nop, lock: nop, mask: nop, destroy: nop });
+    }
+    let state = patchState(D, def, def.init(), o.start);
+    const view = { sel: null, marks: {}, labels: o.labels !== false, trace: [], mask: !!o.mask };
+    let locked = false, partFn = null, changeFn = null;
+    const withCtl = o.controls !== false, withRo = o.readout !== false;
+
+    const ctls = def.controls || [];
+    const strip = !withCtl || !ctls.length ? "" : `<div class="sx-strip" role="group" aria-label="Controls">${ctls.map((c) => {
+      if (c.type === "seg") return `<div class="sx-cg"><span class="sx-cl">${esc(c.label)}</span><div class="s1-seg">${
+        c.opts.map((op, j) => `<button type="button" data-k="${c.key}" data-j="${j}">${esc(op[1])}</button>`).join("")}</div></div>`;
+      if (c.type === "toggle") return `<div class="sx-cg"><button type="button" class="sx-tg" data-k="${c.key}" aria-pressed="false">${esc(c.label)}</button></div>`;
+      return `<label class="sx-cg sx-rg"><span class="sx-cl">${esc(c.label)}</span><input type="range" data-k="${c.key}" min="${c.min}" max="${c.max}" step="${c.step || 1}"><output></output></label>`;
+    }).join("")}</div>`;
+    host.innerHTML = `<div class="sx-stage"><div class="sx-fig"></div>${strip}${withRo ? `<p class="sx-readout" aria-live="polite"></p>` : ""}</div>`;
+    const stage = host.firstElementChild, figEl = stage.querySelector(".sx-fig"), ro = stage.querySelector(".sx-readout");
+    const model = () => def.model(state);
+
+    function draw() {
+      // a redraw replaces the SVG, so put keyboard focus back where it was
+      const a = document.activeElement, f = a && figEl.contains(a) ? a.closest("[data-part],[data-ctl]") : null;
+      const sel = f ? (f.dataset.part ? `[data-part="${f.dataset.part}"]` : `[data-ctl="${f.dataset.ctl}"][data-val="${f.dataset.val}"]`) : null;
+      try { figEl.innerHTML = def.draw(state, { sel: view.sel, marks: view.marks, labels: view.labels, trace: view.trace, mask: view.mask }); }
+      catch (e) { console.error(e); figEl.innerHTML = `<p class="s1-note">This diagram failed to draw.</p>`; }
+      const n = sel && figEl.querySelector(sel);
+      if (n) n.focus({ preventScroll: true });
+    }
+    function sync() {
+      if (ro) { let m = ""; try { m = model().msg || ""; } catch (e) { console.error(e); } ro.innerHTML = m; }
+      stage.querySelectorAll("[data-k]").forEach((n) => {
+        const c = ctls.find((x) => x.key === n.dataset.k), v = state[c.key];
+        if (c.type === "seg") { const on = c.opts[+n.dataset.j][0] === v; n.classList.toggle("on", on); n.setAttribute("aria-pressed", on); }
+        else if (c.type === "toggle") { n.classList.toggle("on", !!v); n.setAttribute("aria-pressed", !!v); }
+        else { if (document.activeElement !== n) n.value = v; n.nextElementSibling.textContent = v + (c.unit || ""); }
+      });
+    }
+    function apply(s, key) { state = s; draw(); sync(); if (changeFn) changeFn(state, key); }
+    // data-val arrives as a string: map it back to the control's real value
+    function coerce(key, raw) {
+      const c = ctls.find((x) => x.key === key);
+      if (c && c.type === "seg") { const op = c.opts.find((x) => String(x[0]) === String(raw)); if (op) return op[0]; }
+      if (raw === "true") return true;
+      if (raw === "false") return false;
+      return raw !== "" && raw != null && !isNaN(raw) ? +raw : raw;
+    }
+    // an in-SVG control with no data-val cycles (seg) or flips (toggle) its value
+    function hardware(n) {
+      const key = n.dataset.ctl, c = ctls.find((x) => x.key === key);
+      if (n.dataset.val != null) return coerce(key, n.dataset.val);
+      if (c && c.type === "seg") { const i = c.opts.findIndex((x) => x[0] === state[key]); return c.opts[(i + 1) % c.opts.length][0]; }
+      return !state[key];
+    }
+    function act(t, e) {
+      const c = t.closest && t.closest("[data-ctl]");
+      if (c && host.contains(c)) { if (locked) return false; L.set(c.dataset.ctl, hardware(c)); return true; }
+      const p = t.closest && t.closest("[data-part]");
+      if (p && host.contains(p) && partFn) { partFn(p.dataset.part, e); return true; }
+      return false;
+    }
+    host.addEventListener("click", (e) => {
+      const b = e.target.closest && e.target.closest("button[data-k]");
+      if (b && stage.contains(b)) {
+        const c = ctls.find((x) => x.key === b.dataset.k);
+        return L.set(c.key, c.type === "seg" ? c.opts[+b.dataset.j][0] : !state[c.key]);
+      }
+      act(e.target, e);
+    });
+    host.addEventListener("input", (e) => {
+      const r = e.target.closest && e.target.closest('input[data-k]');
+      if (r) L.set(r.dataset.k, +r.value);
+    });
+    // Enter / Space on a focused part or hardware control; stopped here so a
+    // handled key doesn't also fire the drill's global Enter → Next
+    host.addEventListener("keydown", (e) => {
+      if ((e.key === "Enter" || e.key === " ") && act(e.target, e)) { e.preventDefault(); e.stopPropagation(); }
+    });
+
+    Object.assign(L, {
+      model,
+      set(key, val) { if (!locked) apply(D.setState(def, state, key, val), key); return L; },
+      patch(obj) { apply(patchState(D, def, state, obj)); return L; },
+      load(s) { apply({ ...s }); return L; },
+      reset(patch) { view.sel = null; view.marks = {}; view.trace = []; apply(patchState(D, def, def.init(), patch === undefined ? o.start : patch)); return L; },
+      redraw(opts) { Object.assign(view, opts || {}); draw(); return L; },
+      onPart(fn) { partFn = fn; return L; },
+      onChange(fn) { changeFn = fn; return L; },
+      lock(b) { locked = !!b; stage.classList.toggle("sx-locked", locked); stage.querySelectorAll("button,input").forEach((n) => { n.disabled = locked; }); return L; },
+      // predict tasks: hide the readout and controls, and ask the def to hide the fault
+      mask(b) { stage.classList.toggle("sx-masked", !!b); view.mask = !!b; draw(); return L; },
+      destroy() { partFn = changeFn = null; },
+    });
+    Object.defineProperty(L, "state", { get: () => state });   // live, so not part of the assign above
+    if (o.mask) stage.classList.add("sx-masked");
+    draw(); sync();
+    return L;
+  }
+
+  // breadth-first search over the controls for a state satisfying `goal`, so a
+  // failed `set` task can show one way to do it
+  function solveGoal(def, start, goal) {
+    const D = SD();
+    const vals = (c) => c.type === "seg" ? c.opts.map((x) => x[0]) : c.type === "toggle" ? [true, false] : [...new Set([c.min, Math.round((c.min + c.max) / 2), c.max])];
+    if (D.match(def, start, goal)) return start;
+    const seen = new Set([JSON.stringify(start)]);
+    let frontier = [start];
+    for (let depth = 0; depth < 4 && frontier.length && seen.size < 6000; depth++) {
+      const nxt = [];
+      for (const s of frontier) for (const c of def.controls || []) for (const v of vals(c)) {
+        const n = D.setState(def, s, c.key, v), k = JSON.stringify(n);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        if (D.match(def, n, goal)) return n;
+        nxt.push(n);
+      }
+      frontier = nxt;
+    }
+    return null;
+  }
+
+  const taskUnits = (t) => t.t === "order" ? t.seq.length : 1;
+
+  // One graded task on the live diagram. `o` = { k, n, tickOne }; `end(points, units)`
+  // fires from the Next button, so the 1–9 / Enter keys behave as in the quiz.
+  function runTask(sys, t, box, o, end) {
+    killViews();
+    const units = taskUnits(t);
+    const dots = o.n > 1 ? `<div class="s1-dots">${Array.from({ length: o.n }, (_, j) => `<i class="${j < o.k ? "done" : j === o.k ? "cur" : ""}"></i>`).join("")}</div>` : "";
+    const card = el(`<div class="s1-block sx-task">${dots}<p class="s1-muted">${esc(sys.name)} · ${t.t === "locate" ? "find it on the airplane" : t.t === "order" ? "trace it" : t.t === "set" ? "set it up" : t.t === "predict" ? "predict" : "find it"}</p>
+      <h3>${esc(t.q)}</h3><div class="sx-host"></div><div class="sx-actions"></div><div class="s1-why" hidden></div></div>`);
+    box.innerHTML = "";
+    box.appendChild(card);
+    const host = card.querySelector(".sx-host"), actions = card.querySelector(".sx-actions"), why = card.querySelector(".s1-why");
+    let finished = false;
+    const fin = (pts, extra = "") => {
+      if (finished) return;
+      finished = true;
+      const ok = pts === units;
+      hit(ok, cardKey.task(sys.id, t)); tick(o.tickOne ? 1 : units);
+      actions.innerHTML = "";
+      why.hidden = false;
+      why.className = "s1-why " + (ok ? "good" : "badwhy");
+      why.innerHTML = `<b>${ok ? "✓ Correct." : "✗ Not quite."}</b> ${units > 1 ? `${pts} of ${units} steps first try. ` : ""}${esc(t.why || "")} ${extra}`;
+      card.appendChild(nextBtn(o.last || "Next →", () => end(pts, units)));
+    };
+    const help = (s) => host.insertAdjacentHTML("beforebegin", `<p class="sx-help">${s}</p>`);
+
+    if (t.t === "find") {
+      const lab = mountLab(host, sys.id, { start: t.start, controls: false, readout: false, labels: !t.blind });
+      lab.lock(true);   // the scene is the question: hardware stays put
+      const reveal = (marks) => { lab.lock(true); lab.onPart(null); lab.redraw({ marks, labels: true }); };
+      if (!t.parts) {
+        lab.onPart((p) => { const ok = p === t.part; reveal(ok ? { [p]: "ok" } : { [p]: "bad", [t.part]: "ok" }); fin(ok ? 1 : 0); });
+      } else {
+        const want = new Set(t.parts), got = new Set();
+        help("Click every part that applies, then Check.");
+        lab.onPart((p) => {
+          got.has(p) ? got.delete(p) : got.add(p);
+          lab.redraw({ marks: Object.fromEntries([...got].map((x) => [x, "hint"])) });
+        });
+        const chk = el(`<button class="btn primary wide">Check</button>`);
+        chk.addEventListener("click", () => {
+          const ok = got.size === want.size && [...want].every((x) => got.has(x));
+          const marks = Object.fromEntries(t.parts.map((x) => [x, "ok"]));
+          got.forEach((x) => { if (!want.has(x)) marks[x] = "bad"; });
+          reveal(marks); fin(ok ? 1 : 0);
+        });
+        actions.appendChild(chk);
+      }
+    } else if (t.t === "order") {
+      const lab = mountLab(host, sys.id, { start: t.start, controls: false, readout: false, labels: !t.blind });
+      lab.lock(true);
+      const bar = el(`<p class="sx-step"></p>`);
+      host.insertAdjacentElement("beforebegin", bar);
+      let i = 0, pts = 0, missed = false;
+      const marks = {};
+      const stepText = () => { bar.textContent = `Step ${Math.min(i + 1, t.seq.length)} of ${t.seq.length}`; };
+      stepText();
+      lab.onPart((p) => {
+        if (marks[p] === "done") return;
+        if (p === t.seq[i]) {
+          if (!missed) pts++;
+          missed = false; marks[p] = "done"; i++;
+          lab.redraw({ marks: { ...marks }, trace: t.seq.slice(0, i) });
+          if (i >= t.seq.length) { lab.lock(true); lab.onPart(null); lab.redraw({ labels: true }); bar.remove(); fin(pts); } else stepText();
+        } else {
+          missed = true;
+          lab.redraw({ marks: { ...marks, [p]: "bad" } });
+          setTimeout(() => { if (!finished && host.isConnected) lab.redraw({ marks: { ...marks } }); }, 650);
+        }
+      });
+    } else if (t.t === "set") {
+      const lab = mountLab(host, sys.id, { start: t.start });
+      const chk = el(`<button class="btn primary wide">Check</button>`);
+      chk.addEventListener("click", () => {
+        const ok = SD().match(lab.def, lab.state, t.goal);
+        let extra = "";
+        lab.lock(true);
+        if (!ok) {
+          const sol = solveGoal(lab.def, lab.state, t.goal);
+          if (sol) { lab.load(sol); extra = "<br>One way to do it is now on the diagram."; }
+        }
+        fin(ok ? 1 : 0, extra);
+      });
+      actions.appendChild(chk);
+    } else if (t.t === "predict") {
+      const lab = mountLab(host, sys.id, { start: t.start, controls: false, mask: true });
+      lab.lock(true);
+      const opts = el(`<div class="s1-opts"></div>`);
+      shuffle(t.o.map((txt, j) => ({ txt, ok: j === 0 }))).forEach((x) => {
+        const b = el(`<button class="s1-opt">${esc(x.txt)}</button>`);
+        if (x.ok) b.dataset.ok = "1";
+        b.addEventListener("click", () => {
+          opts.querySelectorAll("button").forEach((n) => { n.disabled = true; });
+          opts.querySelector("[data-ok]").classList.add("ok");
+          if (x.ok) b.classList.add("picked"); else b.classList.add("bad");
+          card.querySelector(".s1-keys")?.remove();
+          // now let the diagram show what really happens
+          lab.mask(false);
+          if (t.apply) lab.patch(t.apply);
+          fin(x.ok ? 1 : 0);
+        });
+        opts.appendChild(b);
+      });
+      host.insertAdjacentElement("afterend", opts);
+      opts.insertAdjacentHTML("afterend", KEYS(t.o.length));
+    } else if (t.t === "locate") {
+      host.innerHTML = `<div class="sx-loc"><p class="s3-hint">Loading the airplane…</p></div>
+        <details class="sx-picks"><summary>Pick from a list instead</summary><div class="sx-pickbody">${pickListHTML()}</div></details>`;
+      const vh = host.querySelector(".sx-loc"), det = host.querySelector("details");
+      let view = null, lab = null;
+      const grade = (id) => {
+        if (finished) return;
+        const ok = id === t.id;
+        const marks = ok ? { [t.id]: "ok" } : { [id]: "bad", [t.id]: "ok" };
+        if (view) view.mark(marks); else if (lab) { lab.lock(true); lab.redraw({ marks, labels: true }); }
+        fin(ok ? 1 : 0);
+      };
+      host.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => grade(b.dataset.pick)));
+      ready3d().then((ok) => { if (!ok) return null; vh.innerHTML = ""; return S3().mount(vh, { scene: "airplane", labels: false, onPick: (p) => grade(p.id) }); }).catch(() => null).then((v) => {
+        if (!vh.isConnected) return dropView(v);
+        if (v) { view = track(v); return; }
+        vh.innerHTML = "";
+        if (hasDef("airplane")) {
+          lab = mountLab(vh, "airplane", { controls: false, readout: false, labels: false });
+          lab.onPart(grade);
+          vh.insertAdjacentHTML("afterbegin", `<p class="s3-note">3D unavailable — showing schematic</p>`);
+        } else { vh.innerHTML = ""; det.open = true; }
+      });
+    }
+  }
 
   const RUNNERS = {
     /* ----------------------------- acronym ------------------------------ */
@@ -616,27 +1062,6 @@ const StudyDrill = (() => {
         });
       };
 
-      const norm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-      // at most one slip (wrong, missing, extra or swapped letter) between a and b
-      const near = (a, b) => {
-        if (Math.abs(a.length - b.length) > 1) return false;
-        let i = 0;
-        while (i < a.length && a[i] === b[i]) i++;
-        const rest = (x, y) => a.slice(x) === b.slice(y);
-        return rest(i, i) || rest(i + 1, i + 1) || rest(i + 1, i) || rest(i, i + 1) ||
-          (a[i] === b[i + 1] && a[i + 1] === b[i] && rest(i + 2, i + 2));
-      };
-      // the first five letters decide, one typo forgiven ("alchohol", "ilness").
-      // Short alternates ("ad", "t/o", "wx") must be the whole answer or a
-      // whole word of it — otherwise "radio" would pass for ADs.
-      const accepts = (it, raw) => {
-        const v = norm(raw), words = raw.toLowerCase().split(/[^a-z0-9]+/), p = v.slice(0, 5);
-        if (v.length < 2) return false;
-        return [it.w, ...(it.alt || [])].map(norm).some((c) => c.length < 4
-          ? v === c || words.includes(c) || (c.length === 3 && v.startsWith(c))
-          : (v.length >= 3 && c.startsWith(p)) || v.includes(c) ||
-            (p.length === 5 && [4, 5, 6].some((n) => near(p, c.slice(0, n)))));
-      };
       const typed = () => {
         const inputs = [...box.querySelectorAll(".s1-slot input")];
         inputs[0].focus();
@@ -877,22 +1302,194 @@ const StudyDrill = (() => {
       show();
     },
 
+    /* ------------------------------ recall ------------------------------ */
+    // Must-know prompts, typed from memory. a = { sys? | items?, lead?, rapid?, last? }
+    // (items: [{ q, a, alt?, all?, sys }]) → done(right, total, note?). Graded with
+    // recallMatch; the canonical answer is always shown afterwards. Wrong answers
+    // can be self-graded ("I had it" — the matcher missed a wording) or "Missed it".
+    // Only the first submission counts; each item is a misses-deck card.
+    recall(a, box, done) {
+      const items = a.items || ((sysById(a.sys) || {}).must || []).map((m) => ({ ...m, sys: a.sys }));
+      let k = 0, right = 0;
+      const sysName = (it) => (sysById(it.sys) || {}).name || "";
+      const record = (it, ok) => { if (ok) right++; hit(ok, cardKey.must(it.sys, it)); tick(); };
+      const shell = (it, extra) => `<div class="s1-block s1-recall"><p class="s1-rc-from"><b>★ Must know</b> · ${esc(sysName(it))}${extra || ""}</p>`;
+      const input = (ph) => `<div class="s1-rc-row"><input class="s1-rc-in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${ph}" aria-label="Your answer">
+        <button class="btn primary" data-act="go">Check</button></div>`;
+
+      const show = () => {
+        if (k >= items.length) return done(right, items.length);
+        const it = items[k];
+        box.innerHTML = shell(it, items.length > 1 ? ` · ${k + 1} of ${items.length}` : "") +
+          (a.lead ? `<p class="s1-rc-lead">${esc(a.lead)}</p>` : "") +
+          `<h3 class="s1-rc-q">${esc(it.q)}</h3>${input("Type it from memory · Enter")}
+          <button type="button" class="s1-linkbtn" data-act="show">I don't know — show me</button><div class="s1-fb"></div></div>`;
+        const inp = box.querySelector("input"), fb = box.querySelector(".s1-fb"), blk = box.firstElementChild;
+        let locked = false;
+        const lockUI = () => { locked = true; inp.disabled = true; box.querySelectorAll("[data-act]").forEach((b) => b.remove()); };
+        const next = () => nextBtn(k + 1 < items.length ? "Next →" : (a.last || "Next →"), () => { k++; show(); });
+        const submit = () => {
+          if (locked) return;
+          const v = inp.value.trim();
+          if (!v) { inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake"); return; }
+          const lvl = recallMatch(it, v);
+          lockUI();
+          if (lvl) {
+            record(it, true);
+            inp.classList.add("ok");
+            fb.innerHTML = `<p class="s1-ok">✓ ${esc(it.a)}</p>${lvl === 2 ? `<p class="s1-muted">Close enough — mind the spelling; the examiner wants it exactly.</p>` : ""}`;
+            blk.appendChild(next());
+          } else {
+            inp.classList.add("bad");
+            fb.innerHTML = `<p class="bad">✗ Not what I was looking for.</p><p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p>
+              <p class="s1-muted">Be honest — did you have it, just worded differently?</p>
+              <div class="s1-rc-self"><button class="btn" data-self="1">I had it</button><button class="btn" data-self="0">Missed it</button></div>`;
+            fb.querySelectorAll("[data-self]").forEach((b) => b.addEventListener("click", () => {
+              record(it, b.dataset.self === "1");
+              k++; show();
+            }));
+            fb.querySelector("[data-self]").focus();
+          }
+        };
+        box.querySelector('[data-act="go"]').addEventListener("click", submit);
+        inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+        box.querySelector('[data-act="show"]').addEventListener("click", () => {
+          if (locked) return;
+          lockUI(); record(it, false);
+          fb.innerHTML = `<p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p><p class="s1-muted">It's in your review deck.</p>`;
+          blk.appendChild(next());
+        });
+        inp.focus();
+      };
+
+      // timed: SECS per prompt; a wrong guess can be retried until the clock runs out
+      const SECS = 15;
+      const rapid = () => {
+        const best = (stats.rapid || {}).mustknow;
+        box.innerHTML = `<div class="s1-block s1-recall"><h3>⚡ Rapid fire — must-know</h3>
+          <p class="s1-muted">${items.length} prompts, ${SECS} seconds each. Type the answer and hit Enter; a wrong guess can be retried until the clock runs out.
+          ${best ? `Your best clean run: <b>${best.toFixed(1)} s</b>.` : ""}</p>
+          <button class="btn primary wide" data-act="go">⚡ Start</button></div>`;
+        box.querySelector('[data-act="go"]').addEventListener("click", () => {
+          const R = box.firstElementChild;
+          R.innerHTML = `<p class="s1-rc-from"><b>★ Must know</b> · <span data-r="sys"></span> · <span data-r="n"></span></p>
+            <h3 class="s1-rc-q"></h3><div class="s1-clock"><i></i></div>${input("Type it · Enter")}<p class="s1-rapid-msg"></p>`;
+          const inp = R.querySelector("input"), bar = R.querySelector(".s1-clock i"), msg = R.querySelector(".s1-rapid-msg"), qEl = R.querySelector(".s1-rc-q");
+          R.querySelector('[data-act="go"]').addEventListener("click", () => attempt());
+          let t0 = 0, timer = 0, busy = false;
+          const start = performance.now();
+          const stop = () => clearInterval(timer);
+          const present = () => {
+            if (k >= items.length) {
+              stop(); inp.disabled = true;
+              const secs = (performance.now() - start) / 1000;
+              let note = `${right} of ${items.length} in ${secs.toFixed(1)} s`;
+              if (right === items.length && (!best || secs < best)) {
+                stats.rapid = stats.rapid || {}; stats.rapid.mustknow = secs; save(STATS, stats);
+                note += best ? " — new best!" : "";
+              }
+              return done(right, items.length, note);
+            }
+            const it = items[k];
+            R.querySelector('[data-r="sys"]').textContent = sysName(it);
+            R.querySelector('[data-r="n"]').textContent = `${k + 1} of ${items.length}`;
+            qEl.textContent = it.q;
+            inp.value = ""; inp.disabled = false; inp.focus(); msg.textContent = "";
+            t0 = performance.now(); busy = false;
+          };
+          const resolve = (ok) => {
+            busy = true; inp.disabled = true;
+            const it = items[k];
+            record(it, ok);
+            msg.innerHTML = ok ? `<span class="s1-ok">✓ ${esc(it.a)}</span>` : `<span class="bad">⏱ ${esc(it.a)}</span>`;
+            k++;
+            setTimeout(() => { if (box.isConnected) present(); }, ok ? 450 : 1500);
+          };
+          function attempt() {
+            if (busy) return;
+            if (recallMatch(items[k], inp.value)) resolve(true);
+            else { inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake"); inp.select(); }
+          }
+          inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); attempt(); } });
+          timer = setInterval(() => {
+            if (!box.isConnected) return stop();
+            if (busy) return;
+            const left = 1 - (performance.now() - t0) / (SECS * 1000);
+            bar.style.width = Math.max(0, left * 100) + "%";
+            bar.classList.toggle("low", left < 0.3);
+            if (left <= 0) resolve(false);
+          }, 50);
+          present();
+        });
+      };
+      a.rapid ? rapid() : show();
+    },
+
+    /* ------------------------------ systask ----------------------------- */
+    // a = { sys, tasks, tickOne?, last? } → done(points, units)
+    systask(a, box, done) {
+      const tasks = a.tasks.slice();
+      let k = 0, right = 0, total = 0;
+      const next = () => {
+        if (k >= tasks.length) return done(right, total);
+        const t = tasks[k++];
+        runTask(a.sys, t, box, { k: k - 1, n: tasks.length, tickOne: a.tickOne, last: k >= tasks.length ? a.last : null },
+          (p, u) => { right += p; total += u; next(); });
+      };
+      next();
+    },
+
     /* ------------------------------ systems ----------------------------- */
+    // The examiner picks three (one is always a core system). Each is worked on
+    // the live diagram — 4 tasks for a core system, 2–3 for the lighter ones —
+    // then two questions per system. A system with no tasks yet falls back to
+    // the old say-it-then-tick flow.
     systems(a, box, done) {
-      const pick = shuffle(STAGE1_SYSTEMS).slice(0, 3);
+      const ready = (s) => (s.tasks || []).length && hasDef(s.id);
+      const pool = shuffle(STAGE1_SYSTEMS);
+      const core = pool.find((s) => s.core);
+      const pick = shuffle([...(core ? [core] : []), ...pool.filter((s) => s !== core)].slice(0, 3));
+      const plan = pick.map((s) => {
+        if (!ready(s)) return [];
+        const n = s.core ? 4 : 2 + Math.floor(Math.random() * 2);
+        const all = shuffle(s.tasks), must = all.find((t) => t.t === "order" || t.t === "set");
+        const rest = all.filter((t) => t !== must);
+        return shuffle([...(must ? [must] : []), ...rest].slice(0, n));
+      });
+      const qs = shuffle(pick.flatMap((s) => shuffle(s.qs || []).slice(0, 2).map((q) => ({ ...q, from: s.name }))));
+      // 2–3 must-know prompts per system, typed from memory before the hands-on tasks
+      const pre = pick.map((s) => shuffle(s.must || []).slice(0, 2 + Math.floor(Math.random() * 2)).map((m) => ({ ...m, sys: s.id })));
+      // the bar starts at 3 units; make it the real count (one unit per recall prompt)
+      grow(plan.reduce((n, ts) => n + (ts.length ? ts.reduce((m, t) => m + taskUnits(t), 0) : 1), 0) + qs.length + pre.reduce((n, p) => n + p.length, 0) - 3);
       let k = 0, got = 0, total = 0;
       const show = () => {
         if (k >= pick.length) {
-          // then a quick quiz on the same three
-          const qs = shuffle(pick.flatMap((s) => (s.qs || []).map((q) => ({ ...q, from: s.name }))));
           if (!qs.length) return done(got, total);
-          grow(qs.length);
           return RUNNERS.quiz({ qs }, box, (r, t) => done(got + r, total + t));
         }
-        const s = pick[k];
-        box.innerHTML = `<div class="s1-block s1-sys">
-          <div class="s1-examiner"><span>🧑‍✈️</span><p>"Pick one — ${pick.map((p, j) => j === k ? `<b>${p.name}</b>` : p.name).join(" · ")}.<br>
-          Walk me through the <b>${s.name.toLowerCase()}</b> system."</p></div>
+        const s = pick[k], tasks = plan[k];
+        const intro = `<div class="s1-examiner"><span>🧑‍✈️</span><p>"Pick one — ${pick.map((p, j) => j === k ? `<b>${p.name}</b>` : p.name).join(" · ")}.<br>
+          Walk me through the <b>${s.name.toLowerCase()}</b> system."</p></div>`;
+        const hands = () => {
+          if (!tasks.length) return sayIt(s, intro);
+          box.innerHTML = `<div class="s1-block s1-sys">${intro}
+            ${s.intro ? `<p class="s1-muted">${esc(s.intro)}</p>` : ""}
+            <p class="s1-muted">${tasks.length} task${tasks.length > 1 ? "s" : ""} on the live diagram — operate it, don't just recite it.</p></div>`;
+          box.firstElementChild.appendChild(nextBtn("Begin →", () => {
+            RUNNERS.systask({ sys: s, tasks, last: k + 1 < pick.length ? "Next system →" : "Quiz on these three →" }, box, (r, t) => { got += r; total += t; k++; show(); });
+          }));
+        };
+        if (!pre[k].length) return hands();
+        // recall first: the examiner wants the numbers cold before you touch the diagram
+        box.innerHTML = `<div class="s1-block s1-sys">${intro}
+          <p class="s1-muted">Before you start — ${pre[k].length} thing${pre[k].length > 1 ? "s" : ""} you should know cold, typed from memory.</p></div>`;
+        box.firstElementChild.appendChild(nextBtn("Begin →", () => {
+          RUNNERS.recall({ items: pre[k], lead: `Before you start — the ${s.name.toLowerCase()}.`, last: tasks.length ? "On to the diagram →" : "Continue →" }, box,
+            (r, t) => { got += r; total += t; hands(); });
+        }));
+      };
+      const sayIt = (s, intro) => {
+        box.innerHTML = `<div class="s1-block s1-sys">${intro}
           <p class="s1-muted">Say it out loud first. Then check yourself — tick what you covered.</p>
           <button class="btn primary wide" data-act="reveal">Show what to cover</button>
           <div class="s1-sys-pts" hidden></div></div>`;
@@ -904,8 +1501,7 @@ const StudyDrill = (() => {
             s.points.map((p, j) => `<label class="s1-check"><input type="checkbox" data-j="${j}"> ${esc(p)}</label>`).join("");
           pts.appendChild(nextBtn(k + 1 < pick.length ? "Next system →" : "Quiz on these three →", () => {
             got += pts.querySelectorAll("input:checked").length; total += s.points.length;
-            tick();
-            k++; show();
+            tick(); k++; show();
           }));
         });
       };
@@ -1087,20 +1683,255 @@ const StudyDrill = (() => {
       upd();
     },
 
-    systemsBrowser(w) {
-      w.innerHTML = `<div class="s1-sysnav">${STAGE1_SYSTEMS.map((s) => `<button class="s1-chip" data-s="${s.id}">${s.name}</button>`).join("")}</div>
-        <div class="s1-sysview"></div>`;
-      const pick = (id) => {
-        const s = STAGE1_SYSTEMS.find((x) => x.id === id);
-        w.querySelectorAll("[data-s]").forEach((b) => b.classList.toggle("on", b.dataset.s === id));
-        w.querySelector(".s1-sysview").innerHTML = `<div class="s1-sysgrid"><ul class="s1-list">${s.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
-          ${s.fig ? `<div class="s1-fig">${s.fig()}</div>` : ""}</div>`;
+    /* Systems lab (Learn): airplane hero → system chips → live simulator with
+       Explore / Scenarios / Key facts. Selection, explored parts and finished
+       scenarios persist in STATS.sysSeen. */
+    systemsLab(w) {
+      const order = [...STAGE1_SYSTEMS.filter((s) => s.core), ...STAGE1_SYSTEMS.filter((s) => !s.core)];
+      const seenOf = (id) => { stats.sysSeen = stats.sysSeen || {}; return stats.sysSeen[id] || (stats.sysSeen[id] = { p: [], l: [] }); };
+      const partIds = (s) => { const k = Object.keys(s.parts || {}), d = hasDef(s.id) ? SD().get(s.id) : null; return d ? k.filter((x) => d.parts.includes(x)) : k; };
+      const fullyDone = (s) => {
+        const sn = seenOf(s.id), P = partIds(s), nl = (s.labs || []).length;
+        return (P.length || nl) && P.every((p) => sn.p.includes(p)) && (!nl || sn.l.length >= nl);
       };
-      w.querySelectorAll("[data-s]").forEach((b) => b.addEventListener("click", () => pick(b.dataset.s)));
-      pick(STAGE1_SYSTEMS[0].id);
-      w.appendChild(el(`<p class="s1-note">Numbers are from the C172S POH as quoted in training material — the airplane's own POH governs.</p>`));
+      w.innerHTML = `<div class="sx-lab">
+        <div class="s1-sysnav">${order.map((s) => `<button class="s1-chip" data-s="${s.id}">${s.core ? `<i class="sx-core" title="core system"></i>` : ""}${esc(s.name)}<b class="sx-tick"></b></button>`).join("")}</div>
+        <section class="sx-must" aria-label="Must know"></section>
+        <section class="sx-hero" hidden><div class="sx-hero-view"></div>
+          <details class="sx-picks"><summary>Pick a spot from a list instead</summary><div class="sx-pickbody">${pickListHTML()}</div></details></section>
+        <div class="sx-cols">
+          <div class="sx-main">
+            <div class="sx-tools">
+              <button class="btn small" data-act="labels" aria-pressed="false">Hide labels</button>
+              <button class="btn small" data-act="reset">Reset</button>
+              <span class="s1-seg sx-viewseg" hidden><button data-view="2d" class="on">Schematic</button><button data-view="3d">3D</button></span>
+            </div>
+            <div class="sx-host"></div>
+          </div>
+          <div class="sx-side">
+            <div class="s1-seg sx-tabs"><button class="on" data-pane="explore">Explore</button><button data-pane="scen">Scenarios</button><button data-pane="facts">Key facts</button></div>
+            <div class="sx-pane" data-p="explore"><p class="sx-count"></p><div class="sx-card"></div><div class="sx-plist"></div></div>
+            <div class="sx-pane" data-p="scen" hidden></div>
+            <div class="sx-pane" data-p="facts" hidden></div>
+          </div></div>
+        <p class="s1-note">Schematics and 3D shapes are illustrative. Numbers are from the C172S POH as quoted in training material — the airplane's own POH governs.</p></div>`;
+      const q = (s) => w.querySelector(s), qa = (s) => [...w.querySelectorAll(s)];
+      const host = q(".sx-main .sx-host"), hero = q(".sx-hero"), hv = q(".sx-hero-view");
+      let cur = null, heroView = null, heroLab = null, hideLbl = false;
+      const alive = () => w.isConnected;
+      const seen = () => seenOf(cur.s.id);
+      const store = () => save(STATS, stats);
+
+      /* ---- airplane hero ---- */
+      const heroSelect = (id) => { if (heroView) heroView.select(id); if (heroLab) heroLab.redraw({ sel: id }); };
+      function openPart(id) {
+        const i = id.indexOf("."), sid = id.slice(0, i), part = id.slice(i + 1);
+        if (!sysById(sid)) return;
+        if (!cur || cur.s.id !== sid) show(sid, part); else selectPart(part);
+      }
+      w.querySelectorAll("[data-pick]").forEach((b) => b.addEventListener("click", () => {
+        if (heroView) heroView.pick(b.dataset.pick); else openPart(b.dataset.pick);
+      }));
+      function heroInit() {
+        const t = S3(), twoD = (note) => {
+          hero.hidden = !hasDef("airplane") && !hotspots().length;
+          hv.innerHTML = "";
+          if (hasDef("airplane")) {
+            heroLab = mountLab(hv, "airplane", { controls: false, readout: false });
+            heroLab.onPart(openPart);
+            if (note) hv.insertAdjacentHTML("afterbegin", `<p class="s3-note">3D unavailable — showing schematic</p>`);
+          } else hv.hidden = true;
+        };
+        if (!t) return twoD(false);
+        hero.hidden = false;
+        hv.innerHTML = `<p class="s3-hint s3-loading">Loading the 3D airplane…</p>`;
+        ready3d().then((ok) => { if (!ok || !alive()) return null; hv.innerHTML = ""; return t.mount(hv, { scene: "airplane", labels: true, focus: cur && cur.s.id, onPick: (p) => openPart(p.id) }); })
+          .catch(() => null).then((v) => {
+            if (!alive()) return dropView(v);
+            if (v) { heroView = track(v); if (cur) { v.setFocus(cur.s.id); if (cur.sel) v.select(cur.s.id + "." + cur.sel); } } else twoD(true);
+          });
+      }
+
+      /* ---- Explore pane ---- */
+      const exploredMarks = () => Object.fromEntries(seen().p.map((p) => [p, "done"]));
+      function renderExplore() {
+        const s = cur.s, P = partIds(s), sn = seen();
+        q(".sx-count").innerHTML = P.length ? `Explored <b>${P.filter((p) => sn.p.includes(p)).length} / ${P.length}</b> parts` : "";
+        const info = cur.sel && s.parts && s.parts[cur.sel];
+        q(".sx-card").innerHTML = info
+          ? `<h4>${esc(info.n)}</h4><p>${info.d}</p>${info.tip ? `<p class="sx-tip"><b>Examiner:</b> ${info.tip}</p>` : ""}`
+          : `<p class="s1-muted">${s.intro ? esc(s.intro) + " " : ""}${P.length ? "Click any part on the diagram — or pick one below — to see what it does." : "Part notes aren't loaded for this system yet; the Key facts tab has the essentials."}</p>`;
+        q(".sx-plist").innerHTML = P.map((p) => `<button type="button" class="sx-pchip ${sn.p.includes(p) ? "seen" : ""} ${cur.sel === p ? "on" : ""}" data-p="${p}">${esc(s.parts[p].n)}</button>`).join("");
+        qa(".sx-pchip").forEach((b) => b.addEventListener("click", () => selectPart(b.dataset.p)));
+      }
+      function selectPart(part) {
+        if (!cur) return;
+        cur.sel = part;
+        if (cur.s.parts && cur.s.parts[part] && !seen().p.includes(part)) { seen().p.push(part); store(); }
+        if (cur.lab) cur.lab.redraw({ sel: part, marks: exploredMarks() });
+        if (cur.view3) cur.view3.select(cur.s.id + "." + part);
+        heroSelect(cur.s.id + "." + part);
+        setPane("explore");
+        renderExplore(); chipState();
+      }
+      function chipState() {
+        qa(".s1-chip").forEach((b) => {
+          const s = sysById(b.dataset.s);
+          b.classList.toggle("on", !!cur && s.id === cur.s.id);
+          b.querySelector(".sx-tick").textContent = fullyDone(s) ? " ✓" : "";
+        });
+      }
+
+      /* ---- ★ Must know: flashcards above the lab (tap to reveal, show all, test me) ---- */
+      function renderMust() {
+        const s = cur.s, M = s.must || [], box = q(".sx-must");
+        box.hidden = !M.length;
+        if (!M.length) { box.innerHTML = ""; return; }
+        box.innerHTML = `<div class="sx-must-head"><h3><span class="sx-must-star">★</span> Must know <small>${esc(s.name)} — say it from memory, word for word</small></h3>
+          <div class="sx-must-acts"><button type="button" class="btn small" data-act="mk-all" aria-pressed="false">Show all</button>
+          <button type="button" class="btn small primary" data-act="mk-test">Test me ▸</button></div></div>
+          <div class="sx-must-grid">${M.map((m, i) => `<button type="button" class="sx-mk" data-i="${i}" aria-pressed="false">
+            <span class="sx-mk-q">${esc(m.q)}</span><span class="sx-mk-a">${esc(m.a)}</span><i class="sx-mk-hint">tap to reveal</i></button>`).join("")}</div>`;
+        const grid = box.querySelector(".sx-must-grid"), allBtn = box.querySelector('[data-act="mk-all"]');
+        grid.addEventListener("click", (e) => {
+          const c = e.target.closest(".sx-mk");
+          if (c) c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") !== "true");
+        });
+        allBtn.addEventListener("click", () => {
+          const on = allBtn.getAttribute("aria-pressed") !== "true";
+          allBtn.setAttribute("aria-pressed", on); allBtn.textContent = on ? "Hide all" : "Show all";
+          grid.querySelectorAll(".sx-mk").forEach((c) => c.setAttribute("aria-pressed", on));
+        });
+        box.querySelector('[data-act="mk-test"]').addEventListener("click", () => topic("systems", "recall", { sys: s.id, go: true }));
+      }
+
+      /* ---- Scenarios pane ---- */
+      const labsOf = () => cur.s.labs || [];
+      function renderScen() {
+        const P = q('[data-p="scen"]'), labs = labsOf();
+        if (!labs.length) { P.innerHTML = `<p class="s1-muted">No guided scenarios for this system yet.</p>`; return; }
+        if (!cur.lab || cur.lab.fallback) { P.innerHTML = `<p class="s1-muted">Scenarios run on the interactive schematic.</p>${cur.mode === "3d" ? `<button class="btn small" data-act="to2d">Switch to schematic</button>` : ""}`; P.querySelector("[data-act]")?.addEventListener("click", () => setMode("2d")); return; }
+        const done = seen().l;
+        let html = `<div class="sx-labs">${labs.map((l, i) => `<button type="button" class="sx-labbtn ${i === cur.li ? "on" : ""} ${done.includes(i) ? "done" : ""}" data-lab="${i}">${done.includes(i) ? "✓ " : ""}${esc(l.h)}</button>`).join("")}</div>`;
+        const lb = labs[cur.li];
+        if (lb) {
+          html += `<ol class="sx-steps">${lb.steps.map((st, j) => `<li class="${j < cur.k ? "ok" : j === cur.k ? "cur" : ""}">
+            <span class="sx-do">${st.do}</span>${j < cur.k && st.see ? `<span class="sx-see">${st.see}</span>` : ""}</li>`).join("")}</ol>`;
+          if (cur.k >= lb.steps.length) html += `<p class="s1-ok">✓ Scenario complete.</p>`;
+        } else html += `<p class="s1-muted">Pick a scenario — the diagram resets to its starting point, then you operate the controls yourself.</p>`;
+        P.innerHTML = html;
+        P.querySelectorAll("[data-lab]").forEach((b) => b.addEventListener("click", () => startLab(+b.dataset.lab)));
+      }
+      function startLab(i) {
+        cur.li = -1; cur.k = 0;   // reset() fires onChange; don't tick off steps while arming
+        cur.lab.reset(labsOf()[i].start || {});
+        cur.lab.redraw({ sel: null, marks: {} });
+        cur.li = i;
+        renderScen();
+      }
+      // every manipulation: tick off steps whose `when` the live state now meets, in order
+      function onState() {
+        const lb = labsOf()[cur.li];
+        if (!lb) return;
+        const before = cur.k;
+        while (cur.k < lb.steps.length && SD().match(cur.lab.def, cur.lab.state, lb.steps[cur.k].when)) cur.k++;
+        if (cur.k === before) return;
+        if (cur.k >= lb.steps.length && !seen().l.includes(cur.li)) { seen().l.push(cur.li); store(); chipState(); }
+        renderScen();
+      }
+
+      /* ---- panes & modes ---- */
+      function setPane(p) {
+        cur.pane = p;
+        qa(".sx-tabs button").forEach((b) => b.classList.toggle("on", b.dataset.pane === p));
+        qa(".sx-pane").forEach((x) => { x.hidden = x.dataset.p !== p; });
+        if (cur.lab) cur.lab.redraw({ marks: p === "explore" ? exploredMarks() : {} });
+        if (p === "scen") renderScen();
+      }
+      qa(".sx-tabs button").forEach((b) => b.addEventListener("click", () => setPane(b.dataset.pane)));
+
+      function mount2d() {
+        cur.mode = "2d";
+        cur.lab = mountLab(host, cur.s.id, { labels: !hideLbl });
+        cur.lab.onPart(selectPart).onChange(onState);
+        if (cur.sel) cur.lab.redraw({ sel: cur.sel, marks: exploredMarks() });
+        qa("[data-act=labels],[data-act=reset]").forEach((b) => { b.hidden = !!cur.lab.fallback; });
+      }
+      // engine only: the exploded 3D IO-360 in place of the 2D schematic
+      async function mount3d() {
+        const tok = ++cur.tok;
+        cur.mode = "3d"; cur.lab = null;
+        host.innerHTML = `<div class="sx-stage"><div class="sx-fig sx-3d"></div>
+          <div class="sx-strip sx-strip3">
+            <label class="sx-cg sx-rg"><span class="sx-cl">Explode</span><input type="range" data-e="explode" min="0" max="1" step="0.05" value="0"><output>0</output></label>
+            <div class="sx-cg"><button type="button" class="sx-tg" data-e="cut" aria-pressed="false">Cutaway</button></div>
+            <label class="sx-cg sx-rg"><span class="sx-cl">Crank</span><input type="range" data-e="crank" min="0" max="720" step="5" value="0"><output>0°</output></label>
+            <div class="sx-cg"><button type="button" class="sx-tg" data-e="play" aria-pressed="false">Play</button></div></div></div>`;
+        qa("[data-act=labels],[data-act=reset]").forEach((b) => { b.hidden = true; });
+        qa(".sx-viewseg button").forEach((b) => b.classList.toggle("on", b.dataset.view === "3d"));
+        let v = null;
+        try { v = await S3().mount(host.querySelector(".sx-3d"), { scene: "engine", labels: true, onPick: (p) => selectPart(p.part) }); } catch (e) { v = null; }
+        if (tok !== cur.tok || !alive()) return dropView(v);
+        if (!v) { setMode("2d"); host.insertAdjacentHTML("afterbegin", `<p class="s3-note">3D unavailable — showing schematic</p>`); return; }
+        cur.view3 = track(v);
+        if (cur.sel) v.select("engine." + cur.sel);
+        const strip = host.querySelector(".sx-strip3");
+        const on = (e) => {
+          const n = e.target.closest("[data-e]");
+          if (!n) return;
+          const key = n.dataset.e;
+          if (n.type === "range") { v.set(key, +n.value); n.nextElementSibling.textContent = key === "crank" ? n.value + "°" : n.value; }
+          else { const p = n.getAttribute("aria-pressed") !== "true"; n.setAttribute("aria-pressed", p); n.classList.toggle("on", p); v.set(key, p); }
+        };
+        strip.addEventListener("input", on);
+        strip.addEventListener("click", (e) => { if (e.target.closest("button[data-e]")) on(e); });
+        if (cur.pane === "scen") renderScen();
+      }
+      function setMode(m) {
+        dropView(cur.view3); cur.view3 = null;
+        qa(".sx-viewseg button").forEach((b) => b.classList.toggle("on", b.dataset.view === m));
+        cur.tok++;
+        if (m === "3d") mount3d(); else { mount2d(); if (cur.pane === "scen") renderScen(); }
+      }
+      qa(".sx-viewseg button").forEach((b) => b.addEventListener("click", () => { if (cur.mode !== b.dataset.view) setMode(b.dataset.view); }));
+      q("[data-act=labels]").addEventListener("click", (e) => {
+        hideLbl = !hideLbl;
+        e.target.setAttribute("aria-pressed", hideLbl);
+        e.target.textContent = hideLbl ? "Show labels" : "Hide labels";
+        if (cur.lab) cur.lab.redraw({ labels: !hideLbl });
+      });
+      q("[data-act=reset]").addEventListener("click", () => {
+        if (!cur.lab) return;
+        cur.li = -1; cur.k = 0;
+        cur.lab.reset({}); cur.sel = null;
+        cur.lab.redraw({ marks: cur.pane === "explore" ? exploredMarks() : {} });
+        renderExplore(); if (cur.pane === "scen") renderScen();
+      });
+
+      function show(id, part) {
+        const s = sysById(id);
+        if (cur) { dropView(cur.view3); cur.tok++; }
+        cur = { s, lab: null, mode: "2d", pane: (cur && cur.pane) || "explore", sel: null, li: -1, k: 0, tok: cur ? cur.tok + 1 : 0, view3: null };
+        if (heroView) { heroView.setFocus(id); heroView.select(null); }
+        if (heroLab) heroLab.redraw({ sel: null });
+        mount2d();
+        q('[data-p="facts"]').innerHTML = `<ul class="s1-list">${s.points.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>
+          <p class="s1-note">Say these aloud — the examiner wants the sentence, not just the click.</p>`;
+        // engine: offer the 3D view once three.js is known to work
+        const vs = q(".sx-viewseg"); vs.hidden = true;
+        qa(".sx-viewseg button").forEach((b) => b.classList.toggle("on", b.dataset.view === "2d"));
+        if (id === "engine" && S3()) ready3d().then((ok) => { if (ok && alive() && cur.s.id === "engine") vs.hidden = false; });
+        setPane(cur.pane);
+        renderMust();
+        renderExplore(); chipState();
+        if (part) selectPart(part);
+      }
+      qa("[data-s]").forEach((b) => b.addEventListener("click", () => show(b.dataset.s)));
+      heroInit();
+      show(order[0].id);
     },
   };
+  WIDGETS.systemsBrowser = WIDGETS.systemsLab;   // old name, same lab
 
   /* ============================ activation ============================= */
   function activate() {
@@ -1110,7 +1941,7 @@ const StudyDrill = (() => {
     home();
   }
   function deactivate() {
-    stopVoice();
+    stopVoice(); killViews();
     run = null;
     root.innerHTML = "";   // stops any rapid-fire clock and pending examiner line
     $("studyApp").hidden = true;
