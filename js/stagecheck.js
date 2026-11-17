@@ -836,7 +836,7 @@ const STAGE1_SYSTEMS = [
         apply: { filter: "blocked" },
         why: "Not carb heat — there is no carburetor — but the alternate air door gives the engine a bypass around the filter." },
       { t: "locate", q: "Click the induction air filter.", id: "engine.airFilter", why: "Low in the engine compartment, behind the cowl inlet." },
-      { t: "locate", q: "Click the exhaust muffler and its heat shroud.", id: "engine.muffler", why: "Cabin heat is air warmed around this shroud." },
+      { t: "locate", q: "Click the exhaust muffler and its heat shroud.", id: "environ.shroud", why: "Cabin heat is air warmed around this shroud." },
     ],
     qs: [
       { q: "The C172S engine is…", o: ["Lycoming IO-360, 180 hp, 4-cyl horizontally opposed, air-cooled, fuel-injected", "Continental O-300, 145 hp, carbureted", "Lycoming O-320, 160 hp, carbureted", "Lycoming IO-540, 300 hp, turbocharged"], why: "IO = injected, opposed; 360 cubic inches." },
