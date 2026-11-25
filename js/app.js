@@ -10,6 +10,8 @@
                     maneuver.js.
      STAGE 1      — the stage-check oral review (stagecheck.js), driven by
                     study.js on its own page; the cockpit layout is hidden.
+     CHECKRIDE    — private-pilot checkride oral (oralbank.js), driven by
+                    oral.js on its own page; a helper plays examiner.
 
    All three ask the same question the same way: each step shows only the
    CONDITIONS, the pilot clicks a control/instrument, and a value menu pops up
@@ -247,8 +249,8 @@
   })();
 
   /* ============================ mode switch ============================= */
-  const DRILLS = { pattern: Pattern, emergency: EmergencyDrill, maneuver: ManeuverDrill, study: StudyDrill };
-  const BUTTONS = { pattern: "modePattern", emergency: "modeEmergency", maneuver: "modeManeuver", study: "modeStudy" };
+  const DRILLS = { pattern: Pattern, emergency: EmergencyDrill, maneuver: ManeuverDrill, study: StudyDrill, oral: OralDrill };
+  const BUTTONS = { pattern: "modePattern", emergency: "modeEmergency", maneuver: "modeManeuver", study: "modeStudy", oral: "modeOral" };
   let current = "pattern";
 
   function setMode(next) {
@@ -259,6 +261,7 @@
     document.body.classList.toggle("emergency-mode", next === "emergency");
     document.body.classList.toggle("maneuver-mode", next === "maneuver");
     document.body.classList.toggle("study-mode", next === "study");
+    document.body.classList.toggle("oral-mode", next === "oral");
     DRILLS[next].activate();
   }
 
@@ -270,11 +273,13 @@
     EmergencyDrill.init();
     ManeuverDrill.init();
     StudyDrill.init();
+    OralDrill.init();
 
     $("modePattern").addEventListener("click", () => setMode("pattern"));
     $("modeEmergency").addEventListener("click", () => setMode("emergency"));
     $("modeManeuver").addEventListener("click", () => setMode("maneuver"));
     $("modeStudy").addEventListener("click", () => setMode("study"));
+    $("modeOral").addEventListener("click", () => setMode("oral"));
     $("startBtn").addEventListener("click", () => activeDrill().start());
     $("restartBtn").addEventListener("click", () => activeDrill().restart());
     $("hintBtn").addEventListener("click", () => activeDrill().showHint());
