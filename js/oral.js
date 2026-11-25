@@ -172,7 +172,7 @@ const OralDrill = (() => {
   function updateCard(q, res) {
     const ev = oralEval(q, res);
     const c = cards[q.id] || { n: 0, last: [], box: 0, due: 0, miss: {}, ever: false };
-    c.n++; c.last = c.last.concat(+ev.score.toFixed(3)).slice(-5);
+    c.n++; c.at = Date.now(); c.last = c.last.concat(+ev.score.toFixed(3)).slice(-5);
     const hit = new Set(res.hit);
     q.pts.filter((p) => p.must && !hit.has(p.k)).forEach((p) => { c.miss[p.k] = (c.miss[p.k] || 0) + 1; });
     if (ev.g === "sat") c.box = Math.min(c.box + 1, 4); else { c.box = 0; c.ever = true; }
@@ -203,12 +203,14 @@ const OralDrill = (() => {
       if (!best) break;
       quota[best]++; left--;
     }
-    // within an area: never asked, then due in the misses deck, then lowest last score
-    const key = new Map();
+    // within an area: never asked, then due in the misses deck, then the rest — longest since
+    // asked first, weaker answers a little sooner — so repeat sittings rotate through the bank
+    const key = new Map(), now = Date.now(), FORTNIGHT = 14 * 864e5;
     pool.forEach((q) => {
       const ls = lastScore(q.id), c = cards[q.id];
-      const cls = ls == null ? 0 : inDeck(c) && c.due <= Date.now() ? 1 : 2;
-      key.set(q, cls * 10 + (cls === 2 ? ls : 0) + Math.random() * 0.001);
+      const cls = ls == null ? 0 : inDeck(c) && c.due <= now ? 1 : 2;
+      const recent = cls === 2 && c.at ? Math.max(0, 1 - (now - c.at) / FORTNIGHT) : 0;
+      key.set(q, cls * 10 + (cls === 2 ? recent * 2 + ls : 0) + Math.random() * 0.3);
     });
     const picked = new Set();
     ids.forEach((a) => groups[a].slice().sort((x, y) => key.get(x) - key.get(y)).slice(0, quota[a]).forEach((q) => picked.add(q)));
@@ -267,7 +269,7 @@ const OralDrill = (() => {
       ses.results[q.id] = rec;
       const cap = ses.opts.followups === "none" ? 0 : ses.opts.followups === "some" ? 2 : Infinity;
       const list = oralEligible(q, { g: rec.ov || rec.g, hit: new Set(rec.hit) })
-        .map((f, k) => ({ f, k })).sort((a, b) => oralRank(a.f) - oralRank(b.f) || a.k - b.k)
+        .map((f) => ({ f, r: Math.random() })).sort((a, b) => oralRank(a.f) - oralRank(b.f) || a.r - b.r)
         .slice(0, cap).map((x) => x.f.id);
       cu.fuQueue = list; cu.fuIdx = -1;
       if (list.length) advanceFu(); else finishQ(true);
