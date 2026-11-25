@@ -189,20 +189,6 @@ const OralDrill = (() => {
   function buildDeck(opts) {
     const pool = ORAL_QUESTIONS.filter((q) => opts.areas.includes(q.area) && q.lvl <= opts.depth && scopeOk(q, opts.scope));
     if (opts.length === "all" || opts.length >= pool.length) return orderDeck(pool, opts);
-    // quota per area, proportional to its pool, at least one each while slots remain
-    const groups = {}; pool.forEach((q) => (groups[q.area] = groups[q.area] || []).push(q));
-    const ids = shuffle(Object.keys(groups)), quota = {}; let left = opts.length;
-    ids.forEach((a) => { quota[a] = 0; });
-    ids.forEach((a) => { if (left > 0) { quota[a] = 1; left--; } });
-    while (left > 0) {
-      let best = null, gap = -1;
-      ids.forEach((a) => {
-        const g = opts.length * groups[a].length / pool.length - quota[a];
-        if (quota[a] < groups[a].length && g > gap) { gap = g; best = a; }
-      });
-      if (!best) break;
-      quota[best]++; left--;
-    }
     // within an area: never asked, then due in the misses deck, then the rest — longest since
     // asked first, weaker answers a little sooner — so repeat sittings rotate through the bank
     const key = new Map(), now = Date.now(), FORTNIGHT = 14 * 864e5;
@@ -212,6 +198,27 @@ const OralDrill = (() => {
       const recent = cls === 2 && c.at ? Math.max(0, 1 - (now - c.at) / FORTNIGHT) : 0;
       key.set(q, cls * 10 + (cls === 2 ? recent * 2 + ls : 0) + Math.random() * 0.3);
     });
+    // quota per area: spread over the areas that still have unasked questions, in proportion
+    // to how many each has left; only once those run out do areas give back old questions
+    const groups = {}; pool.forEach((q) => (groups[q.area] = groups[q.area] || []).push(q));
+    const ids = shuffle(Object.keys(groups)), quota = {}; let left = opts.length;
+    const fresh = {}; ids.forEach((a) => { quota[a] = 0; fresh[a] = groups[a].filter((q) => key.get(q) < 10).length; });
+    const fill = (cap, weight) => {
+      const tot = ids.reduce((t, a) => t + weight(a), 0);
+      if (!tot) return;
+      ids.forEach((a) => { if (left > 0 && weight(a) && quota[a] < cap(a)) { quota[a]++; left--; } });  // one each first
+      while (left > 0) {
+        let best = null, gap = -Infinity;
+        ids.forEach((a) => {
+          const g = opts.length * weight(a) / tot - quota[a];
+          if (weight(a) && quota[a] < cap(a) && g > gap) { gap = g; best = a; }
+        });
+        if (!best) break;
+        quota[best]++; left--;
+      }
+    };
+    fill((a) => fresh[a], (a) => fresh[a]);
+    fill((a) => groups[a].length, (a) => groups[a].length);
     const picked = new Set();
     ids.forEach((a) => groups[a].slice().sort((x, y) => key.get(x) - key.get(y)).slice(0, quota[a]).forEach((q) => picked.add(q)));
     // keep core questions in every session: swap the weakest-priority lvl 2/3 pick for an unpicked lvl 1
@@ -219,7 +226,9 @@ const OralDrill = (() => {
     const swaps = [...picked].filter((q) => q.lvl > 1).sort((x, y) => key.get(y) - key.get(x));
     for (const out of swaps) {
       if (core() >= 0.6 * picked.size) break;
-      const inn = groups[out.area].filter((q) => q.lvl === 1 && !picked.has(q)).sort((x, y) => key.get(x) - key.get(y))[0];
+      // only swap in a core question that's at least as fresh, so the swap never brings back repeats
+      const cls = (q) => Math.floor(key.get(q) / 10);
+      const inn = groups[out.area].filter((q) => q.lvl === 1 && !picked.has(q) && cls(q) <= cls(out)).sort((x, y) => key.get(x) - key.get(y))[0];
       if (inn) { picked.delete(out); picked.add(inn); }
     }
     return orderDeck([...picked], opts);

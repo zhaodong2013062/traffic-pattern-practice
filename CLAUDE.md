@@ -211,6 +211,9 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
   the ticks (`when`), ranked miss → unsat → sat → always, capped by the
   follow-ups setting; the helper only chooses Ask it / Skip.
 - Solo mode hides the checklist until "I've answered". No timer, no typing.
+- **Every sitting should feel new**: `buildDeck` serves never-asked questions
+  first (area quotas follow what's left unasked), then due misses, then the
+  longest-since-asked; follow-up ties are random. Don't regress this.
 - **Scope**: "Full checkride" or "Stage 1". Stage 1 is the id list `ORAL_STAGE1`
   in `oralbank.js`, which mirrors `STAGE1_SECTIONS`; it filters the pool, the
   area cards, readiness and the misses deck. Add a question's id there if it
