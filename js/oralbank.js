@@ -9,6 +9,8 @@
 
    ORAL_AREAS       the areas, in the order the examiner usually works:
      { id, name, acs, sub, color }
+   ORAL_STAGE1      ids of the questions that fall inside the Stage 1 check (the
+                    STAGE1_TOPICS in stagecheck.js) — the "Stage 1" scope filter
    ORAL_QUESTIONS   the bank:
      { id, area, lvl, kind, ask, show?, gloss, say?, pts, need?, no?, answer, ref, fu? }
        id     unique, stable — history and the misses deck key on it; don't rename casually
@@ -2062,6 +2064,36 @@ const ORAL_QUESTIONS = (() => {
         answer: "Beyond its touchdown point, having stayed at or above its approach path — vortices end once the aircraft has landed." },
     ] },
 
+  { id: "apt-stabilized", area: "apt", lvl: 1, kind: "explain",
+    ask: "What is a stabilized approach? What has to be true on final, and what do you do if it isn't?",
+    gloss: "On the last part of the approach the airplane should be lined up, set up for landing and steady. If it isn't by a set point, the pilot abandons the landing and climbs away — a 'go-around'.",
+    say: [["CCLAPS", "see-see-laps"]],
+    pts: [
+      M("c1", "Checklist complete", ["before-landing checklist done"]),
+      M("c2", "Centerline — lined up with the runway", ["aligned with the runway", "lined up"]),
+      M("l", "Landing configuration — flaps set", ["flaps set", "configured"]),
+      M("a", "Airspeed on target (the school's tolerance: +5 / −0 knots)", ["on speed", "plus five minus zero"]),
+      M("p", "Power set", ["power set"]),
+      M("s", "Sink rate not excessive", ["descent rate", "not sinking too fast"]),
+      M("ga", "If any of it isn't true by the stabilized gate — go around", ["go around", "go-around"]),
+      N("energy", "Corrections are energy: pitch trades altitude for airspeed, power adds or removes energy", ["pitch for airspeed", "power for altitude"]),
+    ],
+    need: 6,
+    no: ["Says you can fix it in the flare / keep going and salvage it"],
+    answer: "A stabilized approach is one where, by the stabilized gate, everything is set and steady — the school's CCLAPS: Checklist complete, Centerline aligned, Landing configuration (flaps set), Airspeed on target (+5/−0), Power set, Sink rate not excessive. If any item isn't true by the gate, go around. Corrections are about energy: pitch trades altitude and airspeed, power adds or removes energy.",
+    ref: "AFH ch. 9; school CCLAPS (see Stage 1 → Stabilized approach)",
+    fu: [
+      { when: "always", ask: "You're on final, too high and too fast. How do you fix it?",
+        gloss: "Too high and too fast means too much energy. The pilot has to get rid of some — or give up and go around.",
+        pts: [
+          M("pwr", "Reduce power (to idle if needed)", ["power back", "pull power", "idle"]),
+          M("drag", "Add drag — flaps if below the flap speed limit, or a slip", ["more flaps", "slip"]),
+          M("ga", "Go around if it won't stabilize in time", ["go around"]),
+        ],
+        no: ["Pushes the nose down to get back on the glidepath"],
+        answer: "Too much energy on both counts. Reduce power (to idle if needed), pitch to bleed off the speed, add flaps if within the flap speed range or slip — and go around if it won't be stabilized by the gate." },
+    ] },
+
   { id: "apt-lahso", area: "apt", lvl: 3, kind: "scenario",
     ask: "Tower says: 'Cleared to land runway 27, hold short of runway 18.' What is this called, do you have to accept it, and what do you need to know before you do?",
     gloss: "A clearance to land and stop before a crossing runway so both can be used at once. The pilot is free to say no.",
@@ -2601,3 +2633,17 @@ const ORAL_QUESTIONS = (() => {
   bank.forEach((q) => (q.fu || []).forEach((f, k) => { f.id = q.id + "/" + (k + 1); }));
   return bank;
 })();
+
+// Stage 1 scope — mirrors STAGE1_SECTIONS: PAVE (pilot, inspections, documents, inop,
+// preventive maintenance, environment, external pressures), systems, ADM, aerodynamics,
+// stabilized approach, lost comms & airports
+const ORAL_STAGE1 = [
+  "cert-carry", "cert-medical", "hf-imsafe",
+  "airw-inspections", "airw-100hr-overfly", "airw-responsible", "airw-ads", "airw-ferry", "airw-elt",
+  "airw-arrow", "airw-inop", "airw-day-equipment", "airw-prevmaint",
+  "xc-preflight-action", "hf-adm", "hf-attitudes",
+  "sys-engine", "sys-fuel", "sys-electrical", "sys-pitot-static", "sys-g1000", "sys-ignition",
+  "sys-flaps", "sys-gear-brakes", "sys-oil", "sys-stall-warning", "sys-mixture",
+  "aero-four-forces", "aero-stall", "aero-spin", "aero-left-turning",
+  "apt-stabilized", "apt-lost-comms", "apt-light-ground", "apt-untowered", "apt-signs", "apt-runway-numbers",
+];

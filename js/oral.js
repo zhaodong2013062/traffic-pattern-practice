@@ -70,7 +70,7 @@ function oralEval(q, res) {
 const OralDrill = (() => {
   const $ = (id) => document.getElementById(id);
   const K_PREFS = "c172-oral-prefs", K_CARDS = "c172-oral-cards", K_HIST = "c172-oral-history", K_SES = "c172-oral-session";
-  const DEFAULTS = { solo: false, areas: null, length: 15, depth: 2, order: "examiner", followups: "some", briefed: false, glossOpen: true };
+  const DEFAULTS = { scope: "full", solo: false, areas: null, length: 15, depth: 2, order: "examiner", followups: "some", briefed: false, glossOpen: true };
   let root = null;
 
   function load(key, dflt) {
@@ -102,6 +102,9 @@ const OralDrill = (() => {
     });
   });
   const qOf = (id) => byId[id] && byId[id].q;
+  const S1 = new Set(typeof ORAL_STAGE1 !== "undefined" ? ORAL_STAGE1 : []);
+  const scopeOk = (q, scope) => scope !== "stage1" || S1.has(q.id);
+  const inScope = (q) => scopeOk(q, prefs.scope);
   const shortAsk = (q) => { const s = q.ask.replace(/\s+/g, " "); return s.length > 64 ? s.slice(0, 62).replace(/\s\S*$/, "") + "…" : s; };
 
   /* ------------------------------- state -------------------------------- */
@@ -147,16 +150,16 @@ const OralDrill = (() => {
   /* ------------------------------ cards / misses ------------------------ */
   const inDeck = (c) => c && c.ever && c.box < 4;
   const dueCards = () => Object.keys(cards)
-    .filter((id) => qOf(id) && inDeck(cards[id]) && cards[id].due <= Date.now())
+    .filter((id) => qOf(id) && inScope(qOf(id)) && inDeck(cards[id]) && cards[id].due <= Date.now())
     .sort((a, b) => cards[a].due - cards[b].due);
   const lastScore = (id) => { const c = cards[id]; return c && c.n > 0 && c.last.length ? c.last[c.last.length - 1] : null; };
 
   function readiness() {
-    const xs = ORAL_QUESTIONS.map((q) => lastScore(q.id)).filter((x) => x != null);
+    const xs = ORAL_QUESTIONS.filter(inScope).map((q) => lastScore(q.id)).filter((x) => x != null);
     return xs.length ? { pct: Math.round(mean(xs) * 100), asked: xs.length } : { pct: null, asked: 0 };
   }
   function areaStats(id) {
-    const qs = ORAL_QUESTIONS.filter((q) => q.area === id);
+    const qs = ORAL_QUESTIONS.filter((q) => q.area === id && inScope(q));
     const xs = qs.map((q) => lastScore(q.id)).filter((x) => x != null);
     return { total: qs.length, asked: xs.length, pct: xs.length ? Math.round(mean(xs) * 100) : null,
       misses: qs.filter((q) => inDeck(cards[q.id])).length };
@@ -184,7 +187,7 @@ const OralDrill = (() => {
     return shuffle(pool).sort((a, b) => AREA[a.area].idx - AREA[b.area].idx).map((q) => q.id);
   }
   function buildDeck(opts) {
-    const pool = ORAL_QUESTIONS.filter((q) => opts.areas.includes(q.area) && q.lvl <= opts.depth);
+    const pool = ORAL_QUESTIONS.filter((q) => opts.areas.includes(q.area) && q.lvl <= opts.depth && scopeOk(q, opts.scope));
     if (opts.length === "all" || opts.length >= pool.length) return orderDeck(pool, opts);
     // quota per area, proportional to its pool, at least one each while slots remain
     const groups = {}; pool.forEach((q) => (groups[q.area] = groups[q.area] || []).push(q));
@@ -219,8 +222,8 @@ const OralDrill = (() => {
     }
     return orderDeck([...picked], opts);
   }
-  const curOpts = () => ({ areas: prefs.areas.slice(), length: prefs.length, depth: prefs.depth, order: prefs.order, followups: prefs.followups });
-  const poolSize = () => ORAL_QUESTIONS.filter((q) => prefs.areas.includes(q.area) && q.lvl <= prefs.depth).length;
+  const curOpts = () => ({ scope: prefs.scope, areas: prefs.areas.slice(), length: prefs.length, depth: prefs.depth, order: prefs.order, followups: prefs.followups });
+  const poolSize = () => ORAL_QUESTIONS.filter((q) => prefs.areas.includes(q.area) && q.lvl <= prefs.depth && inScope(q)).length;
 
   /* ------------------------------ session flow -------------------------- */
   function begin(deck, optsOver) {
@@ -407,6 +410,7 @@ const OralDrill = (() => {
       </div>` : "";
     const cards4 = ORAL_AREAS.map((a) => {
       const st = areaStats(a.id), on = prefs.areas.includes(a.id);
+      if (!st.total) return "";              // nothing from this area in the Stage 1 scope
       return `<div class="cr-area${on ? "" : " off"}" style="--cr-area:${esc(a.color)}">
         <label class="cr-row"><b style="flex:1 1 auto">${esc(a.name)}</b><span class="cr-muted">${esc(a.acs)}</span>
           <input type="checkbox" data-chg="area" data-id="${a.id}" ${on ? "checked" : ""} aria-label="Include ${esc(a.name)}"></label>
@@ -419,8 +423,8 @@ const OralDrill = (() => {
     show(`<section class="cr-home">
       <div class="cr-hero">
         ${ring(r.pct, r.pct == null ? "—" : r.pct + "%")}
-        <div><h2>Checkride Oral</h2>
-        <p>${r.pct == null ? "Nothing asked yet" : r.pct + " % ready"} · ${r.asked} of ${ORAL_QUESTIONS.length} asked<br>One of you is the examiner. No flying knowledge needed.</p>
+        <div><h2>Checkride Oral${prefs.scope === "stage1" ? " · Stage 1" : ""}</h2>
+        <p>${r.pct == null ? "Nothing asked yet" : r.pct + " % ready"} · ${r.asked} of ${ORAL_QUESTIONS.filter(inScope).length} asked<br>One of you is the examiner. No flying knowledge needed.</p>
         <div class="cr-hero-actions">
           <button class="btn primary" data-act="start" ${n ? "" : "disabled"}>${n ? "Start session" : "Pick at least one area"}</button>
           <button class="btn" data-act="review" ${due ? "" : "disabled"}>Review misses (${due})</button>
@@ -429,6 +433,8 @@ const OralDrill = (() => {
       </div>
       ${resume}
       <div class="cr-setup">
+        <div class="cr-row"><span class="cr-label">Scope</span>
+          ${chip("opt", "scope", "full", "Full checkride", prefs.scope !== "stage1")}${chip("opt", "scope", "stage1", "Stage 1", prefs.scope === "stage1")}</div>
         <div class="cr-row"><span class="cr-label">Who's holding the app?</span>
           ${chip("opt", "solo", "helper", "A helper", !prefs.solo)}${chip("opt", "solo", "solo", "Just me", prefs.solo)}</div>
         <div class="cr-row"><span class="cr-label">Length</span>
