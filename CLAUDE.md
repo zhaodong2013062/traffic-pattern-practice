@@ -3,8 +3,8 @@
 Guidance for working in this repository.
 
 ## What this is
-A **static, no-build** web app with three Cessna 172 drills and a stage-check
-review, switched from the top bar:
+A **static, no-build** web app with three Cessna 172 drills, a stage-check
+review and a checkride oral, switched from the top bar:
 - **Pattern** — the airport traffic pattern (takeoff → touchdown, plus a
   go-around branch).
 - **Emergencies** — the emergency-procedures checklists, one random scenario
@@ -13,6 +13,9 @@ review, switched from the top bar:
   steep turns, ground reference, emergency descent), one at a time.
 - **Stage 1 Check** — the stage-check oral: PAVE, inspections, documents, inop
   flow, systems, ADM, aerodynamics, stabilized approach, lost comms / airports.
+- **Checkride Oral** — private-pilot checkride oral practice where a helper who
+  is not a pilot plays examiner: reads the question, ticks what they hear, and
+  the app grades, picks follow-ups and debriefs.
 
 Pure HTML/CSS/vanilla JS — no framework, no bundler, no package.json. It opens
 directly in a browser and is hosted on GitHub Pages.
@@ -33,18 +36,20 @@ js/sysdiag-b.js   lab simulators: pitot, engine, prop, controls, gear, environ
 js/sysdiag-air.js 2D three-view airplane locator (3D fallback) + SysDiagrams.hotspots table
 js/systems3d.js   window.Systems3D — procedural 3D C172 + exploded IO-360 (three.js, lazy-loaded)
 js/stagecheck.js  SOURCE OF TRUTH (Stage 1) — STAGE1_SECTIONS, STAGE1_TOPICS, STAGE1_SYSTEMS
+js/oralbank.js    SOURCE OF TRUTH (checkride oral) — ORAL_AREAS, ORAL_QUESTIONS (data only)
 js/cockpit.js     SVG C172 panel; window.Cockpit API (render(el, mode)/setValues/highlight/flash/…)
 js/minimap.js     top-down pattern; window.Minimap API (render/moveTo/setLegActive/…)
 js/ui.js          shared chrome — value popover, feedback line, phase banner
 js/emergency.js   emergency drill controller (deck, picker, checklist card, debrief)
 js/maneuver.js    maneuver drill controller (menu, setup card, standards card, debrief)
 js/study.js       Stage 1 controller (home, learn/drill pages, activity runners, widgets, mock oral)
+js/oral.js        checkride oral controller (grading, follow-ups, deck, screens, history)
 js/app.js         mode switch + the pattern drill
 ```
 Load order in index.html matters:
 sequence → emergencies → maneuvers → diagrams → sysdiag-core → sysdiag-a →
-sysdiag-b → sysdiag-air → systems3d → stagecheck → cockpit → minimap → ui →
-emergency → maneuver → study → app. (stagecheck builds some sign SVGs at load
+sysdiag-b → sysdiag-air → systems3d → stagecheck → oralbank → cockpit → minimap →
+ui → emergency → maneuver → study → oral → app. (stagecheck builds some sign SVGs at load
 time, so diagrams must come first; sysdiag-air defines the hotspot table that
 systems3d reads.)
 
@@ -191,6 +196,35 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
 - Diagrams are illustrative. Mind handedness: the prop turns clockwise from
   the cockpit; in a top view with the nose left, the pilot's left is DOWN.
 
+## Checkride Oral mode
+- **The helper never needs aviation knowledge.** Every judgment is a tick box
+  written to be matched by ear (`pts[].t`, with `hear` alternatives); the app,
+  not the helper, turns ticks into a grade.
+- The Ask screen is the answer key and says so ("Keep this screen to yourself");
+  a separate **student view** overlay shows only a `show` card. The model answer
+  and reference are **not in the DOM** until Grade. After the reveal ticks stay
+  editable (grade recomputes, override clears) and a three-way override exists.
+- **Grading rule** (pure functions at the top of `js/oral.js`): musts hit vs
+  `need` → `sat`; at least half of `need` → `part`; else `unsat`; a ticked red
+  flag (`no[]`) caps `sat` at `part`. A passed `miss:*`/`unsat` follow-up lifts
+  its parent one step ("with a prompt"). Follow-ups are chosen by the app from
+  the ticks (`when`), ranked miss → unsat → sat → always, capped by the
+  follow-ups setting; the helper only chooses Ask it / Skip.
+- Solo mode hides the checklist until "I've answered". No timer, no typing.
+- **Every sitting should feel new**: `buildDeck` serves never-asked questions
+  first (area quotas follow what's left unasked), then due misses, then the
+  longest-since-asked; follow-up ties are random. Don't regress this.
+- **Scope**: "Full checkride" or "Stage 1". Stage 1 is the id list `ORAL_STAGE1`
+  in `oralbank.js`, which mirrors `STAGE1_SECTIONS`; it filters the pool, the
+  area cards, readiness and the misses deck. Add a question's id there if it
+  belongs to a Stage 1 topic.
+- Schema, scoring and spaced misses deck: see `js/oralbank.js` header; storage
+  keys `c172-oral-{prefs,cards,history,session}` (all optional, try/catch).
+  Keyed by question id, so never rename ids. Class prefix `cr-`.
+- Keys: 1–9/0 points, Shift+digit red flags, Enter/→ next, ← back, S skip
+  follow-up, D "I don't know", G gloss, V student view, Esc.
+- Practice aid only; the bank's numbers must agree with the other modes' data.
+
 ## Aviation accuracy
 Pattern numbers/procedures come from a CFI whiteboard, corroborated against the
 FAA Airplane Flying Handbook (Ch. 8) and AIM §4-3-3. Emergency checklists come
@@ -217,7 +251,9 @@ at `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`). Serve the folder over
 http and click through both the full landing and the go-around branch, an
 emergency session (every scenario, the closed-book behaviour, and a mode
 round-trip back to pattern), every maneuver (plus one `why` deduction), and in Stage 1 every topic's Learn
-page and Drill plus the mock oral, checking for console errors. For the
+page and Drill plus the mock oral, and in Checkride Oral a helper session
+(tick must-haves → Satisfactory, tick nothing → Needs work, a follow-up, the
+debrief, reload → Resume, a solo session, a 390px-wide pass), checking for console errors. For the
 Systems lab also complete every lab scenario, a drill with every task type, the
 must-know recall, and the 3D views (launch Chromium with
 `--use-gl=swiftshader --enable-unsafe-swiftshader`) plus the 2D fallback with
