@@ -44,11 +44,13 @@ js/emergency.js   emergency drill controller (deck, picker, checklist card, debr
 js/maneuver.js    maneuver drill controller (menu, setup card, standards card, debrief)
 js/study.js       Stage 1 controller (home, learn/drill pages, activity runners, widgets, mock oral)
 js/oral.js        checkride oral controller (grading, follow-ups, deck, screens, history)
+js/refs.js        Refs.parse/html — ref strings → bookmark chips; js/reftitles.js is generated
+tools/refs-check.js  validates every ref against tools/ref-index.json (FAA titles); --write
 js/app.js         mode switch + the pattern drill
 ```
 Load order in index.html matters:
 sequence → emergencies → maneuvers → diagrams → sysdiag-core → sysdiag-a →
-sysdiag-b → sysdiag-air → systems3d → stagecheck → oralbank → cockpit → minimap →
+sysdiag-b → sysdiag-air → systems3d → stagecheck → oralbank → reftitles → refs → cockpit → minimap →
 ui → emergency → maneuver → study → oral → app. (stagecheck builds some sign SVGs at load
 time, so diagrams must come first; sysdiag-air defines the hotspot table that
 systems3d reads.)
@@ -236,6 +238,19 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
 - Keys: 1–9/0 points, Shift+digit red flags, Enter/→ next, ← back, S skip
   follow-up, D "I don't know", G gloss, V student view, Esc.
 - Practice aid only; the bank's numbers must agree with the other modes' data.
+
+## Bookmarks (refs)
+- Every oral question/follow-up and every Stage 1 item (quiz, recall, activity,
+  Learn block, system) has a `ref` — where in the FAR/AIM, PHAK or AFH to read.
+  Format: `14 CFR 91.155(c), 91.151; AIM 3-2-5; PHAK ch. 15; AFH ch. 18` (";"
+  separates sources; non-FAA sources such as `C172S POH section 3` stay text).
+  `js/refs.js` renders them as linked chips (eCFR, AIM html, PHAK 8083-25C pdf
+  page, AFH 8083-3C chapter pdf). The oral shows them only after Grade.
+- `node tools/refs-check.js` validates every ref against `tools/ref-index.json`
+  (titles from the eCFR structure API and the AIM contents) and lists items
+  missing one; `--write` regenerates `js/reftitles.js`. Run it after any edit.
+  AFH chapter numbers are the C edition's (emergencies ch. 18, stalls/spins
+  ch. 5) — older B-edition numbers are wrong.
 
 ## Aviation accuracy
 Pattern numbers/procedures come from a CFI whiteboard, corroborated against the

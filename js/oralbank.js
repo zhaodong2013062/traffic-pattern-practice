@@ -93,13 +93,13 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the logbook must be carried on every flight (it does not, once certificated)"],
     answer: "Pilot certificate, a current medical certificate (or BasicMed qualification), and a government-issued photo ID — in your possession or readily accessible in the airplane.",
-    ref: "14 CFR 61.3",
+    ref: "14 CFR 61.3(a), (c)",
     fu: [
       { when: "always", ask: "Today you'll walk out with a temporary certificate. How long is it good for?",
         gloss: "The paper certificate handed over on checkride day is a stand-in until the plastic card arrives.",
         pts: [M("d", "120 days", ["a hundred and twenty days", "about four months"])],
-        answer: "A temporary certificate is valid for up to 120 days. The permanent certificate itself has no expiry date.", ref: "14 CFR 61.17, 61.19" },
-      { when: "miss:id", ask: "If an FAA inspector or a police officer asks to see your pilot certificate, what else will they ask for, to confirm it is really you?",
+        answer: "A temporary certificate is valid for up to 120 days. The permanent certificate itself has no expiry date.", ref: "14 CFR 61.17" },
+      { when: "miss:id", ref: "14 CFR 61.3(a)(2), (l)", ask: "If an FAA inspector or a police officer asks to see your pilot certificate, what else will they ask for, to confirm it is really you?",
         pts: [
           M("id", "A government-issued photo ID", ["driver's licence", "passport"]),
         ],
@@ -155,8 +155,8 @@ const ORAL_QUESTIONS = (() => {
           M("solo", "Fly three takeoffs and landings alone (or with an instructor) first", ["go do three landings solo", "get current by myself"]),
           M("fullstop", "For the night flight they must be full-stop landings at night", ["three full stops at night"]),
         ],
-        answer: "No. With no landings in the last 90 days you may not carry passengers. You can regain currency solo: three takeoffs and landings — and because the flight ends more than an hour after sunset, three to a full stop in that night period.", ref: "14 CFR 61.57" },
-      { when: "miss:night", ask: "Does anything change if the passengers will be flying with you after dark?",
+        answer: "No. With no landings in the last 90 days you may not carry passengers. You can regain currency solo: three takeoffs and landings — and because the flight ends more than an hour after sunset, three to a full stop in that night period.", ref: "14 CFR 61.57(a), (b)" },
+      { when: "miss:night", ref: "14 CFR 61.57(b)", ask: "Does anything change if the passengers will be flying with you after dark?",
         pts: [
           M("fs", "The three takeoffs and landings must be at night and to a full stop", ["full stop", "at night"]),
           N("hr", "In the period from 1 hour after sunset to 1 hour before sunrise", ["an hour after sunset"]),
@@ -196,7 +196,7 @@ const ORAL_QUESTIONS = (() => {
       N("eom", "It expires at the end of the month", ["end of the calendar month"]),
     ],
     answer: "At least a third-class medical. If you were under 40 on the date of the exam it is valid for 60 calendar months; if 40 or older, 24 calendar months — in both cases to the end of the month. BasicMed is an alternative for pilots who have held a medical after 14 July 2006.",
-    ref: "14 CFR 61.23",
+    ref: "14 CFR 61.23(a), (d)",
     fu: [
       { when: "sat", ask: "Tell me about BasicMed. What does a pilot need to use it?",
         gloss: "BasicMed lets a pilot fly on a visit to an ordinary doctor plus an online course instead of an FAA medical, with some limits.",
@@ -208,8 +208,8 @@ const ORAL_QUESTIONS = (() => {
           M("exam", "A physical exam by a state-licensed physician every 48 months, using the FAA checklist", ["doctor's exam every four years"]),
           N("lim", "Limits: below 18,000 feet, no faster than 250 knots, not for compensation or hire", ["under 18,000", "250 knots"]),
         ],
-        answer: "A US driver's licence; having held a medical after 14 July 2006 (not since revoked or denied); a medical education course every 24 calendar months; and a physical with a state-licensed physician every 48 months using the FAA checklist. Limits include flying below 18,000 ft MSL, at 250 knots or less, not for compensation or hire, in an aircraft within the BasicMed size limits (raised in 2024 to 12,500 lb and up to 6 passengers).", ref: "14 CFR 61.23(c)(3), 61.113(i), Part 68" },
-      { when: "miss:o40", ask: "Does the length of a medical change with the pilot's age?",
+        answer: "A US driver's licence; having held a medical after 14 July 2006 (not since revoked or denied); a medical education course every 24 calendar months; and a physical with a state-licensed physician every 48 months using the FAA checklist. Limits include flying below 18,000 ft MSL, at 250 knots or less, not for compensation or hire, in an aircraft within the BasicMed size limits (raised in 2024 to 12,500 lb and up to 6 passengers).", ref: "14 CFR 61.113(i), 61.23(c)(3), 68.3, 68.5" },
+      { when: "miss:o40", ref: "14 CFR 61.23(d)", ask: "Does the length of a medical change with the pilot's age?",
         pts: [
           M("a", "Yes — 40 or older at the exam, it lasts 24 calendar months instead of 60", ["two years if you're forty or over"]),
         ],
@@ -239,7 +239,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says high-performance is 200 horsepower or more (it is MORE than 200)"],
     answer: "No. A high-performance airplane has an engine of more than 200 horsepower; acting as PIC requires ground and flight training and a one-time logbook endorsement. A complex airplane has retractable gear, flaps and a controllable-pitch propeller and needs its own endorsement. Tailwheel and high-altitude (pressurised) airplanes have endorsements too. The 180-hp C172S is neither.",
-    ref: "14 CFR 61.31(e), (f)" },
+    ref: "14 CFR 61.31(f), (e)" },
 
   { id: "cert-logging", area: "cert", lvl: 2, kind: "recall",
     ask: "Do you have to log every flight you make from now on?",
@@ -272,7 +272,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says air traffic control or the instructor has final authority"],
     answer: "The pilot in command is directly responsible for, and is the final authority as to, the operation of the aircraft. In an in-flight emergency requiring immediate action the PIC may deviate from any rule in Part 91 to the extent required to meet that emergency, and sends a written report only if the Administrator requests one.",
-    ref: "14 CFR 91.3" },
+    ref: "14 CFR 91.3(a), (b)" },
 
   /* ========================== AIRWORTHINESS (PA.I.B) ======================== */
   { id: "airw-arrow", area: "airw", lvl: 1, kind: "recall",
@@ -288,7 +288,7 @@ const ORAL_QUESTIONS = (() => {
       M("radio", "R — Radio station licence, only needed for international flights", ["radio license, only outside the US"]),
     ],
     answer: "ARROW: Airworthiness certificate, Registration certificate, Radio station licence (international flights only — an FCC requirement), Operating limitations (the POH/AFM, placards and markings) and Weight-and-balance data for that specific airplane.",
-    ref: "14 CFR 91.203, 91.9; PHAK ch. 9",
+    ref: "14 CFR 91.203(a), 91.9(a), 91.207; PHAK ch. 9",
     fu: [
       { when: "sat", ask: "Does the airworthiness certificate expire? What about the registration?",
         gloss: "One never expires as long as the airplane is looked after; the other has a fixed life.",
@@ -332,8 +332,8 @@ const ORAL_QUESTIONS = (() => {
           M("ia", "A mechanic (A&P) who holds an Inspection Authorization", ["A and P with an I A", "an IA"]),
           M("sub", "Yes — an annual can substitute for a 100-hour, but not the other way round", ["annual counts as a hundred hour"]),
         ],
-        answer: "An A&P mechanic with an Inspection Authorization (IA) signs off an annual; a 100-hour may be signed by an A&P. An annual may replace a 100-hour, but a 100-hour cannot replace an annual.", ref: "14 CFR 91.409, 65.95" },
-      { when: "miss:100", ask: "This is a flight-school airplane, rented out and used for instruction. Is there any inspection on top of the annual?",
+        answer: "An A&P mechanic with an Inspection Authorization (IA) signs off an annual; a 100-hour may be signed by an A&P. An annual may replace a 100-hour, but a 100-hour cannot replace an annual.", ref: "14 CFR 91.409(a), 65.95(a)" },
+      { when: "miss:100", ref: "14 CFR 91.409(b)", ask: "This is a flight-school airplane, rented out and used for instruction. Is there any inspection on top of the annual?",
         pts: [
           M("a", "The 100-hour inspection", ["hundred hour"]),
           N("b", "Every 100 hours of flight time (time in service)", ["every hundred hours of flying"]),
@@ -363,7 +363,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the mechanic is primarily responsible for airworthiness"],
     answer: "The owner or operator is primarily responsible for maintaining the aircraft in an airworthy condition, including AD compliance. The pilot in command is responsible for determining that it is in a condition for safe flight, and must discontinue the flight when unairworthy conditions occur.",
-    ref: "14 CFR 91.403(a), 91.7",
+    ref: "14 CFR 91.403(a), 91.7(a), (b)",
     fu: [
       { when: "sat", ask: "What does airworthy actually mean?",
         gloss: "A two-part legal definition.",
@@ -372,7 +372,7 @@ const ORAL_QUESTIONS = (() => {
           M("safe", "It is in a condition for safe operation", ["safe to fly"]),
         ],
         answer: "The aircraft conforms to its type design (type certificate, plus supplemental type certificates and applicable ADs) and is in a condition for safe operation.", ref: "14 CFR 3.5(a)" },
-      { when: "miss:pic", ask: "Before each flight, whose job is it to decide the airplane is safe to fly that day?",
+      { when: "miss:pic", ref: "14 CFR 91.7(b)", ask: "Before each flight, whose job is it to decide the airplane is safe to fly that day?",
         pts: [
           M("a", "The pilot in command", ["mine", "the pilot"]),
         ],
@@ -459,7 +459,7 @@ const ORAL_QUESTIONS = (() => {
       N("sb", "A manufacturer's service bulletin, by contrast, is advisory for a private operator", ["service bulletins aren't mandatory"]),
     ],
     answer: "An AD is a legally enforceable rule issued by the FAA under Part 39 to correct an unsafe condition in a product. Compliance is mandatory, may be one-time or recurring, and is recorded in the maintenance records. The owner/operator is responsible for compliance. Service bulletins are advisory under Part 91 unless an AD makes them mandatory.",
-    ref: "14 CFR Part 39, 91.403, 91.417" },
+    ref: "14 CFR 39.7, 91.403(a), 91.417(a)(2)(v)" },
 
   { id: "airw-ferry", area: "airw", lvl: 2, kind: "scenario",
     ask: "Scenario. You are at another airport and discover the annual inspection ran out last week. The airplane seems fine and the mechanic is at your home airport 40 miles away. What are your options?",
@@ -487,7 +487,7 @@ const ORAL_QUESTIONS = (() => {
       N("test", "Test only in the first 5 minutes after the hour", ["first five minutes of the hour"]),
     ],
     answer: "The emergency locator transmitter activates automatically on impact and transmits on 121.5 MHz (and 406 MHz on newer units). It is inspected every 12 calendar months; the battery must be replaced or recharged after 1 cumulative hour of use or when 50% of its useful life has expired. Tests are made only in the first 5 minutes after the hour, for no more than three sweeps.",
-    ref: "14 CFR 91.207; AIM 6-2-4" },
+    ref: "14 CFR 91.207(c), (d); AIM 6-2-4" },
 
   { id: "airw-prevmaint", area: "airw", lvl: 2, kind: "explain",
     ask: "As a private pilot, are you allowed to do any maintenance on an airplane yourself?",
@@ -500,7 +500,7 @@ const ORAL_QUESTIONS = (() => {
       N("ex", "Gives examples: adding oil, changing tyres, replacing bulbs, servicing spark plugs, replacing the battery", ["oil change", "tires", "light bulbs"]),
     ],
     answer: "Yes. The holder of a pilot certificate issued under Part 61 may perform preventive maintenance on an aircraft they own or operate that is not used under Part 121, 129 or 135. The permitted items are listed in Part 43 Appendix A, paragraph (c). The work is recorded with a description, the date, and the pilot's name, signature, certificate number and kind of certificate.",
-    ref: "14 CFR 43.3(g), 43.9, Part 43 App. A(c)" },
+    ref: "14 CFR 43.3(g), 43.9; 14 CFR Part 43 App. A(c)" },
 
   /* ============================== WEATHER (PA.I.C) ========================== */
   { id: "wx-briefing", area: "wx", lvl: 1, kind: "explain",
@@ -513,14 +513,14 @@ const ORAL_QUESTIONS = (() => {
       M("out", "Outlook briefing — when departure is six or more hours away", ["outlook", "more than six hours ahead"]),
     ],
     answer: "From Flight Service (1-800-WX-BRIEF or 1800wxbrief.com), aviationweather.gov, or an approved EFB source. A standard briefing is the complete briefing; an abbreviated briefing updates an earlier one or supplies specific items; an outlook briefing is for departures six or more hours away.",
-    ref: "AIM 7-1; 14 CFR 91.103",
+    ref: "AIM 7-1-5, 7-1-2; 14 CFR 91.103; PHAK ch. 13",
     fu: [
       { when: "sat", ask: "The briefer says: VFR flight not recommended. Are you legally prohibited from going?",
         pts: [
           M("no", "No — it is advisory; the decision is the pilot's", ["it's a recommendation", "my decision as PIC"]),
           N("heed", "But it deserves to be taken seriously", ["I'd probably not go"]),
         ],
-        answer: "No. VNR is advisory — the pilot in command makes the go/no-go decision — but it means conditions are, or are forecast to be, doubtful for VFR.", ref: "AIM 7-1" },
+        answer: "No. VNR is advisory — the pilot in command makes the go/no-go decision — but it means conditions are, or are forecast to be, doubtful for VFR.", ref: "AIM 7-1-5; 14 CFR 91.3(a)" },
     ] },
 
   { id: "wx-metar", area: "wx", lvl: 1, kind: "scenario",
@@ -541,7 +541,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Reads BKN008 as 8,000 feet", "Says the flight can depart VFR"],
     answer: "Airport KABC, 12th day at 1853Z; wind 270° at 15 knots gusting 25; visibility 3 statute miles in mist; ceiling broken at 800 ft, overcast at 1,500 ft; temperature 18 °C, dew point 17 °C; altimeter 29.92. A ceiling of 800 ft makes this IFR: you may not operate VFR beneath the ceiling in the surface area of controlled airspace when it is below 1,000 ft, and 800 ft leaves no room for pattern altitude or cloud clearance anywhere. No-go VFR.",
-    ref: "AIM 7-1; 14 CFR 91.155(c)",
+    ref: "AIM 7-1-28; 14 CFR 91.155(c), (d); PHAK ch. 13",
     fu: [
       { when: "always", ask: "What counts as a ceiling?",
         gloss: "Only the thicker cloud layers count; scattered or few clouds do not.",
@@ -550,8 +550,8 @@ const ORAL_QUESTIONS = (() => {
           N("vv", "…or the vertical visibility into an obscuration such as fog", ["vertical visibility"]),
         ],
         no: ["Says a scattered or few layer is a ceiling"],
-        answer: "The height above ground of the lowest layer of cloud reported as broken or overcast, or the vertical visibility into an obscuration.", ref: "14 CFR 1.1" },
-      { when: "unsat", ask: "Let's take one piece at a time. The group reads B-K-N-zero-zero-eight. What does that mean?",
+        answer: "The height above ground of the lowest layer of cloud reported as broken or overcast, or the vertical visibility into an obscuration.", ref: "14 CFR 1.1; AIM 7-1-14" },
+      { when: "unsat", ref: "AIM 7-1-28; 14 CFR 1.1", ask: "Let's take one piece at a time. The group reads B-K-N-zero-zero-eight. What does that mean?",
         gloss: "Cloud heights in a METAR are in hundreds of feet: 008 is 800.",
         pts: [
           M("a", "Broken clouds at 800 feet above the ground", ["broken at eight hundred"]),
@@ -573,7 +573,7 @@ const ORAL_QUESTIONS = (() => {
       M("lifr", "Low IFR: ceiling below 500 feet and/or visibility below 1 mile", ["under five hundred, under a mile"]),
     ],
     answer: "VFR: ceiling greater than 3,000 ft AGL and visibility greater than 5 SM. MVFR: ceiling 1,000–3,000 ft and/or visibility 3–5 SM. IFR: ceiling 500 to below 1,000 ft and/or visibility 1 to less than 3 SM. LIFR: ceiling below 500 ft and/or visibility below 1 SM.",
-    ref: "AIM 7-1; Aviation Weather Handbook" },
+    ref: "AIM 7-1-7" },
 
   { id: "wx-taf", area: "wx", lvl: 1, kind: "explain",
     ask: "What is a TAF, how big an area does it cover, and how long is it valid?",
@@ -587,15 +587,15 @@ const ORAL_QUESTIONS = (() => {
       N("grp", "Explains a change group: FM = from that time, TEMPO = temporary, lasting under an hour, PROB30 = 30% chance, BECMG = gradual change", ["from", "tempo", "prob thirty", "becoming"]),
     ],
     answer: "A Terminal Aerodrome Forecast: the expected weather within 5 statute miles of the airport, issued four times a day (00, 06, 12, 18Z) and valid for 24 hours, or 30 at some major airports. Change groups: FM (rapid change from that time), BECMG (gradual change), TEMPO (temporary fluctuations lasting less than an hour) and PROB30/40 (probability).",
-    ref: "AIM 7-1; Aviation Weather Handbook",
+    ref: "AIM 7-1-28; PHAK ch. 13; Aviation Weather Handbook (TAF)",
     fu: [
       { when: "always", ask: "Your destination is a small airport with no TAF. How do you find out what the weather will be when you get there?",
         pts: [
           M("near", "Use the TAF of the nearest airport that has one", ["nearby TAF"]),
           M("gfa", "Use area-wide forecast products: the Graphical Forecasts for Aviation, MOS or similar", ["GFA", "graphical forecast", "area forecast", "MOS"]),
         ],
-        answer: "Use nearby TAFs together with area products — the Graphical Forecasts for Aviation (GFA), G-AIRMETs, prog charts and model guidance such as MOS — to build a picture for the time of arrival.", ref: "AIM 7-1" },
-      { when: "miss:area", ask: "How far from the airport does a TAF apply?",
+        answer: "Use nearby TAFs together with area products — the Graphical Forecasts for Aviation (GFA), G-AIRMETs, prog charts and model guidance such as MOS — to build a picture for the time of arrival.", ref: "AIM 7-1-4; PHAK ch. 13" },
+      { when: "miss:area", ref: "AIM 7-1-28", ask: "How far from the airport does a TAF apply?",
         pts: [
           M("a", "Within 5 statute miles of the airport", ["five miles"]),
         ],
@@ -617,7 +617,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says go because 12 knots is under the airplane's 15-knot figure, ignoring the personal limit and the gusts"],
     answer: "Wind 180° at 12 gusting 22 knots on runway 09/27 is a direct crosswind. 12 knots already exceeds the stated 10-knot personal limit and the 22-knot gusts exceed the C172S's 15-knot maximum demonstrated crosswind. No-go as planned: choose a destination with a runway aligned with the wind, or wait for the wind to change. (The 5 SM visibility also makes it marginal VFR.)",
-    ref: "C172S POH section 4 (demonstrated crosswind); PHAK ch. 2, 11" },
+    ref: "C172S POH section 4; PHAK ch. 11, 2" },
 
   { id: "wx-airmet-sigmet", area: "wx", lvl: 1, kind: "explain",
     ask: "What is the difference between an AIRMET and a SIGMET? What does each warn you about?",
@@ -634,7 +634,7 @@ const ORAL_QUESTIONS = (() => {
       N("g", "AIRMETs are now issued graphically, as G-AIRMETs", ["G-AIRMET"]),
     ],
     answer: "AIRMETs (now issued as graphical G-AIRMETs) cover weather hazardous mainly to light aircraft: Sierra — IFR and mountain obscuration; Tango — moderate turbulence, sustained surface winds of 30 knots or more, low-level wind shear; Zulu — moderate icing and freezing levels. SIGMETs concern all aircraft: severe icing, severe or extreme turbulence, dust/sandstorms reducing visibility below 3 miles, and volcanic ash. Convective SIGMETs cover severe, embedded or lines of thunderstorms, tornadoes, hail of ¾ inch or more and surface winds of 50 knots or more.",
-    ref: "AIM 7-1; Aviation Weather Handbook" },
+    ref: "AIM 7-1-6; PHAK ch. 13" },
 
   { id: "wx-thunderstorm", area: "wx", lvl: 1, kind: "explain",
     ask: "What three things are needed for a thunderstorm to form, and what are its stages?",
@@ -649,7 +649,7 @@ const ORAL_QUESTIONS = (() => {
       N("avoid", "Stay at least 20 nautical miles from a severe storm", ["twenty miles away"]),
     ],
     answer: "Sufficient water vapour, an unstable lapse rate, and an initial lifting action. Stages: cumulus (updrafts), mature (begins when precipitation starts falling; updrafts and downdrafts, the most intense hazards) and dissipating (mostly downdrafts). Hazards include turbulence, hail, lightning, icing, wind shear and microbursts — avoid severe storms by at least 20 NM.",
-    ref: "Aviation Weather Handbook; AIM 7-1; PHAK ch. 12",
+    ref: "PHAK ch. 12; AIM 7-1-26",
     fu: [
       { when: "sat", ask: "What is a microburst, and why is it so dangerous on takeoff or landing?",
         gloss: "A short, violent blast of sinking air under a storm.",
@@ -658,8 +658,8 @@ const ORAL_QUESTIONS = (() => {
           M("why", "You get a headwind, then a downdraft, then a tailwind — a sudden loss of airspeed and lift close to the ground", ["performance loss", "headwind then tailwind"]),
           N("num", "Typically under a mile to about 2½ miles across, lasting about 15 minutes, with downdrafts up to 6,000 feet per minute", ["fifteen minutes", "six thousand feet per minute"]),
         ],
-        answer: "An intense, localised downdraft, usually less than 1 mile across as it descends and spreading to about 2½ miles, lasting around 15 minutes with downdrafts up to 6,000 fpm. An airplane flying through meets a performance-increasing headwind, then the downdraft, then a tailwind that can exceed its ability to climb.", ref: "AIM 7-1 (microbursts)" },
-      { when: "miss:stages", ask: "A thunderstorm goes through a life cycle. What are its stages?",
+        answer: "An intense, localised downdraft, usually less than 1 mile across as it descends and spreading to about 2½ miles, lasting around 15 minutes with downdrafts up to 6,000 fpm. An airplane flying through meets a performance-increasing headwind, then the downdraft, then a tailwind that can exceed its ability to climb.", ref: "AIM 7-1-24; PHAK ch. 12" },
+      { when: "miss:stages", ref: "PHAK ch. 12", ask: "A thunderstorm goes through a life cycle. What are its stages?",
         pts: [
           M("a", "Cumulus (building)", ["cumulus", "towering cumulus"]),
           M("b", "Mature", ["mature"]),
@@ -692,14 +692,14 @@ const ORAL_QUESTIONS = (() => {
       N("eff", "Ice adds weight and drag, reduces lift and thrust, raises stall speed", ["more weight and drag, less lift"]),
     ],
     answer: "Visible moisture and an aircraft surface temperature at or below freezing. Types are clear, rime and mixed. Ice increases weight and drag and reduces lift and thrust, raising the stall speed. Flight into known icing is prohibited in the C172S.",
-    ref: "Aviation Weather Handbook; C172S POH section 2",
+    ref: "PHAK ch. 12; C172S POH section 2; AIM 7-1-20",
     fu: [
       { when: "always", ask: "It is a cold morning and the wings have a thin layer of frost. It looks harmless. Can you take off?",
         pts: [
           M("no", "No — remove all of it first", ["have to remove it", "no"]),
           M("why", "Frost roughens the wing, spoils the smooth airflow, reduces lift and raises the stall speed", ["disrupts airflow", "less lift"]),
         ],
-        answer: "No. Frost disrupts the smooth airflow over the wing, causing early airflow separation: less lift, more drag and a higher stall speed. It must be removed before takeoff.", ref: "PHAK ch. 12; AFH ch. 2" },
+        answer: "No. Frost disrupts the smooth airflow over the wing, causing early airflow separation: less lift, more drag and a higher stall speed. It must be removed before takeoff.", ref: "PHAK ch. 12, 5" },
     ] },
 
   { id: "wx-stability", area: "wx", lvl: 2, kind: "explain",
@@ -744,7 +744,7 @@ const ORAL_QUESTIONS = (() => {
       N("rule", "Written or forecast winds are true; winds spoken by a tower or ATIS are magnetic", ["if you read it it's true, if you hear it it's magnetic"]),
     ],
     answer: "At 6,000 ft: wind from 270° true at 15 knots, temperature +5 °C. Winds aloft, METARs and TAFs give direction relative to true north; winds read out by a tower, ATIS or AWOS broadcast are magnetic so they match the runway numbers.",
-    ref: "AIM 7-1; Aviation Weather Handbook" },
+    ref: "AIM 7-1-5, 7-1-10; PHAK ch. 13" },
 
   { id: "wx-standard", area: "wx", lvl: 2, kind: "recall",
     ask: "What are standard temperature and pressure at sea level, and how do they change as you climb?",
@@ -770,7 +770,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says they would descend and continue under the clouds without limit ('scud running')"],
     answer: "Make the decision early: reverse course or divert while there is still VFR weather behind you. Updates come from Flight Service on 122.2 or a published frequency, ATIS/AWOS/ASOS broadcasts along the route, ATC, and FIS-B weather over ADS-B In — remembering that datalink radar is delayed and is for strategic avoidance only.",
-    ref: "AIM 7-1; PHAK ch. 2, 13" },
+    ref: "AIM 7-1-9, 7-1-10; PHAK ch. 2, 13" },
 
   /* ====================== CROSS-COUNTRY PLANNING (PA.I.D) =================== */
   { id: "xc-preflight-action", area: "xc", lvl: 1, kind: "recall",
@@ -806,7 +806,7 @@ const ORAL_QUESTIONS = (() => {
       N("pm", "Mentions a larger personal minimum, such as an hour", ["I'd land with an hour"]),
     ],
     answer: "Enough to fly to the first point of intended landing and, at normal cruising speed, for at least 30 minutes after that by day or 45 minutes at night. That is the legal floor; most pilots plan to land with an hour.",
-    ref: "14 CFR 91.151",
+    ref: "14 CFR 91.151(a)",
     fu: [
       { when: "always", ask: "Scenario. Daytime. You have full tanks — 53 gallons usable. You plan to burn 9 gallons an hour and the trip takes 3 and a half hours. How much do you need by law, and do you have it?",
         gloss: "Arithmetic: 3.5 hours at 9 an hour is 31.5 gallons, plus half an hour (4.5 gallons) makes 36.",
@@ -816,8 +816,8 @@ const ORAL_QUESTIONS = (() => {
           M("tot", "36 gallons required — yes, 53 is enough", ["thirty-six", "plenty"]),
           N("more", "Adds allowance for taxi, climb or stronger headwinds", ["plus taxi and climb fuel"]),
         ],
-        answer: "3.5 h × 9 gph = 31.5 gal, plus a 30-minute reserve of 4.5 gal = 36 gal. With 53 usable there is a 17-gallon margin, before allowing for taxi, climb and un-forecast headwinds.", ref: "14 CFR 91.151; C172S POH section 5" },
-      { when: "miss:night", ask: "And if the same flight were at night?",
+        answer: "3.5 h × 9 gph = 31.5 gal, plus a 30-minute reserve of 4.5 gal = 36 gal. With 53 usable there is a 17-gallon margin, before allowing for taxi, climb and un-forecast headwinds.", ref: "14 CFR 91.151(a); C172S POH section 5" },
+      { when: "miss:night", ref: "14 CFR 91.151(a)(2)", ask: "And if the same flight were at night?",
         pts: [
           M("a", "45 minutes of reserve", ["forty-five minutes"]),
         ],
@@ -837,9 +837,9 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Picks an odd-thousand-plus-500 altitude (3,500, 5,500, 7,500) for a course of 270"],
     answer: "Above 3,000 ft AGL in level cruise: on a magnetic course of 0°–179°, odd thousands plus 500 ft MSL (3,500, 5,500…); on 180°–359°, even thousands plus 500 (4,500, 6,500…). For 270° choose 4,500, 6,500 or 8,500, considering terrain, airspace, winds and cloud.",
-    ref: "14 CFR 91.159",
+    ref: "14 CFR 91.159(a); AIM 3-1-5",
     fu: [
-      { when: "miss:3k", ask: "Does that east–west altitude rule apply at any height?",
+      { when: "miss:3k", ref: "14 CFR 91.159(a); AIM 3-1-5", ask: "Does that east–west altitude rule apply at any height?",
         pts: [
           M("a", "No — only when cruising more than 3,000 feet above the ground", ["only above three thousand AGL"]),
         ],
@@ -869,7 +869,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the tower opens or closes a VFR flight plan automatically"],
     answer: "It is not required (outside special areas such as ADIZ crossings) but is strongly recommended. Filed with Flight Service, it must be activated by the pilot after departure and closed by the pilot on arrival — the tower does not do it. If it is not closed within 30 minutes of the ETA, search-and-rescue procedures begin.",
-    ref: "AIM 5-1" },
+    ref: "AIM 5-1-5, 5-1-14; 14 CFR 91.153" },
 
   { id: "xc-course-to-heading", area: "xc", lvl: 2, kind: "explain",
     ask: "You draw a line on the chart and measure a true course. Walk me through how that becomes the compass heading you actually fly.",
@@ -905,7 +905,7 @@ const ORAL_QUESTIONS = (() => {
       M("how", "Checked in the preflight briefing: Flight Service, the FAA NOTAM or TFR websites, or the flight-planning app", ["in my briefing", "tfr.faa.gov", "ForeFlight"]),
     ],
     answer: "A NOTAM is a notice containing time-critical information not known far enough in advance to be published — runway and taxiway closures, lighting and navaid outages, obstructions, airspace changes. A TFR restricts an area for a period: VIP movement, disaster or wildfire relief, major sporting events, space operations, air shows. Both come with a standard briefing and can be checked on the FAA NOTAM and TFR sites or an EFB; check again just before departure because TFRs can appear at short notice.",
-    ref: "AIM 5-1, 3-5-3; 14 CFR 91.137–91.145" },
+    ref: "AIM 5-1-3, 3-5-3; 14 CFR 91.137, 91.141, 91.145" },
 
   { id: "xc-chart", area: "xc", lvl: 2, kind: "explain",
     ask: "On a sectional chart, each box of the grid has a big number in it — something like a large 4 and a small 5. What is that?",
@@ -946,7 +946,7 @@ const ORAL_QUESTIONS = (() => {
       N("f", "There is no Class F in the US", ["no F"]),
     ],
     answer: "A: 18,000 ft MSL to FL600, IFR only. B: surrounds the nation's busiest airports (upside-down wedding cake). C: airports with a tower and radar approach control. D: airports with an operating control tower. E: controlled airspace that is not A–D, usually starting at 700 or 1,200 ft AGL and running up to 18,000. G: uncontrolled, from the surface to the base of the overlying Class E.",
-    ref: "AIM chapter 3; PHAK ch. 15",
+    ref: "AIM 3-1-1, 3-2-1; PHAK ch. 15",
     fu: [
       { when: "always", ask: "How is each of B, C and D drawn on the sectional chart?",
         gloss: "Each class has its own line colour and style on the map.",
@@ -956,7 +956,7 @@ const ORAL_QUESTIONS = (() => {
           M("d", "Class D: dashed blue lines", ["dashed blue"]),
           N("e", "Class E to the surface: dashed magenta; Class E starting at 700 feet: fuzzy (shaded) magenta", ["dashed magenta", "magenta vignette"]),
         ],
-        answer: "Class B solid blue; Class C solid magenta; Class D dashed blue; Class E surface area dashed magenta; Class E beginning at 700 ft AGL shaded magenta.", ref: "FAA Aeronautical Chart User's Guide" },
+        answer: "Class B solid blue; Class C solid magenta; Class D dashed blue; Class E surface area dashed magenta; Class E beginning at 700 ft AGL shaded magenta.", ref: "FAA Aeronautical Chart User's Guide; PHAK ch. 15" },
     ] },
 
   { id: "nas-bravo", area: "nas", lvl: 1, kind: "recall",
@@ -972,7 +972,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says establishing radio contact is enough to enter Class B"],
     answer: "An ATC clearance to enter, a two-way radio, a Mode C transponder and ADS-B Out, and at least a private pilot certificate (a student pilot needs a specific logbook endorsement, and some Class B primary airports prohibit student solo operations). VFR weather minimums are 3 SM and clear of clouds.",
-    ref: "14 CFR 91.131, 91.215, 91.225, 61.95",
+    ref: "14 CFR 91.131(a)(1), (b), (c), 91.215, 91.225, 61.95; AIM 3-2-3",
     fu: [
       { when: "always", ask: "Scenario. Heading toward Class B you call Approach. They answer with your call sign and say: squawk 4321 and ident, radar contact. Are you allowed in?",
         gloss: "Being recognised on radar is not the same as being given permission.",
@@ -994,14 +994,14 @@ const ORAL_QUESTIONS = (() => {
       N("dims", "Typical shape: a 5-mile inner core from the surface to 4,000 feet above the airport, and a 10-mile outer shelf from 1,200 to 4,000 feet", ["five and ten miles", "up to four thousand"]),
     ],
     answer: "Two-way radio communication established before entry, a Mode C transponder and ADS-B Out. If the controller responds with your call sign — even 'N12345, standby' — communication is established and you may enter. Typical dimensions: 5 NM core from the surface to 4,000 ft above the airport, 10 NM shelf from 1,200 to 4,000 ft.",
-    ref: "14 CFR 91.130; AIM 3-2-4",
+    ref: "14 CFR 91.130(c), (d); AIM 3-2-4",
     fu: [
       { when: "always", ask: "Same call, but this time the reply is: 'Aircraft calling Approach, standby.' Now can you enter?",
         pts: [
           M("no", "No — stay outside", ["remain clear"]),
           M("why", "They did not use your call sign, so two-way communication is not established", ["didn't say my call sign"]),
         ],
-        answer: "No. Without your call sign, two-way communication has not been established. Remain outside Class C.", ref: "AIM 3-2-4" },
+        answer: "No. Without your call sign, two-way communication has not been established. Remain outside Class C.", ref: "14 CFR 91.130(c); AIM 3-2-4" },
     ] },
 
   { id: "nas-delta", area: "nas", lvl: 1, kind: "recall",
@@ -1015,7 +1015,7 @@ const ORAL_QUESTIONS = (() => {
       N("noxp", "No transponder is required by Class D itself", ["no transponder needed"]),
     ],
     answer: "Two-way radio communication established with the tower before entry. Class D generally extends from the surface to 2,500 ft above airport elevation, typically about 4 NM radius, tailored to the airport. When the tower is closed it reverts to Class E or Class G as stated in the Chart Supplement, and the airport is used like any non-towered field.",
-    ref: "14 CFR 91.129; AIM 3-2-5" },
+    ref: "14 CFR 91.129(a), (c); AIM 3-2-5" },
 
   { id: "nas-wx-minimums", area: "nas", lvl: 1, kind: "recall",
     ask: "What are the basic VFR weather minimums — visibility and distance from clouds — in Class C, D and E airspace below 10,000 feet?",
@@ -1028,24 +1028,24 @@ const ORAL_QUESTIONS = (() => {
       M("horiz", "2,000 feet horizontally from clouds", ["two thousand horizontal"]),
     ],
     answer: "3 statute miles visibility; 500 ft below, 1,000 ft above and 2,000 ft horizontally from clouds ('3-152').",
-    ref: "14 CFR 91.155",
+    ref: "14 CFR 91.155(a); AIM 3-1-4",
     fu: [
       { when: "always", ask: "And Class B?",
         pts: [M("b", "3 statute miles and simply clear of clouds", ["three miles, clear of clouds"])],
-        answer: "3 SM and clear of clouds — ATC is separating everyone, so no cloud distances are needed.", ref: "14 CFR 91.155" },
+        answer: "3 SM and clear of clouds — ATC is separating everyone, so no cloud distances are needed.", ref: "14 CFR 91.155(a); AIM 3-1-4" },
       { when: "sat", ask: "What about at or above 10,000 feet MSL?",
         gloss: "Higher up airplanes are faster, so the distances grow.",
         pts: [
           M("vis", "5 statute miles visibility", ["five miles"]),
           M("cl", "1,000 feet below, 1,000 feet above, and 1 statute mile horizontally", ["a thousand, a thousand, one mile", "five one-one-one"]),
         ],
-        answer: "At and above 10,000 ft MSL (and more than 1,200 ft AGL): 5 SM visibility; 1,000 ft below, 1,000 ft above, 1 SM horizontally.", ref: "14 CFR 91.155" },
+        answer: "At and above 10,000 ft MSL (and more than 1,200 ft AGL): 5 SM visibility; 1,000 ft below, 1,000 ft above, 1 SM horizontally.", ref: "14 CFR 91.155(a); AIM 3-1-4" },
       { when: "sat", ask: "And Class G, close to the ground — 1,200 feet above the surface or lower — by day and by night?",
         pts: [
           M("day", "Day: 1 statute mile, clear of clouds", ["one mile clear of clouds"]),
           M("night", "Night: 3 statute miles, and 500 below, 1,000 above, 2,000 horizontal", ["three one-five-two at night"]),
         ],
-        answer: "Class G at or below 1,200 ft AGL: day — 1 SM and clear of clouds; night — 3 SM, 500 below, 1,000 above, 2,000 horizontal (with an exception for staying in the pattern within ½ mile of the runway: 1 SM, clear of clouds).", ref: "14 CFR 91.155(a), (b)" },
+        answer: "Class G at or below 1,200 ft AGL: day — 1 SM and clear of clouds; night — 3 SM, 500 below, 1,000 above, 2,000 horizontal (with an exception for staying in the pattern within ½ mile of the runway: 1 SM, clear of clouds).", ref: "14 CFR 91.155(a), (b); AIM 3-1-4" },
     ] },
 
   { id: "nas-cloud-scenario", area: "nas", lvl: 2, kind: "scenario",
@@ -1072,7 +1072,7 @@ const ORAL_QUESTIONS = (() => {
       M("night", "At night: the pilot must be instrument-rated and the airplane equipped for instrument flight", ["need an instrument rating at night"]),
     ],
     answer: "An ATC clearance to operate within the lateral boundaries of the surface area of Class B, C, D or E airspace below 10,000 ft MSL when the weather is less than basic VFR. It requires 1 SM flight visibility and remaining clear of clouds, and must be requested by the pilot. Between sunset and sunrise the pilot must be instrument-rated and the aircraft IFR-equipped. Some large airports do not allow it.",
-    ref: "14 CFR 91.157" },
+    ref: "14 CFR 91.157; AIM 4-4-6" },
 
   { id: "nas-special-use", area: "nas", lvl: 1, kind: "explain",
     ask: "Your route crosses a restricted area and a military operations area. Can you fly through each? What other kinds of special use airspace are there?",
@@ -1087,9 +1087,9 @@ const ORAL_QUESTIONS = (() => {
       N("cfa", "Controlled firing area: not charted; activity stops when an aircraft approaches", ["controlled firing area"]),
     ],
     answer: "Restricted areas contain invisible hazards (artillery, missiles, aerial gunnery): entry when active requires permission from the using or controlling agency — ask ATC whether it is hot. MOAs separate military training from IFR traffic; VFR pilots may enter but should exercise extreme caution and check status with Flight Service or ATC. Others: prohibited (no flight), warning (offshore hazards), alert (high training volume) and controlled firing areas (not charted).",
-    ref: "AIM 3-4; 14 CFR 91.133",
+    ref: "14 CFR 91.133; AIM 3-4-3, 3-4-5, 3-4-6",
     fu: [
-      { when: "miss:r", ask: "How would you find out whether that restricted area is active when you get there?",
+      { when: "miss:r", ref: "AIM 3-4-9, 3-4-3", ask: "How would you find out whether that restricted area is active when you get there?",
         pts: [
           M("a", "Look up its times and altitudes — on the chart's margin table or in the briefing/NOTAMs", ["chart legend", "the sectional lists the hours", "NOTAMs"]),
           M("b", "Ask ATC or Flight Service at the time", ["ask the controlling agency", "ask approach"]),
@@ -1170,7 +1170,7 @@ const ORAL_QUESTIONS = (() => {
           M("vx", "Vx: most altitude gained over a given DISTANCE — to clear obstacles", ["best angle", "most altitude per distance", "clear the trees"]),
           M("vy", "Vy: most altitude gained in a given TIME — the normal climb", ["best rate", "most altitude per minute"]),
         ],
-        answer: "Vx (best angle) gives the greatest altitude gain over a given distance — used to clear obstacles. Vy (best rate) gives the greatest altitude gain in a given time — used to get to altitude efficiently.", ref: "AFH ch. 3; PHAK ch. 11" },
+        answer: "Vx (best angle) gives the greatest altitude gain over a given distance — used to clear obstacles. Vy (best rate) gives the greatest altitude gain in a given time — used to get to altitude efficiently.", ref: "AFH ch. 3, 6; PHAK ch. 11" },
       { when: "sat", ask: "And the limiting speeds: flaps, structural cruise, and never exceed?",
         need: 3,
         pts: [
@@ -1180,7 +1180,7 @@ const ORAL_QUESTIONS = (() => {
           M("vne", "Never exceed (Vne): 163 knots", ["V-N-E one sixty-three"]),
         ],
         answer: "Vfe 110 KIAS (10°) and 85 KIAS (10°–30°); Vno 129 KIAS; Vne 163 KIAS.", ref: "C172S POH section 2" },
-      { when: "miss:vg", ask: "If the engine quit right now, what speed would you fly?",
+      { when: "miss:vg", ref: "C172S POH section 3; AFH ch. 18", ask: "If the engine quit right now, what speed would you fly?",
         pts: [
           M("a", "68 knots — best glide", ["sixty-eight"]),
         ],
@@ -1202,7 +1202,7 @@ const ORAL_QUESTIONS = (() => {
     fu: [
       { when: "sat", ask: "Name an important speed that is NOT marked on the airspeed indicator.",
         pts: [M("va", "Maneuvering speed (Va) — or Vx, Vy, best glide", ["V-A", "maneuvering speed"])],
-        answer: "Maneuvering speed (Va) is not marked, because it changes with weight. Vx, Vy and best glide are not marked either.", ref: "PHAK ch. 8" },
+        answer: "Maneuvering speed (Va) is not marked, because it changes with weight. Vx, Vy and best glide are not marked either.", ref: "C172S POH section 2; PHAK ch. 8" },
     ] },
 
   { id: "perf-va", area: "perf", lvl: 2, kind: "explain",
@@ -1248,7 +1248,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says 18 pounds over is close enough"],
     answer: "1,680 + 360 + 150 + 60 + 318 (53 gal × 6 lb) = 2,568 lb — 18 lb over the 2,550 lb limit. Options: defuel at least 3 gallons (18 lb), or reduce baggage or passengers; then confirm the centre of gravity is within the envelope for takeoff and landing, and that the remaining fuel covers the trip plus reserve.",
-    ref: "C172S POH section 6; PHAK ch. 10",
+    ref: "C172S POH section 6; 14 CFR 91.9; PHAK ch. 10",
     fu: [
       { when: "always", ask: "How do you calculate the centre of gravity?",
         gloss: "Each item's weight is multiplied by how far back it sits; the totals are divided.",
@@ -1259,7 +1259,7 @@ const ORAL_QUESTIONS = (() => {
           N("arm", "Arm is the distance from the datum", ["distance from the datum"]),
         ],
         answer: "Multiply each weight by its arm (distance from the datum) to get its moment; add the weights and the moments; total moment ÷ total weight = CG location, which is then checked against the envelope in POH section 6.", ref: "PHAK ch. 10" },
-      { when: "miss:fuel", ask: "How much does a gallon of aviation fuel weigh — and so how much do 53 gallons weigh?",
+      { when: "miss:fuel", ref: "PHAK ch. 10", ask: "How much does a gallon of aviation fuel weigh — and so how much do 53 gallons weigh?",
         pts: [
           M("a", "6 pounds per gallon", ["six pounds"]),
           M("b", "318 pounds", ["three eighteen"]),
@@ -1303,7 +1303,7 @@ const ORAL_QUESTIONS = (() => {
           M("ans", "1,500 feet", ["fifteen hundred"]),
         ],
         answer: "Pressure altitude is the height above the standard datum plane — what the altimeter reads when set to 29.92. (29.92 − 29.42) × 1,000 = 500 ft; 1,000 + 500 = 1,500 ft.", ref: "PHAK ch. 4, 11" },
-      { when: "miss:up", ask: "Which conditions give you a HIGH density altitude?",
+      { when: "miss:up", ref: "PHAK ch. 11", ask: "Which conditions give you a HIGH density altitude?",
         pts: [
           M("a", "High airport elevation", ["high"]),
           M("b", "High temperature", ["hot"]),
@@ -1338,7 +1338,7 @@ const ORAL_QUESTIONS = (() => {
       M("to", "On takeoff: it can lift off too slow, then fail to climb or settle back once out of ground effect", ["becomes airborne before it's ready", "settles back down"]),
     ],
     answer: "Within about one wingspan of the surface, the ground restricts the wingtip vortices and downwash, reducing induced drag. On landing, excess speed produces a long float. On takeoff, the airplane can become airborne below a safe flying speed and then be unable to climb out of ground effect — especially heavy or at high density altitude.",
-    ref: "PHAK ch. 5; AFH ch. 6" },
+    ref: "PHAK ch. 5; AFH ch. 6, 9" },
 
   { id: "perf-overweight", area: "perf", lvl: 2, kind: "explain",
     ask: "Apart from being illegal, what actually happens if you take off over maximum weight?",
@@ -1352,7 +1352,7 @@ const ORAL_QUESTIONS = (() => {
       N("other", "Lower cruise speed, shorter range, longer landing roll", ["less range", "longer landing"]),
     ],
     answer: "Higher takeoff speed and longer takeoff run, reduced rate and angle of climb, lower service ceiling, reduced cruise speed and range, higher stall speed, higher landing speed and longer landing roll, and reduced structural margins.",
-    ref: "PHAK ch. 10" },
+    ref: "14 CFR 91.9; PHAK ch. 10, 11" },
 
   /* =========================== AIRCRAFT SYSTEMS (PA.I.G) ==================== */
   { id: "sys-engine", area: "sys", lvl: 1, kind: "recall",
@@ -1370,14 +1370,14 @@ const ORAL_QUESTIONS = (() => {
       N("dd", "Direct drive, normally aspirated (no turbocharger)", ["direct drive", "normally aspirated"]),
     ],
     answer: "A Lycoming IO-360-L2A: four-cylinder, horizontally opposed, air-cooled, fuel-injected, direct-drive, normally aspirated, producing 180 hp at 2,700 RPM, turning a McCauley two-blade fixed-pitch propeller.",
-    ref: "C172S POH section 7",
+    ref: "C172S POH section 7; PHAK ch. 7",
     fu: [
       { when: "always", ask: "It is fuel-injected. So is there any carburetor heat? What happens if the air filter ices over or gets blocked?",
         pts: [
           M("no", "No carburetor, so no carb heat", ["no carb heat"]),
           M("alt", "An alternate air door opens automatically and lets unfiltered air into the engine", ["alternate air door"]),
         ],
-        answer: "There is no carburetor and so no carb heat. If the induction filter is blocked, a spring-loaded alternate air door opens and the engine draws unfiltered air from inside the cowling, with a small loss of power.", ref: "C172S POH section 7" },
+        answer: "There is no carburetor and so no carb heat. If the induction filter is blocked, a spring-loaded alternate air door opens and the engine draws unfiltered air from inside the cowling, with a small loss of power.", ref: "C172S POH section 7; PHAK ch. 7" },
     ] },
 
   { id: "sys-fuel", area: "sys", lvl: 1, kind: "explain",
@@ -1397,7 +1397,7 @@ const ORAL_QUESTIONS = (() => {
       N("vent", "The tanks are vented so fuel can flow", ["vented"]),
     ],
     answer: "Two integral wing tanks of 28 gal each: 56 total, 53 usable, 100LL (blue). Fuel gravity-feeds through the selector (LEFT / BOTH / RIGHT) to a reservoir tank, then the electric auxiliary pump, the shutoff valve, the strainer, the engine-driven pump, the fuel/air control unit, the fuel distribution valve and the injector nozzles. BOTH is used for takeoff and landing.",
-    ref: "C172S POH section 7",
+    ref: "C172S POH section 7; PHAK ch. 7",
     fu: [
       { when: "always", ask: "When do you use the electric auxiliary fuel pump?",
         pts: [
@@ -1412,8 +1412,8 @@ const ORAL_QUESTIONS = (() => {
           M("dirt", "Dirt or sediment", ["contamination", "debris"]),
           M("grade", "The correct fuel: blue colour and the right smell", ["right colour", "blue"]),
         ],
-        answer: "Water (which settles to the bottom), sediment or other contamination, and the correct grade — 100LL is blue and smells like fuel; jet fuel is clear or straw-coloured and oily.", ref: "C172S POH section 4; AFH ch. 2" },
-      { when: "miss:use", ask: "Of the 56 gallons on board, how much can you actually use?",
+        answer: "Water (which settles to the bottom), sediment or other contamination, and the correct grade — 100LL is blue and smells like fuel; jet fuel is clear or straw-coloured and oily.", ref: "C172S POH section 4; PHAK ch. 7; AFH ch. 2" },
+      { when: "miss:use", ref: "C172S POH section 2", ask: "Of the 56 gallons on board, how much can you actually use?",
         pts: [
           M("a", "53 gallons", ["fifty-three"]),
           N("b", "3 gallons are unusable", ["three unusable"]),
@@ -1435,7 +1435,7 @@ const ORAL_QUESTIONS = (() => {
       N("time", "The standby battery lasts a limited time — about 30 minutes is the figure usually taught", ["about thirty minutes"]),
     ],
     answer: "A 28-volt DC system: a 60-amp engine-driven alternator supplies the buses and charges a 24-volt main battery; a standby battery powers the essential bus (PFD, and the essential avionics) if both are lost — the POH says for 'a limited time', and training material quotes about 30 minutes. Circuits are protected by breakers.",
-    ref: "C172S POH section 7",
+    ref: "C172S POH section 7; PHAK ch. 7",
     fu: [
       { when: "always", ask: "Scenario. In cruise a red LOW VOLTS message appears and the ammeter shows a discharge. What has happened, and what do you do?",
         gloss: "The alternator has stopped charging. The battery is now a countdown clock.",
@@ -1446,8 +1446,8 @@ const ORAL_QUESTIONS = (() => {
           M("land", "Land as soon as practical", ["land as soon as practical", "divert"]),
           N("eng", "The engine keeps running — the magnetos do not need the electrical system", ["engine won't quit"]),
         ],
-        answer: "LOW VOLTS (at or below 24.5 V) with a discharge means the alternator is not carrying the load. Follow the POH checklist — which attempts an alternator reset — then, if it stays offline, shed non-essential load to save the battery and land as soon as practical. The engine is unaffected because the magnetos are self-powered; flaps and other electric items may be lost when the battery is exhausted.", ref: "C172S POH section 3" },
-      { when: "miss:stby", ask: "Suppose the alternator AND the main battery are both dead. Does the main flight display go dark straight away?",
+        answer: "LOW VOLTS (at or below 24.5 V) with a discharge means the alternator is not carrying the load. Follow the POH checklist — which attempts an alternator reset — then, if it stays offline, shed non-essential load to save the battery and land as soon as practical. The engine is unaffected because the magnetos are self-powered; flaps and other electric items may be lost when the battery is exhausted.", ref: "C172S POH section 3; PHAK ch. 7" },
+      { when: "miss:stby", ref: "C172S POH sections 3, 7", ask: "Suppose the alternator AND the main battery are both dead. Does the main flight display go dark straight away?",
         pts: [
           M("a", "No — the standby battery keeps it running for a limited time", ["standby battery", "essential bus"]),
         ],
@@ -1485,7 +1485,7 @@ const ORAL_QUESTIONS = (() => {
           N("heat", "Turn the pitot heat on", ["pitot heat"]),
         ],
         answer: "With the ram inlet and drain both blocked, pressure is trapped and the ASI acts like an altimeter — increasing in a climb, decreasing in a descent. Pitot heat is the prevention and the cure.", ref: "PHAK ch. 8" },
-      { when: "miss:pitot", ask: "Which one of those instruments is connected to the pitot tube?",
+      { when: "miss:pitot", ref: "PHAK ch. 8", ask: "Which one of those instruments is connected to the pitot tube?",
         pts: [
           M("a", "The airspeed indicator", ["airspeed"]),
         ],
@@ -1505,7 +1505,7 @@ const ORAL_QUESTIONS = (() => {
       N("x", "A failed sensor shows as a red X over that instrument", ["red X"]),
     ],
     answer: "The Primary Flight Display and the Multi-Function Display. The AHRS (with its magnetometer) supplies attitude and heading; the Air Data Computer turns pitot, static and outside-air-temperature inputs into airspeed, altitude and vertical speed. Failed data is flagged by a red X over the affected instrument.",
-    ref: "C172S POH section 7; Garmin G1000 Pilot's Guide",
+    ref: "C172S POH section 7; PHAK ch. 8; Garmin G1000 Pilot's Guide",
     fu: [
       { when: "always", ask: "Scenario. The PFD screen goes black in flight. What do you still have?",
         pts: [
@@ -1536,7 +1536,7 @@ const ORAL_QUESTIONS = (() => {
           M("drop", "Maximum drop of 150 RPM on either magneto", ["one fifty drop"]),
           M("diff", "No more than 50 RPM difference between the two", ["fifty difference"]),
         ],
-        answer: "At 1,800 RPM: no more than a 150 RPM drop on either magneto, and no more than 50 RPM difference between them.", ref: "C172S POH section 4" },
+        answer: "At 1,800 RPM: no more than a 150 RPM drop on either magneto, and no more than 50 RPM difference between them.", ref: "C172S POH section 4; PHAK ch. 7" },
       { when: "sat", ask: "On that mag check you switch to the left magneto and there is no RPM drop at all. Is that good news?",
         gloss: "A trick question. No drop means the switch is not really turning the other magneto off — a hazard.",
         pts: [
@@ -1557,7 +1557,7 @@ const ORAL_QUESTIONS = (() => {
       N("vfe", "Speed limits: 110 knots for 10 degrees, 85 knots beyond", ["one ten", "eighty-five"]),
     ],
     answer: "Single-slotted flaps driven by an electric motor, 0° to 30°, with detents at 10°, 20° and full. They increase both lift and drag, lowering the stall speed and permitting a steeper approach without an increase in airspeed. Limits: 110 KIAS for 10°, 85 KIAS for 10°–30°.",
-    ref: "C172S POH sections 2, 7",
+    ref: "C172S POH sections 2, 7; PHAK ch. 6",
     fu: [
       { when: "always", ask: "If the electrical system has failed, how will you land?",
         pts: [
@@ -1595,7 +1595,7 @@ const ORAL_QUESTIONS = (() => {
       N("min", "Gives a minimum for flight — the POH says do not operate on less than 5 quarts; schools often set a higher number", ["minimum five quarts", "school says six"]),
     ],
     answer: "A wet-sump system holding 8 quarts. Oil lubricates, cools, cleans and seals (and protects against corrosion). The POH says not to operate on less than 5 quarts and to fill to 8 for extended flight; schools commonly set their own higher dispatch minimum.",
-    ref: "C172S POH sections 7, 8",
+    ref: "C172S POH sections 7, 8; PHAK ch. 7",
     fu: [
       { when: "always", ask: "Scenario. In cruise the oil pressure is dropping into the red and the oil temperature is climbing. What does that tell you and what do you do?",
         gloss: "Both gauges agreeing means the engine really is losing oil and may fail soon.",
@@ -1687,7 +1687,7 @@ const ORAL_QUESTIONS = (() => {
           M("histo", "Histotoxic — the cells cannot use the oxygen (alcohol, drugs)", ["histotoxic"]),
         ],
         answer: "Hypoxic (insufficient oxygen available — altitude), hypemic (blood cannot carry oxygen — carbon monoxide, anaemia), stagnant (poor circulation — G-forces, cold) and histotoxic (cells cannot use oxygen — alcohol, drugs).", ref: "PHAK ch. 17" },
-      { when: "miss:12", ask: "At what altitude do you, the pilot, first legally need supplemental oxygen, and after how long?",
+      { when: "miss:12", ref: "14 CFR 91.211", ask: "At what altitude do you, the pilot, first legally need supplemental oxygen, and after how long?",
         pts: [
           M("a", "Above 12,500 feet", ["twelve thousand five hundred"]),
           M("b", "After 30 minutes there", ["more than thirty minutes"]),
@@ -1708,7 +1708,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Carbon monoxide poisoning: cabin heat is air warmed by a shroud around the exhaust muffler, so a crack lets exhaust gas into the cabin. CO is colourless and odourless and binds to haemoglobin (a hypemic hypoxia). Turn the heater off, open the fresh-air vents and windows, land as soon as practical and seek medical attention; use supplemental oxygen if available.",
     ref: "AIM 8-1-4; PHAK ch. 17; C172S POH section 7",
     fu: [
-      { when: "miss:src", ask: "Where does the warm air for the cabin heater come from in this airplane?",
+      { when: "miss:src", ref: "C172S POH section 7; PHAK ch. 7", ask: "Where does the warm air for the cabin heater come from in this airplane?",
         pts: [
           M("a", "From a jacket (shroud) around the engine's exhaust muffler", ["around the exhaust", "muffler shroud"]),
         ],
@@ -1746,7 +1746,7 @@ const ORAL_QUESTIONS = (() => {
           M("high", "It will seem as if you are higher than you really are", ["feel too high"]),
           M("low", "So the tendency is to fly the approach too low", ["end up low", "land short"]),
         ],
-        answer: "A narrower-than-usual runway creates the illusion of being higher than you are, leading to a lower-than-normal approach and the risk of landing short. (An up-sloping runway does the same.) Use the visual glidepath lights where available.", ref: "AIM 8-1-5" },
+        answer: "A narrower-than-usual runway creates the illusion of being higher than you are, leading to a lower-than-normal approach and the risk of landing short. (An up-sloping runway does the same.) Use the visual glidepath lights where available.", ref: "AIM 8-1-5; PHAK ch. 17" },
     ] },
 
   { id: "hf-attitudes", area: "hf", lvl: 1, kind: "recall",
@@ -1763,7 +1763,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Anti-authority — follow the rules, they are usually right. Impulsivity — not so fast, think first. Invulnerability — it could happen to me. Macho — taking chances is foolish. Resignation — I'm not helpless, I can make a difference.",
     ref: "PHAK ch. 2",
     fu: [
-      { when: "unsat", ask: "I'll give you one. A pilot thinks: accidents happen to other people, not to me. Which hazardous attitude is that, and what is the antidote?",
+      { when: "unsat", ref: "PHAK ch. 2", ask: "I'll give you one. A pilot thinks: accidents happen to other people, not to me. Which hazardous attitude is that, and what is the antidote?",
         pts: [
           M("a", "Invulnerability", ["invulnerability"]),
           M("b", "Antidote: it could happen to me", ["it could happen to me"]),
@@ -1795,7 +1795,7 @@ const ORAL_QUESTIONS = (() => {
       M("24", "At least 24 hours after a dive that needed decompression stops, or for any flight above 8,000 feet", ["twenty-four hours"]),
     ],
     answer: "Yes — risk of decompression sickness. Wait at least 12 hours before flying to altitudes up to 8,000 ft after a dive that did not need a controlled ascent, and at least 24 hours after a dive that did, or before any flight above 8,000 ft.",
-    ref: "AIM 8-1-2" },
+    ref: "AIM 8-1-2; PHAK ch. 17" },
 
   /* ====================== PREFLIGHT & GROUND OPS (PA.II) ==================== */
   { id: "pre-pax-brief", area: "pre", lvl: 1, kind: "explain",
@@ -1812,7 +1812,7 @@ const ORAL_QUESTIONS = (() => {
       N("q", "Asks if they have questions", ["any questions"]),
     ],
     answer: "A common format is SAFETY: Seat belts (fastened for taxi, takeoff and landing; shoulder harness), Air vents and environment, Fire extinguisher, Exit doors and emergency evacuation, Traffic and talking (sterile cockpit), Your questions — plus staying clear of the controls. The seat-belt briefing and the notice to fasten them are required by regulation.",
-    ref: "14 CFR 91.107; AFH ch. 2",
+    ref: "14 CFR 91.107; PHAK ch. 2",
     fu: [
       { when: "always", ask: "What does the regulation actually require about seat belts — for passengers and for you?",
         pts: [
@@ -1834,7 +1834,7 @@ const ORAL_QUESTIONS = (() => {
       N("int", "If interrupted, go back a few steps", ["start again if distracted"]),
     ],
     answer: "The PIC is responsible for determining that the aircraft is in a condition for safe flight. The inspection follows the POH section 4 checklist in sequence: documents and maintenance status, cabin, fuel quantity (visually) and quality (sumps), oil, control surfaces and hinges, tyres and brakes, propeller, pitot-static and stall-warning openings, lights, and removal of all tie-downs, covers and the control lock. If interrupted, back up and repeat.",
-    ref: "14 CFR 91.7; C172S POH section 4; AFH ch. 2" },
+    ref: "14 CFR 91.7, 91.103; C172S POH section 4; AFH ch. 2" },
 
   { id: "pre-taxi-wind", area: "pre", lvl: 1, kind: "scenario",
     ask: "Scenario. You are taxiing with a strong wind coming from behind you and to your left — a quartering tailwind. Where do you hold the yoke?",
@@ -1898,14 +1898,14 @@ const ORAL_QUESTIONS = (() => {
       N("alt", "Or divert to a non-towered airport instead", ["go to an untowered field"]),
     ],
     answer: "Troubleshoot (volume, squelch, frequency, headset jacks, other radio, breakers, hand mic). Squawk 7600. Remain outside or above the Class D surface area until the direction and flow of traffic is determined, then join the pattern and watch the tower for light signals. Acknowledge by rocking the wings by day or flashing the landing or navigation lights at night.",
-    ref: "AIM 4-2-13, 4-3-13; 14 CFR 91.125, 91.129",
+    ref: "14 CFR 91.129(d), 91.125; AIM 4-2-13, 4-3-13; PHAK ch. 14",
     fu: [
       { when: "always", ask: "On final you see a steady green light from the tower. What does it mean? And what would flashing red mean?",
         pts: [
           M("sg", "Steady green in flight: cleared to land", ["cleared to land"]),
           M("fr", "Flashing red in flight: airport unsafe — do not land", ["don't land", "airport unsafe"]),
         ],
-        answer: "Steady green in flight: cleared to land. Flashing red in flight: airport unsafe, do not land.", ref: "14 CFR 91.125" },
+        answer: "Steady green in flight: cleared to land. Flashing red in flight: airport unsafe, do not land.", ref: "14 CFR 91.125; AIM 4-3-13; PHAK ch. 14" },
       { when: "sat", ask: "And in the air: steady red, flashing green, and alternating red and green?",
         need: 2,
         pts: [
@@ -1913,7 +1913,7 @@ const ORAL_QUESTIONS = (() => {
           M("fg", "Flashing green: return for landing", ["come back to land"]),
           M("alt", "Alternating red and green: exercise extreme caution", ["extreme caution"]),
         ],
-        answer: "Steady red: give way to other aircraft and continue circling. Flashing green: return for landing (to be followed by steady green). Alternating red and green: exercise extreme caution.", ref: "14 CFR 91.125" },
+        answer: "Steady red: give way to other aircraft and continue circling. Flashing green: return for landing (to be followed by steady green). Alternating red and green: exercise extreme caution.", ref: "14 CFR 91.125; AIM 4-3-13; PHAK ch. 14" },
     ] },
 
   { id: "apt-light-ground", area: "apt", lvl: 2, kind: "recall",
@@ -1928,7 +1928,7 @@ const ORAL_QUESTIONS = (() => {
       M("fw", "Flashing white: return to your starting point on the airport", ["go back to where you started"]),
     ],
     answer: "On the ground: steady green — cleared for takeoff; flashing green — cleared to taxi; steady red — stop; flashing red — taxi clear of the runway in use; flashing white — return to starting point on the airport; alternating red and green — exercise extreme caution.",
-    ref: "14 CFR 91.125" },
+    ref: "14 CFR 91.125; AIM 4-3-13; PHAK ch. 14" },
 
   { id: "apt-signs", area: "apt", lvl: 1, kind: "explain",
     ask: "Describe the runway holding position markings, and tell me which side you stop on. Then: what do a red sign with white writing, a black sign with yellow writing, and a yellow sign with black writing each mean?",
@@ -1941,7 +1941,7 @@ const ORAL_QUESTIONS = (() => {
       M("yel", "Yellow with black writing: direction or destination — where a taxiway LEADS", ["direction sign", "which way to go"]),
     ],
     answer: "Runway holding position markings are four yellow lines, two solid and two dashed, across the taxiway: hold on the solid side; when exiting the runway you are clear once the whole airplane is past them. Red sign, white text: mandatory instruction (runway holding position, no entry). Black sign, yellow text: location — where you are. Yellow sign, black text: direction or destination. ('Black square, you're there; yellow array points the way.')",
-    ref: "AIM 2-3",
+    ref: "AIM 2-3-5, 2-3-8, 2-3-9, 2-3-10",
     fu: [
       { when: "always", ask: "Ground control says: 'Taxi to runway 27 via Alpha, hold short of runway 18.' What must you read back, and may you cross runway 18?",
         pts: [
@@ -1964,9 +1964,9 @@ const ORAL_QUESTIONS = (() => {
       N("seg", "A segmented circle shows the pattern direction", ["segmented circle"]),
     ],
     answer: "Listen to AWOS/ASOS and the CTAF from about 10 miles out, and check the windsock or segmented circle. Fly left traffic unless right traffic is indicated (chart 'RP', Chart Supplement, segmented circle), at pattern altitude — typically 1,000 ft AGL — entering on a 45° to the downwind, abeam midfield. Self-announce on CTAF: who you are calling, who you are, where you are, your intentions, and the airport name again.",
-    ref: "AIM 4-1-9, 4-3-3; AC 90-66; 14 CFR 91.126",
+    ref: "14 CFR 91.126(b); AIM 4-1-9, 4-3-3, 4-3-4; AC 90-66C",
     fu: [
-      { when: "miss:45", ask: "How exactly do you join the traffic pattern?",
+      { when: "miss:45", ref: "AIM 4-3-3; AC 90-66C; AFH ch. 8", ask: "How exactly do you join the traffic pattern?",
         pts: [
           M("a", "On a 45-degree angle to the downwind leg", ["forty-five to downwind"]),
           N("b", "At pattern altitude, about midfield", ["at pattern altitude", "abeam midfield"]),
@@ -1984,7 +1984,7 @@ const ORAL_QUESTIONS = (() => {
       N("lcr", "Parallel runways add L, C or R", ["left, center, right"]),
     ],
     answer: "By magnetic azimuth of the centreline rounded to the nearest 10° with the final zero dropped. Runway 27 is aligned about 270° magnetic — you are heading west. The opposite end is 09. Parallel runways are suffixed L, C and R.",
-    ref: "AIM 2-3-3" },
+    ref: "AIM 2-3-3, 4-3-6" },
 
   { id: "apt-lighting", area: "apt", lvl: 2, kind: "recall",
     ask: "At night, what colour are the runway edge lights, the taxiway edge lights, and the airport's rotating beacon? And what does it suggest if the beacon is on in the daytime?",
@@ -1999,7 +1999,7 @@ const ORAL_QUESTIONS = (() => {
       N("ctr", "Taxiway centreline lights are green", ["green taxiway centerline"]),
     ],
     answer: "Runway edge lights are white (amber for the last 2,000 ft on instrument runways); threshold lights green, runway end red. Taxiway edge lights are blue; taxiway centreline lights green. A civil land airport beacon alternates white and green; a military one shows two quick white flashes between greens. A beacon operating in daylight often indicates the ceiling is below 1,000 ft or the visibility below 3 miles — but it is not a requirement, so do not rely on it.",
-    ref: "AIM 2-1",
+    ref: "AIM 2-1-4, 2-1-9, 2-1-10",
     fu: [
       { when: "always", ask: "You are on final and the PAPI — the row of four lights beside the runway — shows two white and two red. What does that mean? And four red?",
         say: [["PAPI", "PAH-pee"]],
@@ -2016,7 +2016,7 @@ const ORAL_QUESTIONS = (() => {
           M("n", "7 clicks within 5 seconds for full brightness (5 for medium, 3 for low)", ["seven clicks", "seven, five, three"]),
           N("t", "The lights stay on for about 15 minutes", ["fifteen minutes"]),
         ],
-        answer: "Pilot-controlled lighting: on the published frequency (usually the CTAF), key the mic 7 times within 5 seconds for high intensity, 5 for medium, 3 for low. The lights stay on for 15 minutes from the last activation.", ref: "AIM 2-1 (pilot control of airport lighting)" },
+        answer: "Pilot-controlled lighting: on the published frequency (usually the CTAF), key the mic 7 times within 5 seconds for high intensity, 5 for medium, 3 for low. The lights stay on for 15 minutes from the last activation.", ref: "AIM 2-1-8" },
     ] },
 
   { id: "apt-right-of-way", area: "apt", lvl: 1, kind: "scenario",
@@ -2030,7 +2030,7 @@ const ORAL_QUESTIONS = (() => {
       N("cat", "Less manoeuvrable types come first: balloon, then glider, then airship, then airplane", ["balloons then gliders"]),
     ],
     answer: "Converging (same category): the aircraft to the other's right has the right of way. Head-on: each alters course to the right. Overtaking: the aircraft being overtaken has the right of way; pass well clear on the right. An aircraft in distress has right of way over all others; otherwise balloon > glider > airship > airplane or rotorcraft, and aircraft towing or refuelling have priority over other engine-driven aircraft.",
-    ref: "14 CFR 91.113",
+    ref: "14 CFR 91.113(d), 91.113(e)",
     fu: [
       { when: "always", ask: "Two airplanes are approaching the same runway to land. Who has the right of way?",
         pts: [
@@ -2054,9 +2054,9 @@ const ORAL_QUESTIONS = (() => {
       N("wait", "Can ask for extra time or spacing", ["wait a few minutes"]),
     ],
     answer: "Wake turbulence: counter-rotating vortices from the wingtips, generated whenever the wing is producing lift and strongest when the aircraft is heavy, clean and slow. They sink at several hundred feet per minute and drift with the wind. Landing behind a larger aircraft: stay at or above its flight path and land beyond its touchdown point. Departing behind one: rotate before its rotation point and climb above or upwind of its path. You may always request a delay.",
-    ref: "AIM 7-4",
+    ref: "AIM 7-4-6, 7-4-2, 7-4-4; AFH ch. 9",
     fu: [
-      { when: "miss:land", ask: "Landing behind that jet: where do you aim to touch down compared with where it touched down?",
+      { when: "miss:land", ref: "AIM 7-4-6; AFH ch. 9", ask: "Landing behind that jet: where do you aim to touch down compared with where it touched down?",
         pts: [
           M("a", "Beyond (further down the runway than) its touchdown point", ["past where it landed"]),
           N("b", "Because the wing stops making vortices once the jet's nose wheel is on the ground", ["no wake after it lands"]),
@@ -2083,7 +2083,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "A stabilized approach is one where, by the stabilized gate, everything is set and steady — the school's CCLAPS: Checklist complete, Centerline aligned, Landing configuration (flaps set), Airspeed on target (+5/−0), Power set, Sink rate not excessive. If any item isn't true by the gate, go around. Corrections are about energy: pitch trades altitude and airspeed, power adds or removes energy.",
     ref: "AFH ch. 9; school CCLAPS (see Stage 1 → Stabilized approach)",
     fu: [
-      { when: "always", ask: "You're on final, too high and too fast. How do you fix it?",
+      { when: "always", ref: "AFH ch. 9; AFH ch. 4", ask: "You're on final, too high and too fast. How do you fix it?",
         gloss: "Too high and too fast means too much energy. The pilot has to get rid of some — or give up and go around.",
         pts: [
           M("pwr", "Reduce power (to idle if needed)", ["power back", "pull power", "idle"]),
@@ -2106,7 +2106,7 @@ const ORAL_QUESTIONS = (() => {
       N("stu", "Student pilots flying solo should not accept one", ["not for solo students"]),
     ],
     answer: "A Land And Hold Short Operation. The pilot in command has the final authority to accept or decline; say 'unable' if in any doubt. To accept you must have the published available landing distance (ALD) and landing performance for the conditions, and you must read back the hold-short clearance and comply. Solo student pilots should not accept LAHSO. It requires at least a 1,000 ft ceiling and 3 SM visibility.",
-    ref: "AIM 4-3-11" },
+    ref: "AIM 4-3-11; PHAK ch. 14" },
 
   /* ================== AERODYNAMICS, STALLS & SPINS (PA.VII) ================= */
   { id: "aero-four-forces", area: "aero", lvl: 1, kind: "explain",
@@ -2154,7 +2154,7 @@ const ORAL_QUESTIONS = (() => {
           N("num", "A 48-knot stall becomes about 68 knots", ["about sixty-eight"]),
         ],
         answer: "2 G. Stall speed increases with the square root of the load factor: √2 ≈ 1.41, so about 41% higher — a 48-knot clean stall becomes roughly 68 knots.", ref: "PHAK ch. 5" },
-      { when: "miss:any", ask: "So: you are in a dive at 120 knots and haul back hard on the yoke. Can the wing stall?",
+      { when: "miss:any", ref: "AFH ch. 5; PHAK ch. 5", ask: "So: you are in a dive at 120 knots and haul back hard on the yoke. Can the wing stall?",
         pts: [
           M("a", "Yes", ["yes"]),
           N("b", "That is an accelerated stall", ["accelerated stall"]),
@@ -2221,7 +2221,7 @@ const ORAL_QUESTIONS = (() => {
       M("fix", "Use rudder in the direction of the turn to stay coordinated", ["rudder into the turn", "step on the ball"]),
     ],
     answer: "Adverse yaw: the down-going aileron on the rising wing increases that wing's lift and with it its induced drag, yawing the nose opposite to the direction of roll. Coordinated rudder in the direction of the turn cancels it.",
-    ref: "PHAK ch. 5, 6" },
+    ref: "PHAK ch. 6; AFH ch. 3" },
 
   { id: "aero-drag", area: "aero", lvl: 2, kind: "explain",
     ask: "What are the two kinds of drag, and how does each change as you fly faster?",
@@ -2245,7 +2245,7 @@ const ORAL_QUESTIONS = (() => {
       N("how", "It is done by twisting the wing (washout) so the tips sit at a lower angle", ["washout", "wing twist"]),
     ],
     answer: "With the root stalling first the wingtips, and so the ailerons, remain effective for roll control, and the separated flow from the roots buffets the tail as a natural warning. It is achieved with washout — the wing is twisted so the tips meet the air at a lower angle of incidence than the roots.",
-    ref: "PHAK ch. 5; AFH ch. 5" },
+    ref: "AFH ch. 5; PHAK ch. 5" },
 
   /* ============================= NAVIGATION (PA.VI) ========================= */
   { id: "nav-lost", area: "nav", lvl: 1, kind: "scenario",
@@ -2262,9 +2262,9 @@ const ORAL_QUESTIONS = (() => {
       N("circ", "Circle a known landmark rather than flying on blindly", ["circle"]),
     ],
     answer: "The five Cs: Climb (better visibility, radio and radar coverage), Communicate (ATC, Flight Service, or 121.5), Confess (say you are lost), Comply (with the help given), Conserve (fuel — reduce power). Also use the onboard GPS 'nearest' function or VOR cross-bearings, hold the heading while you work it out or circle a landmark, and squawk 7700 if it becomes an emergency.",
-    ref: "PHAK ch. 16; AIM 6-2, 6-3",
+    ref: "PHAK ch. 16; AIM 6-3-2, 6-2-1",
     fu: [
-      { when: "miss:comm", ask: "Is there anyone you could ask for help? On what frequency, if you were not already talking to someone?",
+      { when: "miss:comm", ref: "AIM 6-3-2, 6-2-2, 4-1-17", ask: "Is there anyone you could ask for help? On what frequency, if you were not already talking to someone?",
         pts: [
           M("a", "ATC or Flight Service", ["approach", "center", "flight service"]),
           M("b", "121.5, the emergency frequency", ["one twenty-one point five", "guard"]),
@@ -2336,7 +2336,7 @@ const ORAL_QUESTIONS = (() => {
       N("raim", "The receiver checks its own accuracy (RAIM) and needs enough satellites to do it", ["RAIM", "five satellites"]),
     ],
     answer: "GPS can be lost to electrical or display failure, satellite outages, interference or jamming (check NOTAMs), and its database may be out of date. Over-reliance also erodes situational awareness. So the flight is planned with courses, headings, times and visual checkpoints, and progress is cross-checked by pilotage; VORs are a further backup. The receiver uses RAIM to monitor signal integrity, which needs at least five satellites (four give a 3-D position).",
-    ref: "AIM 1-1-17; PHAK ch. 16" },
+    ref: "AIM 1-1-17, 1-2-4; PHAK ch. 16" },
 
   { id: "nav-flight-following", area: "nav", lvl: 2, kind: "explain",
     ask: "What is VFR flight following, how do you get it, and what are you still responsible for while you have it?",
@@ -2349,7 +2349,7 @@ const ORAL_QUESTIONS = (() => {
       N("sar", "A big benefit: someone already knows where you are if something goes wrong", ["help in an emergency"]),
     ],
     answer: "Flight following is Radar Traffic Information Service: on request, and workload permitting, ATC gives traffic advisories and safety alerts to VFR aircraft. Call Approach or Center with your call sign, type, position, altitude and destination; you will be assigned a squawk code. You remain responsible for see-and-avoid, cloud clearance, terrain and navigation, and you still need an explicit clearance for Class B. Tell ATC before leaving the frequency.",
-    ref: "AIM 4-1-15" },
+    ref: "AIM 4-1-15, 4-1-16" },
 
   /* ========================= EMERGENCY OPERATIONS (PA.IX) =================== */
   { id: "emer-engine-failure", area: "emer", lvl: 1, kind: "scenario",
@@ -2375,14 +2375,14 @@ const ORAL_QUESTIONS = (() => {
           N("ld", "It is the best lift-to-drag speed", ["best L over D"]),
           N("wt", "The figure is for maximum weight — slightly lower when light", ["changes with weight"]),
         ],
-        answer: "Best glide gives the maximum distance per foot of altitude lost — the best lift-to-drag ratio. Faster or slower both shorten the glide. The POH figure is for maximum gross weight.", ref: "AFH ch. 18; C172S POH section 3" },
+        answer: "Best glide gives the maximum distance per foot of altitude lost — the best lift-to-drag ratio. Faster or slower both shorten the glide. The POH figure is for maximum gross weight.", ref: "AFH ch. 3; PHAK ch. 5; C172S POH section 3" },
       { when: "miss:a", ask: "Back up. The instant the engine goes quiet, what is the very first thing you do with the airplane?",
         pts: [
           M("a", "Pitch for best glide speed", ["set the glide", "trim for best glide"]),
           M("b", "68 knots", ["sixty-eight"]),
         ],
         answer: "Pitch for and trim 68 KIAS, best glide — flying the airplane comes before everything else." },
-      { when: "miss:d", ask: "Would you tell anyone? How?",
+      { when: "miss:d", ref: "AIM 6-3-1, 6-2-2; C172S POH section 3", ask: "Would you tell anyone? How?",
         pts: [
           M("a", "A Mayday call, on the current frequency or 121.5", ["mayday", "one twenty-one point five"]),
           M("b", "Transponder 7700", ["seventy-seven hundred"]),
@@ -2402,7 +2402,7 @@ const ORAL_QUESTIONS = (() => {
       N("spd", "Gives the speed — this school's placard uses 68 knots flaps up (65 flaps down); the POH prints 70 flaps up", ["sixty-eight", "seventy"]),
     ],
     answer: "Lower the nose at once and establish the glide — the POH prints 70 KIAS flaps up and 65 KIAS flaps down for this case; this school's placard teaches the 68 KIAS best-glide figure. Land straight ahead, with only small heading changes to avoid obstacles. Do not attempt to return to the runway: the 180°-plus turn at low speed costs more altitude than is available and invites a stall-spin. If time permits: mixture idle cut-off, fuel shutoff valve OFF, magnetos OFF, flaps as required, standby battery and master OFF, door unlatched.",
-    ref: "C172S POH section 3; AFH ch. 18",
+    ref: "C172S POH section 3; AFH ch. 18, 6",
     fu: [
       { when: "unsat", ask: "Why is turning back to the runway from 400 feet such a bad idea?",
         pts: [
@@ -2427,7 +2427,7 @@ const ORAL_QUESTIONS = (() => {
     need: 5,
     no: ["Says they would restart the engine once the fire is out"],
     answer: "Engine fire in flight: mixture IDLE CUT-OFF, fuel shutoff valve OFF (pull), auxiliary fuel pump OFF, master switch OFF, cabin vents open as needed with cabin heat and air OFF, airspeed 100 KIAS — and if the fire is not out, increase to a speed that gives an incombustible mixture. Then execute a forced landing. Do not attempt a restart.",
-    ref: "C172S POH section 3",
+    ref: "C172S POH section 3; AFH ch. 18",
     fu: [
       { when: "always", ask: "Different fire: during engine start on the ground you see flames from the engine. What is the first thing you do?",
         gloss: "Counter-intuitive: keep cranking the starter so the engine sucks the flames and excess fuel inside.",
@@ -2452,7 +2452,7 @@ const ORAL_QUESTIONS = (() => {
       N("back", "If power is essential for the flight, restore items one at a time to find the culprit", ["turn things back on one at a time"]),
     ],
     answer: "Electrical fire in flight: standby battery OFF, master OFF, vents / cabin air / heat CLOSED, fire extinguisher ACTIVATE if available, avionics and all other switches (except magnetos) OFF. Once the fire is out, ventilate — vents, cabin air and windows open. If power is needed to continue, check breakers and restore power and equipment one item at a time. Land as soon as practical. The engine runs on regardless — the magnetos are independent.",
-    ref: "C172S POH section 3" },
+    ref: "C172S POH section 3; AFH ch. 18" },
 
   { id: "emer-declare", area: "emer", lvl: 1, kind: "explain",
     ask: "How do you declare an emergency? What do you say, on what frequency, and what transponder code? Are you in trouble with the FAA for doing it?",
@@ -2469,7 +2469,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     need: 4,
     answer: "'Mayday, Mayday, Mayday' (distress) or 'Pan-pan' ×3 (urgency) on the frequency in use, or 121.5 if not talking to anyone; squawk 7700. State call sign, nature of the emergency, position and altitude, intentions, fuel remaining and people on board. Under 91.3 the PIC may deviate from any rule to the extent required; a written report is needed only if the FAA requests it. Declaring early gets you priority and help.",
-    ref: "AIM 6-3; 14 CFR 91.3" },
+    ref: "AIM 6-3-1, 6-2-2, 6-1-2; 14 CFR 91.3; PHAK ch. 14" },
 
   { id: "emer-imc", area: "emer", lvl: 1, kind: "scenario",
     ask: "Scenario. You are VFR, the haze thickens, and suddenly you are inside a cloud and cannot see the ground or horizon. What do you do?",
@@ -2516,7 +2516,7 @@ const ORAL_QUESTIONS = (() => {
       M("land", "Fly a normal pattern and land, then close it — or close it once at a safe altitude", ["come around and land", "deal with it at altitude"]),
     ],
     answer: "Maintain control: an open door will not stop a 172 flying, but the distraction has caused accidents. Continue the climb, fly a normal pattern and land to secure it — or, at a safe altitude and trimmed, close it per the POH. Brief the passenger not to lean on or grab at it.",
-    ref: "AFH ch. 18" },
+    ref: "C172S POH section 3; AFH ch. 18" },
 
   { id: "emer-survival", area: "emer", lvl: 2, kind: "explain",
     ask: "What emergency equipment is on this airplane, and what else would you bring for a cross-country over remote country?",
@@ -2528,7 +2528,7 @@ const ORAL_QUESTIONS = (() => {
       N("fp", "Plus a flight plan or flight following so someone knows the route", ["file a flight plan"]),
     ],
     answer: "Installed: the ELT and a fire extinguisher (check its gauge and security on preflight). Carry survival gear suited to the terrain, climate and season: water, clothing and blankets, first-aid kit, flashlight, signalling devices (mirror, whistle), a charged phone or handheld radio — and file a flight plan or use flight following so the search starts in the right place.",
-    ref: "FAA-S-ACS-6C PA.IX.D; AIM 6-2" },
+    ref: "FAA-S-ACS-6C PA.IX.D; AIM 6-2-4; 14 CFR 91.207" },
 
   { id: "emer-ntsb", area: "emer", lvl: 3, kind: "recall",
     ask: "After an accident, who do you have to notify, and how quickly?",
@@ -2542,7 +2542,7 @@ const ORAL_QUESTIONS = (() => {
       N("wreck", "The wreckage must be preserved", ["don't move the wreckage"]),
     ],
     answer: "The nearest NTSB office must be notified immediately of an aircraft accident (death, serious injury or substantial damage) and of the serious incidents listed in NTSB 830.5 — for example an in-flight fire, flight-control system failure, or a crewmember unable to perform duties. A written report is filed within 10 days of an accident. Wreckage and records are preserved.",
-    ref: "49 CFR Part 830" },
+    ref: "49 CFR 830.5, 830.2, 830.10, 830.15" },
 
   /* =========================== NIGHT OPERATIONS (PA.XI) ===================== */
   { id: "night-definitions", area: "night", lvl: 1, kind: "explain",
@@ -2594,7 +2594,7 @@ const ORAL_QUESTIONS = (() => {
     fu: [
       { when: "sat", ask: "And if all you can see of another aircraft is a steady white light and a flashing red one?",
         pts: [M("away", "You are behind it — it is flying away from you", ["going away", "I'm looking at its tail"])],
-        answer: "The white light is the tail: the aircraft is heading away and you may be overtaking it — pass well clear on the right.", ref: "AFH ch. 11" },
+        answer: "The white light is the tail: the aircraft is heading away and you may be overtaking it — pass well clear on the right.", ref: "14 CFR 91.113(d), 91.209; AFH ch. 11" },
     ] },
 
   { id: "night-illusions", area: "night", lvl: 2, kind: "explain",
@@ -2649,7 +2649,7 @@ const ORAL_QUESTIONS = (() => {
           N("step", "It simply counts as a third-class medical after its first-class privileges lapse", ["it reverts to third class", "steps down"]),
         ],
         answer: "For private-pilot privileges any class of medical lasts as a third class: 24 calendar months at age 40 or over — to 31 August 2027.", ref: "14 CFR 61.23(d)" },
-      { when: "unsat", ask: "Simpler. For a private pilot, how many years does a medical last if you are under 40, and how many if you are 40 or over?",
+      { when: "unsat", ref: "14 CFR 61.23(d)", ask: "Simpler. For a private pilot, how many years does a medical last if you are under 40, and how many if you are 40 or over?",
         pts: [M("5", "Under 40: five years (60 calendar months)", ["sixty months", "five years"]), M("2", "40 or over: two years (24 calendar months)", ["twenty-four months", "two years"])],
         answer: "60 calendar months under 40; 24 calendar months at 40 or over." },
     ] },
@@ -2680,7 +2680,7 @@ const ORAL_QUESTIONS = (() => {
           M("ame", "Ask an aviation medical examiner (or the FAA's guidance on medications)", ["ask my AME", "FAA medication list", "flight doctor"]),
           N("label", "Read the label for drowsiness warnings and try nothing new just before a flight", ["read the label", "may cause drowsiness"]),
         ],
-        answer: "Ask an AME and check FAA guidance. Anything that warns of drowsiness or impaired alertness is a no-go, including many over-the-counter antihistamines and sleep aids.", ref: "PHAK ch. 17; AIM 8-1-1" },
+        answer: "Ask an AME and check FAA guidance. Anything that warns of drowsiness or impaired alertness is a no-go, including many over-the-counter antihistamines and sleep aids.", ref: "PHAK ch. 17; AIM 8-1-1; 14 CFR 91.17(a)(3)" },
     ] },
 
   { id: "cert-log-pic", area: "cert", lvl: 2, kind: "scenario",
@@ -2714,7 +2714,7 @@ const ORAL_QUESTIONS = (() => {
       N("log", "The pilot under the hood logs the safety pilot's name", ["write my name in their logbook"]),
     ],
     answer: "A safety pilot must hold at least a private pilot certificate with category and class ratings appropriate to the aircraft, hold a medical (a required crewmember — BasicMed is now also accepted), and have adequate vision forward and to each side. The airplane must have fully functioning dual controls. The pilot under the hood records the safety pilot's name.",
-    ref: "14 CFR 91.109(c), 61.3(c), 61.51(g)",
+    ref: "14 CFR 91.109(c), 61.3(c)",
     fu: [
       { when: "sat", ask: "Can you log any of that flight yourself?",
         pts: [
@@ -2880,7 +2880,7 @@ const ORAL_QUESTIONS = (() => {
           N("faa", "ADs themselves are published by the FAA online", ["FAA website"]),
         ],
         answer: "The aircraft records must show the current status of applicable ADs: the AD number, method of compliance, date, and for recurring ADs the next time or date due. The owner/operator keeps it; the FAA publishes the ADs.", ref: "14 CFR 91.417(a)(2)(v)" },
-      { when: "miss:nograce", ask: "A 100-hour inspection may be overflown by up to 10 hours to reach the shop. Does the same apply to an AD?",
+      { when: "miss:nograce", ref: "14 CFR 39.7, 39.11; 14 CFR 91.409(b)", ask: "A 100-hour inspection may be overflown by up to 10 hours to reach the shop. Does the same apply to an AD?",
         pts: [M("no", "No — not unless the AD itself says so", ["no"])],
         answer: "No. An AD's limits are absolute unless the AD provides otherwise (or a special flight permit is issued)." },
     ] },
@@ -2896,7 +2896,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says position lights are only required when flying for hire"],
     answer: "Not as planned. Position lights are required for night VFR and must be lit from sunset to sunrise. Options: replace the bulb (replacing position-light bulbs is on the preventive maintenance list), or deactivate and placard it INOPERATIVE and be on the ground before 6:10 pm.",
-    ref: "14 CFR 91.205(c), 91.209(a), 91.213(d); Part 43 App. A(c)",
+    ref: "14 CFR 91.205(c), 91.209(a), 91.213(d); 14 CFR Part 43 App. A(c)",
     fu: [
       { when: "always", ask: "Change it: all the wingtip lights work, but the landing light is burned out. Same private flight landing after dark. Legal?",
         pts: [
@@ -2918,14 +2918,14 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says it is fine because a stall horn is not in the required day-VFR list (ATOMATOFLAMES)"],
     answer: "No. With no MEL, 91.213(d) allows flight with inoperative equipment only if it is not required by the type certificate, the equipment list or KOEL, 91.205 or another rule, or an AD. The scenario's KOEL requires it, so the airplane is unairworthy until repaired.",
-    ref: "14 CFR 91.213(d)(2)(ii)",
+    ref: "14 CFR 91.213(d)(2)(i), (ii); C172S POH section 2",
     fu: [
       { when: "sat", ask: "Where in the POH is that Kinds of Operations Equipment List? And where is the full list of everything installed in the airplane?",
         pts: [
           M("s2", "KOEL: Section 2, Limitations", ["section two", "limitations"]),
           M("s6", "Full equipment list: Section 6, Weight and Balance", ["section six", "weight and balance section"]),
         ], need: 1,
-        answer: "The KOEL is in Section 2 (Limitations). The comprehensive equipment list is in Section 6 (Weight & Balance / Equipment List).", ref: "C172S POH sections 2, 6" },
+        answer: "The KOEL is in Section 2 (Limitations). The comprehensive equipment list is in Section 6 (Weight & Balance / Equipment List).", ref: "C172S POH section 2, section 6" },
       { when: "unsat", ask: "With no minimum equipment list, what are the places you must check before flying with something broken?",
         pts: [
           M("tc", "The airplane's type certificate requirements for day VFR", ["type certificate"]),
@@ -2968,7 +2968,7 @@ const ORAL_QUESTIONS = (() => {
       N("open", "Any open squawks or inoperative-equipment entries", ["squawk sheet", "discrepancies"]),
     ], need: 4,
     answer: "Airframe, engine and propeller records. Find: the annual (within 12 calendar months, signed by an IA with an airworthy statement); the 100-hour if applicable; the transponder test (24 calendar months); the ELT inspection (12 calendar months) and battery date; AD status; and for IFR the altimeter/static test. Entries carry a description, date, signature and certificate number.",
-    ref: "14 CFR 91.417, 43.9, 43.11",
+    ref: "14 CFR 91.417(a), 43.9, 43.11, 91.409, 91.413, 91.207",
     fu: [
       { when: "always", ask: "Do those logbooks have to be carried in the airplane?",
         pts: [M("no", "No — they are kept by the owner or operator and made available for inspection", ["no", "kept in the office"])],
@@ -2986,7 +2986,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Would take the passengers on the first flight after the work"],
     answer: "The work must be approved for return to service with a logbook entry. Because the maintenance may have appreciably changed the flight characteristics, an appropriately rated pilot with at least a private certificate must fly it, make an operational check and log that flight in the aircraft records before anyone carries passengers.",
-    ref: "14 CFR 91.407",
+    ref: "14 CFR 91.407(a), (b)",
     fu: [
       { when: "always", ask: "Could you be the pilot who makes that check flight?",
         pts: [
@@ -3012,7 +3012,7 @@ const ORAL_QUESTIONS = (() => {
     fu: [
       { when: "always", ask: "Which section of the POH holds the limitations?",
         pts: [M("2", "Section 2", ["section two"])],
-        answer: "Section 2, Limitations.", ref: "C172S POH section 2" },
+        answer: "Section 2, Limitations.", ref: "14 CFR 91.9(b); C172S POH section 2" },
     ] },
 
   { id: "airw-100hr-next-due", area: "airw", lvl: 3, kind: "scenario",
@@ -3074,7 +3074,7 @@ const ORAL_QUESTIONS = (() => {
           N("cg", "It comes out around 42.3 inches — barely moved", ["forty-two point three"]),
         ],
         answer: "20 gal × 6 lb = 120 lb, so 2,280 lb. Moment 102,230 − 5,760 = 96,470; ÷ 2,280 = 42.3 in. The CG must be within limits for both takeoff and landing.", ref: "PHAK ch. 10" },
-      { when: "miss:cg", ask: "To get the centre of gravity, what do you divide by what?",
+      { when: "miss:cg", ref: "PHAK ch. 10", ask: "To get the centre of gravity, what do you divide by what?",
         pts: [M("d", "Total moment divided by total weight", ["moment over weight"])],
         answer: "CG = total moment ÷ total weight." },
     ] },
@@ -3107,7 +3107,7 @@ const ORAL_QUESTIONS = (() => {
       N("same", "Total weight does not change", ["weight stays the same"]),
     ],
     answer: "Forward. Shift = weight moved × distance moved ÷ total weight = 50 × 22 ÷ 2,400 = 0.46 inch. The total weight is unchanged.",
-    ref: "PHAK ch. 10 (weight shift)",
+    ref: "PHAK ch. 10",
     fu: [
       { when: "always", ask: "If that is still not enough to get inside the aft limit, what else can you do?",
         pts: [
@@ -3135,7 +3135,7 @@ const ORAL_QUESTIONS = (() => {
           M("upd", "The mechanic records a new empty weight and balance point", ["they update the weight and balance", "new empty weight"]),
           M("new", "Use the most recent one — it replaces the earlier sheets", ["the latest dated one", "the old one is superseded"]),
         ],
-        answer: "The person making the change revises the empty weight and CG in the aircraft records; the newest dated record supersedes the others and is the one to use.", ref: "14 CFR 91.9; PHAK ch. 10" },
+        answer: "The person making the change revises the empty weight and CG in the aircraft records; the newest dated record supersedes the others and is the one to use.", ref: "C172S POH section 6; PHAK ch. 10" },
     ] },
 
   { id: "perf-takeoff-grass-calc", area: "perf", lvl: 2, kind: "scenario",
@@ -3150,7 +3150,7 @@ const ORAL_QUESTIONS = (() => {
       N("margin", "Says that margin is thin and adds a safety margin of their own (many pilots add half again) or lightens the load", ["I'd want more margin", "add fifty percent", "not comfortable"]),
     ],
     answer: "15% of the 1,200 ft ground roll is 180 ft, added to both figures: 1,380 ft ground roll and 2,180 ft to clear 50 ft. That leaves 420 ft of a 2,600 ft runway — legal, but thin for book figures flown by a test pilot in a new airplane; most pilots would want a bigger margin or a lighter airplane.",
-    ref: "C172S POH section 5 (short-field takeoff distance notes)",
+    ref: "C172S POH section 5",
     fu: [
       { when: "always", ask: "Same chart figures, but now a paved runway with a 4-knot tailwind. The POH says to add 10 percent for every 2 knots of tailwind. What are the distances?",
         pts: [
@@ -3176,7 +3176,7 @@ const ORAL_QUESTIONS = (() => {
       N("margin", "Adds a safety margin — the chart assumes perfect short-field technique", ["I'd add a margin"]),
     ], need: 3,
     answer: "Grass: 45% of 600 = 270 ft, added to both — 870 ft and 1,620 ft. Tailwind 6 knots = +30%: 600 → 780 ft and 1,350 → 1,755 ft.",
-    ref: "C172S POH section 5 (short-field landing distance notes)",
+    ref: "C172S POH section 5",
     fu: [
       { when: "always", ask: "What does that landing chart assume about how the airplane is flown and what the runway is like?",
         pts: [
@@ -3222,9 +3222,9 @@ const ORAL_QUESTIONS = (() => {
       N("pers", "Compares it with their own personal limit, not just the airplane's", ["my personal minimum"]),
     ],
     answer: "Runway 18 is 180°; wind 220° is 40° off, from the right. Crosswind = 22 × sin 40° ≈ 14 knots (rule of thumb: about two-thirds at 40°); headwind ≈ 17 knots. The C172S maximum demonstrated crosswind is 15 knots, so this is at the edge — and well beyond most new pilots' personal limits.",
-    ref: "C172S POH sections 4, 5 (wind components); PHAK ch. 11",
+    ref: "C172S POH sections 4, 5; PHAK ch. 11",
     fu: [
-      { when: "always", ask: "Two quick ones. Wind 30 degrees off the runway at 20 knots — crosswind? And 90 degrees off at 12 knots?",
+      { when: "always", ref: "PHAK ch. 11", ask: "Two quick ones. Wind 30 degrees off the runway at 20 knots — crosswind? And 90 degrees off at 12 knots?",
         pts: [M("a", "30 degrees at 20: 10 knots (half)", ["ten"]), M("b", "90 degrees at 12: all 12 knots", ["twelve", "all of it"])],
         answer: "At 30° the crosswind is half the wind: 10 knots. At 90° it is all of it: 12 knots." },
       { when: "sat", ask: "Is 15 knots a limitation? Would it be illegal to land with 17?",
@@ -3232,7 +3232,7 @@ const ORAL_QUESTIONS = (() => {
           M("no", "Not a limitation — it is the most a test pilot demonstrated during certification", ["not a limit", "demonstrated, not limiting"]),
           N("wise", "But beyond it you are a test pilot yourself", ["not wise", "outside what's been proven"]),
         ],
-        answer: "It is the maximum demonstrated crosswind velocity, not a limitation. Exceeding it is not illegal in itself, but it is beyond what has been shown and beyond most pilots' skill.", ref: "C172S POH section 4" },
+        answer: "It is the maximum demonstrated crosswind velocity, not a limitation. Exceeding it is not illegal in itself, but it is beyond what has been shown and beyond most pilots' skill.", ref: "C172S POH section 4; PHAK ch. 11" },
     ] },
 
   { id: "perf-fuel-tabs", area: "perf", lvl: 2, kind: "scenario",
@@ -3269,7 +3269,7 @@ const ORAL_QUESTIONS = (() => {
       N("num", "This airplane's service ceiling is 14,000 feet", ["fourteen thousand"]),
     ],
     answer: "With altitude, indicated Vx increases and Vy decreases; they meet at the absolute ceiling, where the rate of climb is zero. The service ceiling is the altitude at which the maximum rate of climb is 100 feet per minute — 14,000 ft for the C172S.",
-    ref: "PHAK ch. 11; C172S POH section 1",
+    ref: "PHAK ch. 11; AFH ch. 3; C172S POH section 5",
     fu: [
       { when: "sat", ask: "Why does the climb get weaker the higher you go?",
         pts: [
@@ -3296,7 +3296,7 @@ const ORAL_QUESTIONS = (() => {
     fu: [
       { when: "always", ask: "You and an instructor want to practise spins in this airplane, with a full bag in the baggage area. Problem?",
         pts: [M("yes", "Yes — spins need the utility category: baggage area and rear seat empty, 2,200 pounds or less", ["take the bag out", "has to be utility"])],
-        answer: "Yes. Intentional spins are approved only in the utility category: at or below 2,200 lb, within the utility CG range, rear seat and baggage compartment empty.", ref: "C172S POH section 2" },
+        answer: "Yes. Intentional spins are approved only in the utility category: at or below 2,200 lb, within the utility CG range, rear seat and baggage compartment empty.", ref: "C172S POH section 2; 14 CFR 91.9" },
     ] },
 
   { id: "perf-hot-high", area: "perf", lvl: 2, kind: "scenario",
@@ -3332,9 +3332,9 @@ const ORAL_QUESTIONS = (() => {
       N("round", "When between chart values, interpolate or use the worse number", ["round up", "interpolate"]),
     ], need: 2,
     answer: "They are accurate for the conditions and technique stated on the chart, obtained by test pilots in a new airplane with a new engine. An older airplane and an average pilot will not match them, so read the chart's notes, use the conservative values and add a margin.",
-    ref: "C172S POH section 5 (introduction); PHAK ch. 11",
+    ref: "C172S POH section 5; PHAK ch. 11",
     fu: [
-      { when: "always", ask: "Your conditions fall between two rows of the chart — say between 2,000 and 3,000 feet. What do you do?",
+      { when: "always", ref: "C172S POH section 5; PHAK ch. 11", ask: "Your conditions fall between two rows of the chart — say between 2,000 and 3,000 feet. What do you do?",
         pts: [M("i", "Interpolate between them, or simply use the higher, more pessimistic row", ["interpolate", "use the higher one", "round up"])],
         answer: "Interpolate, or take the next higher (more conservative) altitude, temperature and weight." },
     ] },
@@ -3352,17 +3352,17 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the whole display has failed and it is an emergency"],
     answer: "The air data computer (or its inputs) has failed: it supplies airspeed, altitude, vertical speed, true airspeed and outside air temperature. Attitude and heading come from the AHRS and are still valid. Fly on the standby airspeed indicator and altimeter and land as soon as practical.",
-    ref: "C172S POH section 3 (ADC failure), section 7",
+    ref: "C172S POH section 3 (ADC failure), section 7; PHAK ch. 8",
     fu: [
       { when: "always", ask: "Now the opposite: red X's over the attitude and the heading, but airspeed and altitude are fine. Which unit, and what do you use?",
         pts: [
           M("ahrs", "The attitude and heading unit — the AHRS", ["AHRS", "attitude heading reference system"]),
           M("use", "Use the standby attitude indicator and the magnetic compass", ["standby attitude", "the compass"]),
         ],
-        answer: "The AHRS has failed. Use the standby attitude indicator and the magnetic compass (and the horizon outside, in VFR).", ref: "C172S POH section 3 (AHRS failure)" },
+        answer: "The AHRS has failed. Use the standby attitude indicator and the magnetic compass (and the horizon outside, in VFR).", ref: "C172S POH section 3 (AHRS failure); PHAK ch. 8" },
       { when: "sat", ask: "And if only the heading is crossed out, with attitude still working?",
         pts: [M("mag", "The magnetometer — the heading sensor — so use the magnetic compass", ["magnetometer", "use the compass"])],
-        answer: "The magnetometer (or its link to the AHRS) has failed; navigate by the magnetic compass and GPS track.", ref: "C172S POH section 7" },
+        answer: "The magnetometer (or its link to the AHRS) has failed; navigate by the magnetic compass and GPS track.", ref: "C172S POH section 7; PHAK ch. 8" },
     ] },
 
   { id: "sys-g1000-lrus", area: "sys", lvl: 3, kind: "recall",
@@ -3400,7 +3400,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Identify the circuit. If the equipment is needed, allow the breaker to cool and reset it once; if it trips again, do not reset it. Never reset with any sign of burning. A breaker protects the wiring from overheating, and repeated resets invite an electrical fire.",
     ref: "C172S POH sections 3, 7; PHAK ch. 7",
     fu: [
-      { when: "always", ask: "What is a circuit breaker actually protecting?",
+      { when: "always", ref: "PHAK ch. 7", ask: "What is a circuit breaker actually protecting?",
         pts: [M("w", "The wiring — from carrying too much current, overheating and starting a fire", ["the wires", "overload", "prevents fire"])],
         answer: "The wiring: it opens the circuit when the current exceeds its rating, before the wire overheats." },
     ] },
@@ -3525,8 +3525,8 @@ const ORAL_QUESTIONS = (() => {
     fu: [
       { when: "sat", ask: "In this engine, where does the fuel meet the air?",
         pts: [M("inj", "It is injected at each cylinder's intake, not mixed in a carburetor", ["fuel injected", "injector nozzles at each cylinder"])],
-        answer: "Fuel is metered by the fuel/air control unit and sprayed by an injector nozzle into the intake port of each cylinder.", ref: "C172S POH section 7" },
-      { when: "unsat", ask: "Try it this way: what are the four words pilots use — suck, squeeze…?",
+        answer: "Fuel is metered by the fuel/air control unit and sprayed by an injector nozzle into the intake port of each cylinder.", ref: "C172S POH section 7; PHAK ch. 7" },
+      { when: "unsat", ref: "PHAK ch. 7", ask: "Try it this way: what are the four words pilots use — suck, squeeze…?",
         pts: [M("w", "Suck, squeeze, bang, blow — intake, compression, power, exhaust", ["bang, blow"])],
         answer: "Suck, squeeze, bang, blow: intake, compression, power, exhaust." },
     ] },
@@ -3545,7 +3545,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "The engine is air-cooled: ram air entering the cowl is directed by baffles over the cylinder fins, and the oil carries heat to the oil cooler. To cool it: increase airspeed (lower the nose), enrich the mixture, and reduce power or level off. The 172S has no cowl flaps.",
     ref: "C172S POH section 7; PHAK ch. 7",
     fu: [
-      { when: "always", ask: "Why is a long wait on the ground with the engine running hard on the engine in summer?",
+      { when: "always", ref: "PHAK ch. 7", ask: "Why is a long wait on the ground with the engine running hard on the engine in summer?",
         pts: [M("flow", "Very little air is flowing through the cowling when the airplane is not moving", ["no airflow", "not enough cooling air"])],
         answer: "Cooling depends on airflow through the cowl; on the ground there is little, so temperatures rise. Face into the wind and keep ground runs short." },
     ] },
@@ -3562,14 +3562,14 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the primary controls are hydraulic or electric"],
     answer: "Ailerons, elevator and rudder are moved manually through cables, pulleys and bellcranks. Pitch trim is a tab on the elevator, set with the trim wheel. There is no in-flight rudder or aileron trim on the 172S (the rudder tab is ground-adjustable). Flaps are electric.",
-    ref: "C172S POH section 7",
+    ref: "C172S POH section 7; PHAK ch. 6",
     fu: [
       { when: "always", ask: "Before takeoff you check the controls are 'free and correct'. What does correct look like when you turn the yoke left, and when you pull it back?",
         pts: [
           M("ail", "Yoke left: the left aileron goes UP and the right one down", ["left aileron up"]),
           M("elev", "Yoke back: the elevator goes up", ["elevator up"]),
         ],
-        answer: "Yoke left: left aileron up, right aileron down (thumbs point to the up aileron). Yoke back: elevator trailing edge up. Free means full travel without binding.", ref: "AFH ch. 2" },
+        answer: "Yoke left: left aileron up, right aileron down (thumbs point to the up aileron). Yoke back: elevator trailing edge up. Free means full travel without binding.", ref: "AFH ch. 2; PHAK ch. 6" },
     ] },
 
   { id: "sys-mag-fouled", area: "sys", lvl: 1, kind: "scenario",
@@ -3588,7 +3588,7 @@ const ORAL_QUESTIONS = (() => {
       { when: "sat", ask: "What can you do during ground operations to make plug fouling less likely?",
         pts: [M("lean", "Lean the mixture for taxi and avoid long periods at idle with it full rich", ["lean on the ground", "don't idle rich"])],
         answer: "Lean the mixture during taxi and ground running as the POH or school procedure describes, and avoid prolonged low-RPM idling.", ref: "C172S POH section 4" },
-      { when: "always", ask: "Which spark plugs stop firing when you select the left magneto?",
+      { when: "always", ref: "PHAK ch. 7", ask: "Which spark plugs stop firing when you select the left magneto?",
         pts: [M("r", "The ones fired by the right magneto — one of the two plugs in every cylinder", ["the right mag's plugs", "one plug per cylinder"])],
         answer: "Selecting L grounds the right magneto, so the plug it fires in each cylinder stops — hence the small normal drop." },
     ] },
@@ -3648,7 +3648,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Would fly and deal with it on landing"],
     answer: "A soft, long pedal on one side means a leak, low fluid or air in that wheel's brake system — each main wheel has its own master cylinder and line. The airplane is not fit to fly: stop, and either return very slowly or shut down and be towed, and write it up.",
-    ref: "C172S POH section 7; 14 CFR 91.7",
+    ref: "C172S POH section 7; 14 CFR 91.7; AFH ch. 2",
     fu: [
       { when: "always", ask: "Suppose instead you only discover it after touchdown: no left brake at all. How do you stop?",
         pts: [
@@ -3656,7 +3656,7 @@ const ORAL_QUESTIONS = (() => {
           M("roll", "Let it slow down on its own using the whole runway — yoke back, and only gentle use of the good brake", ["let it roll out", "aerodynamic braking", "easy on the other brake"]),
           N("tell", "Tell the tower or other traffic", ["tell tower"]),
         ],
-        answer: "Hold the centreline with rudder and nosewheel steering, hold the yoke back for aerodynamic braking and let the airplane decelerate over the available runway, using the good brake gently with opposite rudder so it does not swerve. Advise ATC and do not taxi further than necessary.", ref: "AFH ch. 9, 18" },
+        answer: "Hold the centreline with rudder and nosewheel steering, hold the yoke back for aerodynamic braking and let the airplane decelerate over the available runway, using the good brake gently with opposite rudder so it does not swerve. Advise ATC and do not taxi further than necessary.", ref: "AFH ch. 9" },
     ] },
 
   { id: "sys-elec-dead", area: "sys", lvl: 1, kind: "scenario",
@@ -3694,7 +3694,7 @@ const ORAL_QUESTIONS = (() => {
       N("lean", "Lean for taxi if the school's procedure calls for it", ["lean for taxi"]),
     ],
     answer: "Oil pressure. It should rise into the green within 30 seconds (about 60 seconds in very cold weather); if not, shut down immediately. Then set about 1,000 RPM, check the charging indications and annunciators, and continue the after-start checklist.",
-    ref: "C172S POH section 4 (starting engine)",
+    ref: "C172S POH section 4; PHAK ch. 7",
     fu: [
       { when: "always", ask: "And just before you turn the key, what do you do to protect anyone standing near the airplane?",
         pts: [
@@ -3762,7 +3762,7 @@ const ORAL_QUESTIONS = (() => {
     fu: [
       { when: "always", ask: "Halfway to the runway you realise you have not set up the GPS or finished a checklist. When do you do it?",
         pts: [M("stop", "When stopped — not while the airplane is moving", ["stop first", "in the run-up area", "not while taxiing"])],
-        answer: "Stop first — at the run-up area or holding short. Heads-down tasks while moving are a leading cause of taxi accidents and runway incursions.", ref: "AC 91-73; AFH ch. 2" },
+        answer: "Stop first — at the run-up area or holding short. Heads-down tasks while moving are a leading cause of taxi accidents and runway incursions.", ref: "AC 91-73B; AFH ch. 2" },
     ] },
 
   { id: "pre-takeoff-brief", area: "pre", lvl: 1, kind: "explain",
@@ -3802,7 +3802,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Into the wind where practical (cooling, and steadier readings), nose wheel straight, with nothing behind that the propwash could damage. Brakes held, and eyes outside between instrument checks because the airplane can creep. Avoid loose gravel, which the propeller will pick up.",
     ref: "AFH ch. 2",
     fu: [
-      { when: "always", ask: "Why does loose gravel under the nose matter during a run-up?",
+      { when: "always", ref: "AFH ch. 2; PHAK ch. 7", ask: "Why does loose gravel under the nose matter during a run-up?",
         pts: [M("g", "The propeller sucks up stones, which nick the blades", ["stones hit the prop", "prop damage", "nicks"])],
         answer: "At high power the propeller draws loose stones into the blades; nicks are stress points that can grow into cracks." },
     ] },
@@ -3828,7 +3828,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Reads VV002 as 2,000 feet", "Says the sky is clear because no cloud layer is listed"],
     answer: "Airport KDEF, 4th day at 1156Z; wind calm; visibility 1/4 statute mile in fog; sky obscured with a vertical visibility of 200 ft (which counts as a ceiling); temperature and dew point both 9 °C; altimeter 30.12. A 200 ft ceiling and 1/4 mile is low IFR. No VFR flight until it lifts.",
-    ref: "AIM 7-1; Aviation Weather Handbook (METAR)",
+    ref: "AIM 7-1-28, 7-1-7; 14 CFR 91.155(c), (d)",
     fu: [
       { when: "always", ask: "Calm wind after a clear night, fog at sunrise. What kind of fog is this most likely, and what usually gets rid of it?",
         gloss: "The common ground fog of still, clear nights. Sun and wind normally clear it during the morning.",
@@ -3837,8 +3837,8 @@ const ORAL_QUESTIONS = (() => {
           M("burn", "It usually clears as the sun warms the ground, or when the wind picks up", ["burns off", "sun heats it", "wind mixes it out"]),
           N("when", "It may not clear when forecast — wait for an actual report, not the hope", ["wait and see", "don't count on it"]),
         ],
-        answer: "Radiation fog: the ground cools on a clear, calm night and chills the air above it to its dew point. It normally dissipates after sunrise as the surface warms, or when wind stirs in drier air — but the timing is unreliable, so wait for the reports to show it." , ref: "Aviation Weather Handbook (fog)" },
-      { when: "miss:vv", ask: "The group V-V-zero-zero-two. What is it telling you?",
+        answer: "Radiation fog: the ground cools on a clear, calm night and chills the air above it to its dew point. It normally dissipates after sunrise as the surface warms, or when wind stirs in drier air — but the timing is unreliable, so wait for the reports to show it." , ref: "PHAK ch. 12" },
+      { when: "miss:vv", ref: "AIM 7-1-28; 14 CFR 1.1", ask: "The group V-V-zero-zero-two. What is it telling you?",
         pts: [
           M("a", "Vertical visibility of 200 feet — the sky is hidden by fog", ["two hundred feet", "sky obscured"]),
           N("b", "It is treated as a ceiling", ["counts as a ceiling"]),
@@ -3865,7 +3865,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says it is fine because the ceiling and visibility are VFR"],
     answer: "A special (unscheduled) report on the 22nd at 1720Z: wind 210° at 18 gusting 30 knots; visibility 5 statute miles in a thunderstorm with moderate rain; scattered cumulonimbus at 3,500 ft, broken at 5,000 ft; temperature 29, dew point 22; altimeter 29.78. Remarks: the thunderstorm began at 12 past the hour, lightning distant to the southwest. The numbers alone are marginal VFR, but a thunderstorm on the field means wind shear, turbulence, hail and lightning. Stay on the ground until it has moved well clear.",
-    ref: "AIM 7-1; Aviation Weather Handbook (METAR, thunderstorms)",
+    ref: "AIM 7-1-28, 7-1-26; PHAK ch. 12",
     fu: [
       { when: "always", ask: "The storm moves off to the east and the sun comes out. How do you decide when it is safe to depart?",
         gloss: "A storm's gusts and downdrafts reach well beyond the rain. Looking for a comfortable gap — and an updated report — before leaving.",
@@ -3897,7 +3897,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Reads M04 as plus 4", "Chooses runway 18"],
     answer: "Automated observation on the 30th at 1253Z: wind 340° at 8 knots, visibility 10 statute miles, no clouds detected below 12,000 ft, temperature −4 °C, dew point −9 °C, altimeter 30.41. Runway 36 gives an almost direct headwind (the wind is 20° off the nose). With the temperature below freezing overnight, expect frost: all of it comes off before takeoff. Cold also means a careful engine start per the POH.",
-    ref: "AIM 7-1; 14 CFR 91.103; C172S POH section 4 (cold weather operation)",
+    ref: "AIM 7-1-28; 14 CFR 91.103; C172S POH section 4",
     fu: [
       { when: "always", ask: "Is the wind direction in that written report measured from true north or magnetic north? And the runway number?",
         gloss: "Written weather uses true north; runways are numbered by compass (magnetic) direction. The difference is usually small enough not to change the runway choice.",
@@ -3906,7 +3906,7 @@ const ORAL_QUESTIONS = (() => {
           M("m", "Runway numbers are magnetic", ["runways are magnetic"]),
           N("rule", "If you read it, it is true; if you hear it (tower, ATIS), it is magnetic", ["read it true, hear it magnetic"]),
         ],
-        answer: "METAR and TAF winds are referenced to true north. Runway numbers are magnetic, and so are winds spoken by a tower, ATIS or the airport's automated broadcast.", ref: "AIM 7-1; PHAK ch. 13" },
+        answer: "METAR and TAF winds are referenced to true north. Runway numbers are magnetic, and so are winds spoken by a tower, ATIS or the airport's automated broadcast.", ref: "AIM 7-1-28, 7-1-10; PHAK ch. 13" },
     ] },
 
   { id: "wx-metar-runway", area: "wx", lvl: 2, kind: "scenario",
@@ -3925,7 +3925,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Chooses runway 3 or 12 (a tailwind)"],
     answer: "Wind 240° at 14 knots. Runway 21 (heading 210°) is 30° off the wind: crosswind about half the wind speed, 7 knots from the right, with about 12 knots of headwind. Runway 30 is 60° off: about 12 knots of crosswind and only 7 of headwind. Expect runway 21. Rules of thumb: 30° off ≈ half, 45° ≈ 0.7, 60° ≈ 0.9 of the wind speed.",
-    ref: "PHAK ch. 11 (crosswind component); C172S POH section 5",
+    ref: "PHAK ch. 11; C172S POH section 4",
     fu: [
       { when: "sat", ask: "Same airport another day: the wind is 170 degrees at 20 knots. Which runway now, and about how much crosswind?",
         gloss: "170 falls between runway 21 (40 degrees off) and runway 12 (50 degrees off). 21 is slightly better; either way the crosswind is large.",
@@ -3934,7 +3934,7 @@ const ORAL_QUESTIONS = (() => {
           M("xw", "Crosswind roughly 13 to 15 knots", ["about thirteen", "about fifteen", "around two thirds to three quarters of twenty"]),
           N("lim", "That is at or near the 15-knot demonstrated crosswind — consider another airport", ["near the limit", "might divert"]),
         ],
-        answer: "Runway 21 is 40° off the wind: about 13 knots of crosswind (20 × 0.64) from the left. Runway 12 is 50° off: about 15 knots. Both are close to the 172's 15-knot maximum demonstrated crosswind — a good moment to compare with personal limits and think about an airport with a better-aligned runway.", ref: "PHAK ch. 11; C172S POH section 2 / 5" },
+        answer: "Runway 21 is 40° off the wind: about 13 knots of crosswind (20 × 0.64) from the left. Runway 12 is 50° off: about 15 knots. Both are close to the 172's 15-knot maximum demonstrated crosswind — a good moment to compare with personal limits and think about an airport with a better-aligned runway.", ref: "PHAK ch. 11; C172S POH section 4" },
     ] },
 
   { id: "wx-metar-marginal", area: "wx", lvl: 1, kind: "scenario",
@@ -3954,7 +3954,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Calls this IFR and says the pattern is illegal", "Says it is good VFR"],
     answer: "Wind 090° at 5, visibility 4 statute miles in haze, ceiling 2,500 ft broken, temperature 24, dew point 21, altimeter 29.95. Ceiling 1,000–3,000 ft and/or visibility 3–5 miles is marginal VFR. Pattern work is legal: visibility is at least 3 miles, the ceiling is above 1,000 ft, and a 1,000 ft pattern leaves 1,500 ft under the cloud. A cross-country is another matter: 4 miles in haze, a 3-degree spread and nightfall coming all point toward worse. Most pilots' personal minimums say no.",
-    ref: "14 CFR 91.155; AIM 7-1-7 (weather categories); PHAK ch. 2 (personal minimums)",
+    ref: "14 CFR 91.155(c), (d); AIM 7-1-7; PHAK ch. 2",
     fu: [
       { when: "always", ask: "You go up for pattern work. Half an hour later the tower's new report gives the visibility as 2 and a half miles. What does that mean for you?",
         gloss: "Below 3 miles, ordinary visual flying in a tower's airspace is over. The pilot lands.",
@@ -3980,7 +3980,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says it is flyable by staying below the clouds"],
     answer: "Wind 060° at 10, visibility 2 statute miles in light freezing rain and mist, overcast at 1,200 ft, temperature −1 °C, dew point −2 °C, altimeter 29.70. Freezing rain is the hazard: supercooled drops freeze on impact, building clear ice fast — and it does so below the cloud, in the clear. It also tells you there is a layer of above-freezing air aloft, with the rain falling through it into sub-freezing air near the ground. No flight: the 172S is prohibited from known icing, and the visibility is IFR anyway.",
-    ref: "Aviation Weather Handbook (icing, freezing precipitation); C172S POH section 2",
+    ref: "PHAK ch. 12; C172S POH section 2; Aviation Weather Handbook (icing, freezing precipitation)",
     fu: [
       { when: "always", ask: "At another airport the report shows ice pellets — little balls of ice bouncing off the ground. What does that tell you about the air higher up?",
         gloss: "Ice pellets are raindrops that froze on the way down, so somewhere above there is rain falling into freezing air.",
@@ -3989,7 +3989,7 @@ const ORAL_QUESTIONS = (() => {
           M("fz", "There is freezing rain at a higher altitude", ["freezing rain above", "rain is freezing on the way down"]),
           N("inv", "So there is a warm layer aloft over cold air — a temperature inversion", ["warm air above", "inversion"]),
         ],
-        answer: "Ice pellets mean rain is falling from a warm layer aloft into sub-freezing air and freezing on the way down: an inversion, with freezing rain at some higher altitude.", ref: "PHAK ch. 12; Aviation Weather Handbook" },
+        answer: "Ice pellets mean rain is falling from a warm layer aloft into sub-freezing air and freezing on the way down: an inversion, with freezing rain at some higher altitude.", ref: "PHAK ch. 12; AIM 7-1-16" },
     ] },
 
   { id: "wx-taf-timeline", area: "wx", lvl: 1, kind: "scenario",
@@ -4008,7 +4008,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Uses only the first line (6 miles, scattered 5,000) for a 0100 arrival", "Says TEMPO weather can be ignored because it is only temporary"],
     answer: "Issued on the 9th at 1730Z, valid 1800Z on the 9th to 1800Z on the 10th. At first: wind 160° at 8, more than 6 miles, scattered 5,000 ft. From 2200Z: 180° at 12 gusting 20, 5 miles in light rain showers, broken 3,000 ft. Temporarily between 0000Z and 0400Z on the 10th: 2 miles in thunderstorms and rain, broken 1,500 ft cumulonimbus. From 0600Z: 270° at 10, more than 6 miles, clear. A 0100Z arrival lands in the thunderstorm window with marginal weather underneath it. Arrive well before 2200Z, wait for the clearing after 0600Z, or do not go.",
-    ref: "AIM 7-1; Aviation Weather Handbook (TAF)",
+    ref: "AIM 7-1-28; Aviation Weather Handbook (TAF)",
     fu: [
       { when: "always", ask: "What exactly is the difference between a line that starts F-M and one that starts TEMPO?",
         gloss: "FM is a permanent change from that time on. TEMPO is on-and-off weather laid over the main forecast.",
@@ -4017,8 +4017,8 @@ const ORAL_QUESTIONS = (() => {
           M("tempo", "TEMPO — temporary swings, on and off, on top of the main forecast", ["temporary", "comes and goes", "fluctuations"]),
           N("hour", "Each TEMPO spell is expected to last less than an hour, and less than half the period in total", ["less than an hour at a time", "less than half the time"]),
         ],
-        answer: "FM means a rapid, significant change beginning at that time; the new line replaces the previous conditions. TEMPO means temporary fluctuations expected to last generally less than an hour at a time and, in total, less than half of the period given — overlaid on the prevailing forecast.", ref: "Aviation Weather Handbook (TAF)" },
-      { when: "unsat", ask: "Start with the very first line. From when to when is this whole forecast valid?",
+        answer: "FM means a rapid, significant change beginning at that time; the new line replaces the previous conditions. TEMPO means temporary fluctuations expected to last generally less than an hour at a time and, in total, less than half of the period given — overlaid on the prevailing forecast.", ref: "AIM 7-1-28; Aviation Weather Handbook (TAF)" },
+      { when: "unsat", ref: "AIM 7-1-28", ask: "Start with the very first line. From when to when is this whole forecast valid?",
         gloss: "The group 0918/1018 is day-and-hour to day-and-hour.",
         pts: [M("v", "From 1800 Zulu on the 9th to 1800 Zulu on the 10th — 24 hours", ["ninth at eighteen hundred to the tenth at eighteen hundred", "twenty-four hours"])],
         answer: "0918/1018: from the 9th at 1800Z until the 10th at 1800Z, a 24-hour forecast." },
@@ -4040,9 +4040,9 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Plans to depart at 1200 or 1300 Zulu", "Ignores the PROB30 thunderstorm group"],
     answer: "Valid 1200Z on the 20th to 1200Z on the 21st. Until 1500Z: variable 3 knots, 1 mile in mist, overcast 400 ft — low IFR. From 1500Z: 120° at 6, 4 miles in mist, scattered 800 ft, broken 2,500 ft — marginal VFR. From 1800Z: 140° at 10, more than 6 miles, scattered 3,500 ft — VFR. Then a 30% probability between 2000Z and 2400Z of 3 miles in thunderstorms and rain, broken 3,000 ft cumulonimbus. The window is 1800Z to about 2000Z: take off around 1800Z once the actual reports agree, and be back before the thunderstorm risk begins.",
-    ref: "Aviation Weather Handbook (TAF)",
+    ref: "AIM 7-1-28; PHAK ch. 13",
     fu: [
-      { when: "always", ask: "It is now 1830 Zulu, and the actual report still shows 4 miles and broken at 2,500. The forecast said it would be clear by now. Which do you believe?",
+      { when: "always", ref: "AIM 7-1-3; PHAK ch. 13", ask: "It is now 1830 Zulu, and the actual report still shows 4 miles and broken at 2,500. The forecast said it would be clear by now. Which do you believe?",
         gloss: "A forecast is a prediction; the report is what is actually there. When they disagree, the forecast is the one that is wrong.",
         pts: [
           M("obs", "Believe the actual report — the forecast was late or wrong", ["the METAR", "what's actually happening", "the observation"]),
@@ -4070,7 +4070,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Reads the cloud bases or tops as 450 / 600 feet or 45,000 / 60,000 feet"],
     answer: "A routine pilot report (UA): 15 NM east of XYZ on the 090 radial, at 1745Z, at 6,500 ft, from a Cessna 172. Sky broken, bases 4,500 ft, tops 6,000 ft; temperature −3 °C; light turbulence; light rime icing, encountered during the climb. For a VFR 172 it confirms two things: the layer is 1,500 ft thick with clear air above 6,000, and the cloud holds ice — which the airplane is not approved for. Stay clear of the cloud by the required margins.",
-    ref: "AIM 7-1-18 to 7-1-21; Aviation Weather Handbook (PIREP)",
+    ref: "AIM 7-1-18, 7-1-19, 7-1-21; PHAK ch. 13",
     fu: [
       { when: "always", ask: "Some pilot reports start with U-U-A instead of U-A. What is the difference? And who would you give a pilot report to?",
         gloss: "UUA is the urgent kind, for dangerous weather. Any pilot can make one by radio.",
@@ -4096,7 +4096,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Reads 9900 as wind from 990 degrees or 99 knots"],
     answer: "DEF at 3,000 ft: 9900 — light and variable (under 5 knots). 6,000 ft: 180° true at 12 knots, +12 °C. 9,000 ft: 210° at 30 knots, +6 °C. 7,500 ft is halfway between, so interpolate: about 195° at 21 knots, +9 °C.",
-    ref: "Aviation Weather Handbook (wind and temperature aloft forecast, FB)",
+    ref: "AIM 7-1-5; Aviation Weather Handbook (winds and temperatures aloft, FB)",
     fu: [
       { when: "always", ask: "Look at the second line, G-H-I. There is nothing at all under 3,000 feet. Why?",
         gloss: "The forecast leaves out heights too close to the ground at that station — it is a high-elevation airport.",
@@ -4104,8 +4104,8 @@ const ORAL_QUESTIONS = (() => {
           M("elev", "The station is high — no wind is forecast within 1,500 feet of the station's elevation", ["too close to the ground", "the airport is at high elevation", "within fifteen hundred feet"]),
           N("temp", "Temperatures are never given for 3,000 feet, or within 2,500 feet of the station's elevation", ["no temperature at three thousand"]),
         ],
-        answer: "Winds are not forecast for a level within 1,500 ft of the station elevation, so a high station has a blank at 3,000 ft. (Temperatures are omitted at 3,000 ft and for any level within 2,500 ft of station elevation — which is why the DEF 3,000 group has no temperature.)", ref: "Aviation Weather Handbook (FB)" },
-      { when: "miss:interp", ask: "Take it in steps. 6,000 feet is 180 at 12. 9,000 feet is 210 at 30. 7,500 is exactly halfway. What is halfway between those?",
+        answer: "Winds are not forecast for a level within 1,500 ft of the station elevation, so a high station has a blank at 3,000 ft. (Temperatures are omitted at 3,000 ft and for any level within 2,500 ft of station elevation — which is why the DEF 3,000 group has no temperature.)", ref: "Aviation Weather Handbook (winds and temperatures aloft, FB)" },
+      { when: "miss:interp", ref: "AIM 7-1-5", ask: "Take it in steps. 6,000 feet is 180 at 12. 9,000 feet is 210 at 30. 7,500 is exactly halfway. What is halfway between those?",
         pts: [
           M("d", "Direction about 195 degrees", ["one ninety-five"]),
           M("s", "Speed about 21 knots", ["twenty-one"]),
@@ -4124,7 +4124,7 @@ const ORAL_QUESTIONS = (() => {
       N("cu", "The rule works for cumulus (heaped) clouds formed by rising warm air, not for layered cloud", ["only for cumulus"]),
     ],
     answer: "Spread 28 − 16 = 12 °C. Rising air cools toward its dew point at about 2.5 °C per 1,000 ft, so 12 ÷ 2.5 = 4.8 — bases near 4,800 ft AGL. (In Fahrenheit, divide the spread by 4.4.) It is an estimate for cumulus cloud only, and it is a height above the ground.",
-    ref: "PHAK ch. 12 (estimating cloud bases)",
+    ref: "PHAK ch. 12",
     fu: [
       { when: "always", ask: "The airport is 700 feet above sea level. You want to cruise legally under those clouds in ordinary Class E airspace. What is the highest altitude on your altimeter you could use?",
         gloss: "Bases about 4,800 feet above a 700-foot airport are at about 5,500 on the altimeter; visual pilots must stay 500 feet below cloud.",
@@ -4151,7 +4151,7 @@ const ORAL_QUESTIONS = (() => {
       N("src", "Gets them from aviationweather.gov, a flight-planning app or a Flight Service briefing", ["aviation weather dot gov", "ForeFlight", "1-800-WX-BRIEF"]),
     ],
     answer: "Start wide, then narrow. Surface analysis: pressure systems and fronts as observed. Prog charts: the forecast position of fronts and areas of precipitation over the next hours and days. Radar and satellite: where the rain and cloud actually are. The Graphical Forecasts for Aviation: cloud cover, tops, visibility, precipitation and winds for a chosen time. Then the advisories — G-AIRMETs, SIGMETs, convective SIGMETs — and finally the METARs, TAFs, winds aloft and PIREPs along the route.",
-    ref: "Aviation Weather Handbook; AIM 7-1",
+    ref: "AIM 7-1-4, 7-1-3; PHAK ch. 13; Aviation Weather Handbook",
     fu: [
       { when: "sat", ask: "In flight, the weather radar picture on your display shows a gap between two storm cells. Do you use it to thread your way between them?",
         gloss: "The radar picture sent up to the cockpit is several minutes old. It is for deciding to stay far away, not for squeezing through gaps.",
@@ -4160,7 +4160,7 @@ const ORAL_QUESTIONS = (() => {
           M("far", "Use it to stay well away — about 20 miles — not to pick a way through", ["big-picture only", "strategic not tactical", "go around the whole area"]),
         ],
         no: ["Says yes, fly through the gap shown"],
-        answer: "No. Datalink radar is a mosaic that can be many minutes older than its time stamp suggests, and cells move and build quickly. Use it strategically — to give the whole area a wide berth, 20 NM from severe storms — never to pick through gaps.", ref: "AIM 7-1-10 (FIS-B); AC 00-24" },
+        answer: "No. Datalink radar is a mosaic that can be many minutes older than its time stamp suggests, and cells move and build quickly. Use it strategically — to give the whole area a wide berth, 20 NM from severe storms — never to pick through gaps.", ref: "AIM 7-1-9, 7-1-27" },
     ] },
 
   { id: "wx-wind-shear", area: "wx", lvl: 2, kind: "explain",
@@ -4176,7 +4176,7 @@ const ORAL_QUESTIONS = (() => {
       N("rep", "Look for it in pilot reports, the ATIS or the forecast", ["LLWS", "wind shear alert"]),
     ],
     answer: "Wind shear is a sudden, drastic change in wind speed and/or direction over a very small area, vertically or horizontally. Expect it with thunderstorms and microbursts, frontal passages, low-level temperature inversions with strong wind above, and downwind of terrain or obstructions. Close to the ground a shift from headwind to tailwind cuts airspeed and lift when the airplane is slow, low and configured to land. If it is reported, delay; if it is met on approach, add power and go around.",
-    ref: "PHAK ch. 12; AC 00-54",
+    ref: "PHAK ch. 12; AIM 7-1-22; AC 00-54",
     fu: [
       { when: "sat", ask: "On final approach, your headwind suddenly drops away. What happens to the airplane in the first few seconds, and what do you do?",
         gloss: "The airplane's speed through the air falls at once, so it sinks. The fix is power, immediately.",
@@ -4185,7 +4185,7 @@ const ORAL_QUESTIONS = (() => {
           M("sink", "The airplane sinks below the glidepath", ["it sinks", "nose drops", "get low"]),
           M("pwr", "Add power at once — go around if in any doubt", ["full power", "go around"]),
         ],
-        answer: "Indicated airspeed falls by roughly the lost headwind, lift falls with it, and the airplane pitches down and sinks below the glidepath. Add power immediately and go around unless the approach is clearly stable again.", ref: "PHAK ch. 12" },
+        answer: "Indicated airspeed falls by roughly the lost headwind, lift falls with it, and the airplane pitches down and sinks below the glidepath. Add power immediately and go around unless the approach is clearly stable again.", ref: "PHAK ch. 12; AIM 7-1-24" },
     ] },
 
   { id: "wx-turbulence", area: "wx", lvl: 2, kind: "explain",
@@ -4204,7 +4204,7 @@ const ORAL_QUESTIONS = (() => {
       N("alt", "Try a different altitude, and report it", ["climb above it", "give a PIREP"]),
     ],
     answer: "Causes: convective currents from surface heating; mechanical turbulence where wind flows over terrain and obstructions (including mountain wave); wind shear at fronts, inversions and near thunderstorms; and wake turbulence. In strong turbulence slow to maneuvering speed or below (C172S: 105 KIAS at 2,550 lb, 98 at 2,200 lb, 90 at 1,900 lb), hold a level attitude and accept altitude excursions, tighten belts, then look for smoother air at another altitude and report it.",
-    ref: "PHAK ch. 12; AFH ch. 3; C172S POH section 2",
+    ref: "PHAK ch. 12; C172S POH section 2; AIM 7-1-21",
     fu: [
       { when: "sat", ask: "Why is maneuvering speed lower when the airplane is lighter?",
         gloss: "A light airplane is thrown about more by the same gust, so it must fly slower to stay inside its strength limits.",
@@ -4212,7 +4212,7 @@ const ORAL_QUESTIONS = (() => {
           M("why", "A lighter airplane is accelerated more by the same gust, so it reaches its load limit sooner", ["lighter gets thrown around more", "less weight, more G for the same gust"]),
           N("stall", "At or below maneuvering speed the wing stalls before the structure is overloaded", ["it stalls before it breaks"]),
         ],
-        answer: "Below maneuvering speed the wing will stall before it can generate enough lift to exceed the limit load factor. A lighter airplane stalls at a lower speed, and the same gust or control input produces more acceleration on less mass — so the protective speed comes down with weight.", ref: "PHAK ch. 5; AFH" },
+        answer: "Below maneuvering speed the wing will stall before it can generate enough lift to exceed the limit load factor. A lighter airplane stalls at a lower speed, and the same gust or control input produces more acceleration on less mass — so the protective speed comes down with weight.", ref: "PHAK ch. 5; C172S POH section 2" },
     ] },
 
   { id: "wx-clouds", area: "wx", lvl: 2, kind: "explain",
@@ -4314,7 +4314,7 @@ const ORAL_QUESTIONS = (() => {
         pts: [M("mc", "262 degrees", ["two six two", "two sixty-two"])],
         no: ["Says 278"],
         answer: "East is least: 270° − 8° = 262° magnetic.", ref: "PHAK ch. 16" },
-      { when: "unsat", ask: "One step only. Your true heading is 140 and the variation is 10 degrees west. Do you add or subtract, and what is the magnetic heading?",
+      { when: "unsat", ref: "PHAK ch. 16", ask: "One step only. Your true heading is 140 and the variation is 10 degrees west. Do you add or subtract, and what is the magnetic heading?",
         pts: [
           M("add", "Add west variation", ["add", "west is best"]),
           M("mh", "150 degrees", ["one five zero"]),
@@ -4334,7 +4334,7 @@ const ORAL_QUESTIONS = (() => {
       N("more", "Adds fuel for start, taxi, run-up and climb, and a personal reserve of about an hour", ["taxi and climb fuel", "I'd carry an hour reserve"]),
     ],
     answer: "135 NM ÷ 90 knots = 1.5 hours. 1.5 h × 9 gal/h = 13.5 gallons. Day VFR reserve is 30 minutes at normal cruise: 4.5 gallons. Legal minimum 18 gallons — before allowing for start, taxi, run-up and the climb, and before any personal reserve.",
-    ref: "14 CFR 91.151; PHAK ch. 16",
+    ref: "14 CFR 91.151(a); PHAK ch. 16",
     fu: [
       { when: "always", ask: "The headwind turns out stronger and your groundspeed is only 75 knots. Now how long does the 135 miles take, and how much fuel does it burn?",
         gloss: "Slower over the ground means longer in the air and more fuel for the same distance.",
@@ -4343,7 +4343,7 @@ const ORAL_QUESTIONS = (() => {
           M("fuel", "About 16 gallons", ["sixteen point two", "sixteen gallons"]),
         ],
         answer: "135 ÷ 75 = 1.8 hours = 1 hour 48 minutes. 1.8 × 9 = 16.2 gallons — 2.7 gallons more than planned, before the reserve.", ref: "PHAK ch. 16" },
-      { when: "sat", ask: "You have 30 gallons of usable fuel on board and burn 9 an hour. What is your endurance — how long until the tanks are dry?",
+      { when: "sat", ref: "PHAK ch. 16", ask: "You have 30 gallons of usable fuel on board and burn 9 an hour. What is your endurance — how long until the tanks are dry?",
         pts: [M("e", "About 3 hours 20 minutes", ["three hours twenty", "three and a third hours", "three point three hours"])],
         answer: "30 ÷ 9 = 3.33 hours — 3 hours 20 minutes to dry tanks, which is not the same as 3 hours 20 of planned flying." },
     ] },
@@ -4363,9 +4363,9 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says there is plenty of fuel and continues"],
     answer: "22 NM in 15 minutes is 88 knots (22 × 4). The remaining 110 NM at 88 knots takes 1.25 hours — 75 minutes. 16 gallons at 9 gal/h lasts 1.78 hours — about 106 minutes. Arrival would be with about 31 minutes of fuel: right at the day reserve you were required to plan for, with nothing in hand for a go-around, a longer pattern or a stronger wind. Land at an airport along the way and refuel.",
-    ref: "14 CFR 91.151; PHAK ch. 16",
+    ref: "14 CFR 91.151(a); PHAK ch. 16",
     fu: [
-      { when: "miss:gs", ask: "Just the speed. 22 miles in 15 minutes. How many miles is that in an hour?",
+      { when: "miss:gs", ref: "PHAK ch. 16", ask: "Just the speed. 22 miles in 15 minutes. How many miles is that in an hour?",
         gloss: "Fifteen minutes is a quarter of an hour, so multiply by four.",
         pts: [M("gs", "88 knots", ["eighty-eight"])],
         answer: "15 minutes is a quarter of an hour: 22 × 4 = 88 knots." },
@@ -4390,7 +4390,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Reads 55 as the elevation or as 55 feet", "Says magenta and blue mean the same thing"],
     answer: "Blue symbol: a towered airport (magenta is non-towered). CT 118.3: control tower frequency; the star after it means the tower operates part-time. ATIS 124.9. 1250: field elevation in feet MSL. L: runway lighting (an asterisk before the L would mean lighting limitations — see the Chart Supplement). 55: longest runway 5,500 ft. 122.95: UNICOM. RP 18: right traffic for runway 18.",
-    ref: "Aeronautical Chart Users' Guide (airport data); sectional chart legend",
+    ref: "FAA Aeronautical Chart User's Guide; PHAK ch. 16",
     fu: [
       { when: "always", ask: "The tower there is part-time. Where do you find its hours — and what do you use for a radio frequency when it is closed?",
         gloss: "A book of airport details gives the hours. After hours the tower frequency normally becomes the pilots' shared frequency.",
@@ -4398,7 +4398,7 @@ const ORAL_QUESTIONS = (() => {
           M("cs", "The Chart Supplement lists the tower's hours", ["chart supplement", "airport facility directory", "A-F-D"]),
           M("ctaf", "Use the common traffic frequency (CTAF) — normally the tower frequency — and make your own calls", ["CTAF", "self-announce on the tower frequency"]),
         ],
-        answer: "The Chart Supplement (and the chart's tower-frequency table) gives the hours. When the tower is closed the airport is non-towered: self-announce on the CTAF, which is normally the tower frequency and is marked with a C in a circle on the chart.", ref: "Chart Supplement; AIM 4-1-9" },
+        answer: "The Chart Supplement (and the chart's tower-frequency table) gives the hours. When the tower is closed the airport is non-towered: self-announce on the CTAF, which is normally the tower frequency and is marked with a C in a circle on the chart.", ref: "Chart Supplement; AIM 4-1-9, 9-1-4" },
     ] },
 
   { id: "xc-obstacle", area: "xc", lvl: 2, kind: "scenario",
@@ -4416,9 +4416,9 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Mixes them up: says 1034 is above sea level"],
     answer: "The upper number is the elevation of the top in feet MSL — 1,549; the number in parentheses is its height above ground — 1,034 (so the ground is at about 515 ft). The taller obstruction symbol is used for obstacles 1,000 ft AGL or higher. At 2,000 ft MSL you would pass 451 ft over the top: less than 500 ft from a structure, which 91.119 does not allow over sparsely populated areas, and far short of the 1,000 ft required over a congested area. Guy wires can extend well out from the tower. Plan to clear it by a wide margin or route around it.",
-    ref: "Aeronautical Chart Users' Guide (obstructions); 14 CFR 91.119; AIM 7-6-4",
+    ref: "FAA Aeronautical Chart User's Guide; 14 CFR 91.119; AIM 7-6-4",
     fu: [
-      { when: "sat", ask: "Using those same two numbers: how high is the ground at the tower, and so how far above the ground is your 2,000-foot cruise?",
+      { when: "sat", ref: "FAA Aeronautical Chart User's Guide", ask: "Using those same two numbers: how high is the ground at the tower, and so how far above the ground is your 2,000-foot cruise?",
         gloss: "Top above sea level minus the tower's own height gives the ground's height.",
         pts: [
           M("gnd", "The ground is about 515 feet above sea level", ["five hundred fifteen", "about five hundred"]),
@@ -4468,7 +4468,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Pattern altitude 500 + 1,000 = 1,500 ft MSL. Height to lose: 6,500 − 1,500 = 5,000 ft. At 500 ft/min that is 10 minutes. At 120 knots — 2 NM a minute — that is 20 NM. Begin a little earlier so you are level at pattern altitude a few miles before the airport.",
     ref: "PHAK ch. 16",
     fu: [
-      { when: "unsat", ask: "One piece at a time. At 120 knots, how many miles do you cover in one minute? And in ten minutes?",
+      { when: "unsat", ref: "PHAK ch. 16", ask: "One piece at a time. At 120 knots, how many miles do you cover in one minute? And in ten minutes?",
         pts: [
           M("a", "2 miles a minute", ["two"]),
           M("b", "20 miles in ten minutes", ["twenty"]),
@@ -4490,9 +4490,9 @@ const ORAL_QUESTIONS = (() => {
       N("rule", "If you read it, it is true; if you hear it, it is magnetic", ["read true, hear magnetic"]),
     ],
     answer: "True: winds aloft, METAR and TAF winds, and any course measured against the chart's meridians. Magnetic: runway numbers, winds reported by a tower, ATIS or an airport's automated broadcast, and VOR radials and compass roses. Rule of thumb: if you read it, it is true; if you hear it, it is magnetic. That is why forecast wind is converted with variation before working out a heading — or left in true alongside a true course.",
-    ref: "PHAK ch. 13, 16; AIM 7-1",
+    ref: "AIM 7-1-5, 7-1-10; PHAK ch. 16",
     fu: [
-      { when: "always", ask: "The ATIS says: wind 270 at 10. You are landing on runway 27. Do you need to convert anything before working out the crosswind?",
+      { when: "always", ref: "AIM 7-1-10", ask: "The ATIS says: wind 270 at 10. You are landing on runway 27. Do you need to convert anything before working out the crosswind?",
         gloss: "Both numbers are already measured from magnetic north, so they compare directly.",
         pts: [
           M("no", "No — both are magnetic", ["no conversion", "they're both magnetic"]),
@@ -4517,7 +4517,7 @@ const ORAL_QUESTIONS = (() => {
       N("dia", "An airport diagram, if one is published", ["airport diagram"]),
     ],
     answer: "The Chart Supplement, reissued every 56 days: runway dimensions, surface, gradient and lighting; frequencies; traffic pattern direction and altitude; fuel types, services and hours; tower hours and what the airspace becomes when it closes; field elevation; and the remarks section — obstructions, noise abatement, wildlife, parachuting, unusual procedures. Then check NOTAMs for what has changed, and look at the airport diagram to plan the taxi.",
-    ref: "Chart Supplement; 14 CFR 91.103; AIM 9-1",
+    ref: "Chart Supplement; 14 CFR 91.103; AIM 9-1-4",
     fu: [
       { when: "always", ask: "It says the only runway is 2,400 feet of grass. What do you need to work out before deciding to go there?",
         gloss: "Whether the airplane can land and — harder — take off again from a short, soft runway on that day.",
@@ -4526,7 +4526,7 @@ const ORAL_QUESTIONS = (() => {
           M("grass", "Add the handbook's correction for grass, plus a margin", ["grass adds distance", "add a safety margin"]),
           N("obs", "Check for obstacles off the ends and the runway's condition — wet, long grass, soft", ["trees at the end", "is it wet"]),
         ],
-        answer: "Compute takeoff and landing distances, including over a 50 ft obstacle, from POH section 5 for the actual weight, pressure altitude, temperature and wind; apply the POH's grass-runway correction; add a personal margin; and find out the surface condition and the obstacles. Getting in is usually easier than getting out.", ref: "C172S POH section 5; 14 CFR 91.103" },
+        answer: "Compute takeoff and landing distances, including over a 50 ft obstacle, from POH section 5 for the actual weight, pressure altitude, temperature and wind; apply the POH's grass-runway correction; add a personal margin; and find out the surface condition and the obstacles. Getting in is usually easier than getting out.", ref: "14 CFR 91.103(b); C172S POH section 5" },
     ] },
 
   /* ------------------------- AIRSPACE — more scenarios ----------------------- */
@@ -4547,7 +4547,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says a clearance is needed for Class C (that is Class B)", "Says 4,500 feet is above the Class C shelf"],
     answer: "On the ground you are in Class G. Inside the shaded magenta, Class E begins at 700 ft AGL — 1,500 ft MSL here — and you stay in Class E in the climb. A solid magenta line is Class C; the label 48/21 gives its ceiling and floor in hundreds of feet MSL: 2,100 to 4,800 ft. At 4,500 ft you would be inside the shelf, so before entering you need two-way radio communication with Approach (they must answer using your call sign), a Mode C transponder and ADS-B Out. Otherwise go around it — flying over the top still requires the transponder and ADS-B Out.",
-    ref: "14 CFR 91.130, 91.215, 91.225; AIM 3-2-4; Aeronautical Chart Users' Guide",
+    ref: "14 CFR 91.130, 91.215, 91.225; AIM 3-2-4, 3-2-6; FAA Aeronautical Chart User's Guide",
     fu: [
       { when: "always", ask: "What is the usual shape and size of Class C airspace?",
         gloss: "Two stacked cylinders: a small one touching the ground and a wider one sitting above it.",
@@ -4559,7 +4559,7 @@ const ORAL_QUESTIONS = (() => {
           N("outer", "An outer area out to about 20 miles where radar service is available but contact is not required", ["twenty mile outer area"]),
         ],
         answer: "Typically a 5 NM radius core from the surface to 4,000 ft above the airport and a 10 NM radius shelf from 1,200 ft to 4,000 ft above the airport, with a 20 NM outer area where radar services are offered. Each is tailored, and the chart gives the actual altitudes in MSL.", ref: "AIM 3-2-4" },
-      { when: "miss:shelf", ask: "The label reads 48 over 21. What are those two numbers?",
+      { when: "miss:shelf", ref: "AIM 3-2-4; FAA Aeronautical Chart User's Guide", ask: "The label reads 48 over 21. What are those two numbers?",
         pts: [
           M("top", "The top: 4,800 feet above sea level", ["forty-eight hundred"]),
           M("bot", "The bottom: 2,100 feet above sea level", ["twenty-one hundred"]),
@@ -4593,7 +4593,7 @@ const ORAL_QUESTIONS = (() => {
           M("ask", "Ask for the clearance, and stay below 4,000 until you hear it", ["request Bravo clearance", "stay under until cleared"]),
         ],
         no: ["Says radar contact is enough to enter"],
-        answer: "No. Radar contact and an altimeter setting are not a clearance. Request it, and remain below the 4,000 ft floor until you hear 'cleared into the Class Bravo airspace'.", ref: "14 CFR 91.131(a)(1)" },
+        answer: "No. Radar contact and an altimeter setting are not a clearance. Request it, and remain below the 4,000 ft floor until you hear 'cleared into the Class Bravo airspace'.", ref: "14 CFR 91.131(a)(1); AIM 3-2-3" },
     ] },
 
   { id: "nas-delta-over", area: "nas", lvl: 2, kind: "scenario",
@@ -4617,7 +4617,7 @@ const ORAL_QUESTIONS = (() => {
           M("call", "Call the tower before entering and get an answer that uses your call sign", ["establish two-way radio", "call before I get there"]),
           M("when", "Call early — about 10 miles out — or go around the circle instead", ["ten miles out", "before the boundary", "or fly around it"]),
         ],
-        answer: "At 2,500 ft you would be inside the Class D, so two-way radio communication must be established with the tower before entering — call about 10 miles out and wait to hear your call sign. Otherwise route around it.", ref: "14 CFR 91.129(c); AIM 4-3-2" },
+        answer: "At 2,500 ft you would be inside the Class D, so two-way radio communication must be established with the tower before entering — call about 10 miles out and wait to hear your call sign. Otherwise route around it.", ref: "14 CFR 91.129(c); AIM 3-2-5" },
     ] },
 
   { id: "nas-cloud-high", area: "nas", lvl: 2, kind: "scenario",
@@ -4837,7 +4837,7 @@ const ORAL_QUESTIONS = (() => {
           M("space", "Rocket launches and space operations", ["space launch"]),
           N("sec", "Security-sensitive sites", ["national security"]),
         ],
-        answer: "Presidential and other VIP movements, wildfire and disaster-relief operations, air shows and major sporting events, space launches and recoveries, and security-sensitive locations. Check NOTAMs and the TFR map before every flight, and ask Flight Service or ATC en route.", ref: "14 CFR 91.137–91.145; AIM 3-5-3" },
+        answer: "Presidential and other VIP movements, wildfire and disaster-relief operations, air shows and major sporting events, space launches and recoveries, and security-sensitive locations. Check NOTAMs and the TFR map before every flight, and ask Flight Service or ATC en route.", ref: "14 CFR 91.137, 91.141, 91.143, 91.145; AIM 3-5-3" },
     ] },
 
   { id: "nas-equipment-fail", area: "nas", lvl: 2, kind: "scenario",
@@ -4889,7 +4889,7 @@ const ORAL_QUESTIONS = (() => {
           N("veil", "Transponder and ADS-B Out are still needed within 30 miles", ["mode C veil still applies"]),
         ],
         no: ["Enters anyway because radio contact was made"],
-        answer: "Remain clear: go around, or beneath the shelves with a margin under each charted floor, using a flyway if one is published. The Mode C veil equipment rule and the 200-knot limit under the Class B still apply.", ref: "14 CFR 91.131" },
+        answer: "Remain clear: go around, or beneath the shelves with a margin under each charted floor, using a flyway if one is published. The Mode C veil equipment rule and the 200-knot limit under the Class B still apply.", ref: "14 CFR 91.131(a)(1)" },
     ] },
 
   /* -------------------------- NAVIGATION — more scenarios --------------------- */
@@ -4908,7 +4908,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says you are east of the station", "Turns right, away from the needle"],
     answer: "With 090 selected and a TO indication, flying 090° would take you to the station: you are west of it. The needle to the left means the selected course lies to your left — north of you — so you are slightly south of it, on roughly the 265 radial; full-scale deflection is about 10°, so half-scale is about 5°. Turn left to an intercept heading such as 060°, and as the needle centres turn back to about 090°, correcting for wind, and track inbound.",
-    ref: "PHAK ch. 16 (VOR)",
+    ref: "PHAK ch. 16; AIM 1-1-3",
     fu: [
       { when: "always", ask: "You keep tracking inbound on 090. How will you know when you have passed over the station?",
         gloss: "The TO flag flips to FROM.",
@@ -4916,7 +4916,7 @@ const ORAL_QUESTIONS = (() => {
           M("flag", "The indicator changes from TO to FROM", ["flips to FROM", "TO-FROM reversal"]),
           N("cone", "The needle swings and becomes erratic just before, close to the station", ["needle gets twitchy", "cone of confusion"]),
         ],
-        answer: "The needle becomes sensitive and erratic in the cone of confusion close to the station, then the TO indication flips to FROM: station passage. You are then outbound on the 090 radial.", ref: "PHAK ch. 16" },
+        answer: "The needle becomes sensitive and erratic in the cone of confusion close to the station, then the TO indication flips to FROM: station passage. You are then outbound on the 090 radial.", ref: "PHAK ch. 16; AIM 1-1-3" },
       { when: "unsat", ask: "Simpler. The needle is centred with 360 selected and a FROM indication. Which side of the station are you on?",
         pts: [M("n", "North of the station — on the 360 radial", ["north", "on the three-sixty radial"])],
         no: ["Says south"],
@@ -4936,7 +4936,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says north of Alpha or east of Bravo"],
     answer: "A centred needle with FROM puts you on the selected radial: the 180 radial of Alpha (due south of it) and the 270 radial of Bravo (due west of it). Draw each radial outward from the station using its printed compass rose — which is already magnetic — and your position is the intersection. Identify both stations by Morse code before trusting them.",
-    ref: "PHAK ch. 16 (VOR)",
+    ref: "PHAK ch. 16; AIM 1-1-3",
     fu: [
       { when: "sat", ask: "For the best fix, would you rather the two lines crossed at a wide angle or a narrow one?",
         pts: [M("w", "A wide angle — close to 90 degrees", ["near ninety degrees", "wide"])],
@@ -4957,7 +4957,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Turns right"],
     answer: "One-in-sixty rule: degrees = miles off ÷ miles flown × 60. Track error: 3 ÷ 30 × 60 = 6°. Turning 6° left would only parallel the planned course. To close 3 miles over the remaining 60: 3 ÷ 60 × 60 = 3° more. Total: about 9° left to fly direct to the destination. Then find the cause — usually a wind different from forecast.",
-    ref: "PHAK ch. 16 (dead reckoning); common pilotage technique",
+    ref: "PHAK ch. 16; rule of thumb (1-in-60)",
     fu: [
       { when: "unsat", ask: "The rule of thumb in its simplest form: after flying 60 miles you are 1 mile off course. How many degrees off is that? And if you were 2 miles off?",
         pts: [
@@ -4980,7 +4980,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Rolls out after the compass passes north"],
     answer: "Turning toward north the compass lags, so undershoot: start the roll-out before it reaches north — by about your latitude, so roughly when it reads 030° in a left turn from east. Accelerating on an east or west heading makes the compass swing toward north; decelerating, toward south (ANDS). The compass only tells the truth in straight, level, unaccelerated flight — settle and re-check. A timed standard-rate turn (3° per second: 90° in 30 seconds) avoids the problem.",
-    ref: "PHAK ch. 8 (magnetic compass)",
+    ref: "PHAK ch. 8",
     fu: [
       { when: "sat", ask: "And turning from west onto south by compass — do you roll out early or late?",
         gloss: "The opposite of north: on south the compass runs ahead, so the pilot rolls out after it passes south.",
@@ -5004,7 +5004,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Starts turning to search without noting heading and time"],
     answer: "Keep flying the planned heading and note the time: you know your speed, so you know roughly how far along the line you are, and a stronger headwind may simply mean the checkpoint is still ahead. Look to both sides for it and for the next large feature — the river itself, a highway, a lake. Cross-check with GPS or a VOR radial. Work out what changed (groundspeed, drift) and correct. If two checkpoints fail to appear, move to the lost procedure: climb, communicate, confess, comply, conserve.",
-    ref: "PHAK ch. 16; AFH ch. 14",
+    ref: "PHAK ch. 16; FAA-S-ACS-6C PA.VI.A, VI.D",
     fu: [
       { when: "always", ask: "The town finally appears, dead ahead. The leg was planned at 10 minutes and it took 14. What does that tell you, and what do you redo?",
         gloss: "Slower over the ground than planned, so the whole trip will take longer and burn more fuel.",
@@ -5035,7 +5035,7 @@ const ORAL_QUESTIONS = (() => {
           M("rose", "Heading: line it up against a nearby VOR compass circle (already magnetic), or use the GPS", ["use the compass rose", "direct-to on the GPS", "nearest function"]),
           M("dist", "Distance: mark it on a pencil or finger and hold it against the scale — or the latitude marks, where one minute is one nautical mile", ["use my pencil against the scale", "one minute of latitude is a mile", "finger widths"]),
         ],
-        answer: "Lay a straight edge from present position to the airport and slide it parallel to the nearest VOR compass rose to read a magnetic course directly. For distance, mark the length on a pencil and hold it against the chart scale or a meridian's latitude ticks — one minute of latitude is one nautical mile. The G1000's nearest-airport and direct-to functions give both at once; back them up with the chart.", ref: "AFH ch. 14 (diversion)" },
+        answer: "Lay a straight edge from present position to the airport and slide it parallel to the nearest VOR compass rose to read a magnetic course directly. For distance, mark the length on a pencil and hold it against the chart scale or a meridian's latitude ticks — one minute of latitude is one nautical mile. The G1000's nearest-airport and direct-to functions give both at once; back them up with the chart.", ref: "PHAK ch. 16; FAA-S-ACS-6C PA.VI.C" },
     ] },
 
   { id: "nav-wind-drift", area: "nav", lvl: 2, kind: "scenario",
@@ -5050,7 +5050,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the wind is from the east"],
     answer: "The highway moving to your left means the airplane has drifted right — east — so the wind has a component from the left, the west. Turn left to re-intercept the highway, then take up a heading a few degrees left of 360° — a wind correction angle, or crab — and adjust until the road stays under you. Heading is then different from track, which is exactly what the navigation log's wind correction predicts.",
-    ref: "PHAK ch. 16; AFH ch. 7 (ground reference)",
+    ref: "PHAK ch. 16; AFH ch. 7",
     fu: [
       { when: "sat", ask: "The wind is from the west. You now turn and fly due east. What happens to your groundspeed, and do you still need that wind correction?",
         pts: [
@@ -5099,7 +5099,7 @@ const ORAL_QUESTIONS = (() => {
       N("dark", "Notes the trade-off: dark areas may be fields — or water, woods or hills; lit areas have people and wires", ["dark could be a field or a lake"]),
     ],
     answer: "The priorities do not change: best glide at 68 KIAS, turn toward a landing area, attempt a restart, declare (Mayday, 7700, 121.5 or the frequency in use), then secure the engine and cabin. What changes is the landing site: use the G1000's nearest-airport function first; failing that, steer for terrain you know or planned for. The Airplane Flying Handbook suggests an unlit area away from congestion but near public access, such as beside a road — remembering that a dark patch can equally be water or trees. Landing light on near the ground, land into the wind if known, and touch down in a normal landing attitude at the lowest controllable airspeed. The real defence is planning: altitude, and a route within glide of airports.",
-    ref: "AFH ch. 11 (night emergencies); C172S POH section 3; the school's emergency placard",
+    ref: "AFH ch. 11; C172S POH section 3; school emergency placard",
     fu: [
       { when: "miss:glide", ask: "Before anything else — what is the very first thing you do with the airplane when the engine stops?",
         pts: [M("g", "Pitch for best glide — 68 knots — and trim", ["best glide", "sixty-eight"])],
@@ -5121,7 +5121,7 @@ const ORAL_QUESTIONS = (() => {
       N("ga", "If unsure, go around", ["go around"]),
     ],
     answer: "Fly exactly the day pattern, at the same speeds, with a stabilised, powered approach, and use the VASI or PAPI where there is one. Depth perception is poor at night, so the usual errors are rounding out too high or not rounding out at all. Start the round-out when the landing light begins to show the runway surface and tyre marks, and judge height from the way the runway edge lights appear to rise and spread — looking well down the runway rather than into the bright patch from the landing light. Be able to land without the landing light; go around if it does not look right.",
-    ref: "AFH ch. 11 (night approaches and landings)",
+    ref: "AFH ch. 11; AIM 2-1-2",
     fu: [
       { when: "always", ask: "On downwind your landing light burns out. Can you still land? How?",
         gloss: "Yes. The runway's own lights are enough; the landing light is a help, not a necessity.",
@@ -5130,7 +5130,7 @@ const ORAL_QUESTIONS = (() => {
           M("how", "Fly the normal approach using the runway lights and glidepath lights, and flare by the runway edge lights", ["use the runway lights", "use the PAPI"]),
           N("reg", "It is only legally required when carrying people for hire", ["only required for hire"]),
         ],
-        answer: "Yes. Fly a normal stabilised approach on the VASI or PAPI, hold a slightly nose-high attitude with a little power as the runway edge lights begin to rise around you, and let the airplane settle. A landing light is required equipment only for night operations for hire.", ref: "AFH ch. 11; 14 CFR 91.205(c)(4)" },
+        answer: "Yes. Fly a normal stabilised approach on the VASI or PAPI, hold a slightly nose-high attitude with a little power as the runway edge lights begin to rise around you, and let the airplane settle. A landing light is required equipment only for night operations for hire.", ref: "AFH ch. 11; 14 CFR 91.205(c); AIM 2-1-2" },
     ] },
 
   { id: "night-lights-fade", area: "night", lvl: 2, kind: "scenario",
@@ -5145,7 +5145,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Continues, or descends to try to stay underneath it"],
     answer: "Lights that grow a halo are being seen through haze or thin fog; lights that vanish are behind cloud or fog. Visibility is going down ahead of you and you cannot see the cloud itself. Turn around now, while the way back is clear, and land or re-plan. If you enter cloud anyway, go straight to the instruments, keep the wings level and make a gentle 180° turn, and ask ATC for help. Descending to stay under it at night invites flying into terrain.",
-    ref: "AFH ch. 11 (night flying); PHAK ch. 17",
+    ref: "AFH ch. 11, 18; PHAK ch. 17",
     fu: [
       { when: "sat", ask: "Why is it easier to fly into cloud by accident at night than by day?",
         pts: [
@@ -5170,7 +5170,7 @@ const ORAL_QUESTIONS = (() => {
       N("chk", "Follow the checklist for low volts", ["run the checklist", "the POH procedure"]),
     ],
     answer: "Follow the low-volts checklist; if the alternator will not come back, reduce electrical load to the essentials and land as soon as practical — the battery, then the standby battery, give limited time (about 30 minutes is the figure usually taught for the standby battery). Have the flashlight in hand. While the radio works, tell ATC what has happened and what you intend. Plan for losing radios, exterior and panel lighting, the displays and the electrically driven flaps: a no-flap landing without a landing light, and at a towered field light-gun signals — steady green is cleared to land. The engine keeps running; the magnetos need no electrical system.",
-    ref: "C172S POH section 3 (electrical power supply malfunctions); 14 CFR 91.125; AFH ch. 11",
+    ref: "C172S POH section 3 (electrical power supply malfunctions); AFH ch. 18; AIM 4-3-13; 14 CFR 91.125",
     fu: [
       { when: "always", ask: "Will the engine stop when the battery is flat?",
         gloss: "No: the spark comes from magnetos, which make their own electricity.",
@@ -5205,7 +5205,7 @@ const ORAL_QUESTIONS = (() => {
           N("spd", "Worked out at normal cruising speed", ["at normal cruise"]),
         ],
         answer: "Enough fuel to fly to the first point of intended landing and, at normal cruising speed, for at least 30 minutes more by day or 45 minutes by night.", ref: "14 CFR 91.151" },
-      { when: "miss:press", ask: "What do pilots call the urge to press on to the destination no matter what? And which letter of PAVE does it come under?",
+      { when: "miss:press", ref: "PHAK ch. 2", ask: "What do pilots call the urge to press on to the destination no matter what? And which letter of PAVE does it come under?",
         say: [["PAVE", "like pave a road"]],
         pts: [
           M("a", "Get-there-itis (plan continuation bias)", ["get-there-itis", "get-home-itis"]),
@@ -5281,7 +5281,7 @@ const ORAL_QUESTIONS = (() => {
           M("down", "Worse in the descent", ["coming down", "on descent"]),
           N("fix", "Help it by swallowing, yawning, or pinching the nose and blowing gently; descend slowly", ["Valsalva", "swallow", "yawn"]),
         ],
-        answer: "The Eustachian tube lets the middle ear equalise. Climbing, expanding air escapes easily; descending, a congested tube will not let air back in, and the pressure difference causes severe pain and can rupture the eardrum. Swallowing, yawning or the Valsalva manoeuvre helps; a slower descent helps too. The same applies to the sinuses.", ref: "AIM 8-1-2" },
+        answer: "The Eustachian tube lets the middle ear equalise. Climbing, expanding air escapes easily; descending, a congested tube will not let air back in, and the pressure difference causes severe pain and can rupture the eardrum. Swallowing, yawning or the Valsalva manoeuvre helps; a slower descent helps too. The same applies to the sinuses.", ref: "AIM 8-1-2; PHAK ch. 17" },
     ] },
 
   { id: "hf-morning-after", area: "hf", lvl: 2, kind: "scenario",
@@ -5320,7 +5320,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "It matters. Stress and Emotion are two letters of IMSAFE: anger, grief or worry take attention away from flying, narrow your focus and push people toward risk. Being physically fit is not the test — the test is whether your mind will be on the airplane. If not, delay, cancel, or fly with an instructor.",
     ref: "PHAK ch. 2, 17; AIM 8-1-1",
     fu: [
-      { when: "unsat", ask: "Think of the IMSAFE self-check. Which two of its letters are about your state of mind rather than your body?",
+      { when: "unsat", ref: "PHAK ch. 2; AIM 8-1-1", ask: "Think of the IMSAFE self-check. Which two of its letters are about your state of mind rather than your body?",
         say: [["IMSAFE", "I'm safe"]],
         pts: [
           M("s", "S — Stress", ["stress"]),
@@ -5341,7 +5341,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says it is fine because the friend agrees to it", "Says the landings can be touch-and-goes"],
     answer: "Landing at 7:15 is more than an hour after the 5:40 sunset, so 61.57(b) applies: to carry a passenger you need three takeoffs and three landings to a full stop in that period within the preceding 90 days, and you have none. Options: stay overnight, send the friend home another way, or reschedule — the time pressure of a late lunch is the external pressure to recognise. Even where it would be legal, six months without night flying is a proficiency risk.",
-    ref: "14 CFR 61.57(b); PHAK ch. 2",
+    ref: "14 CFR 61.57(b), 1.1; PHAK ch. 2",
     fu: [
       { when: "sat", ask: "Could you legally fly home alone at 7:15, leaving your friend to drive?",
         pts: [
@@ -5365,7 +5365,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Go around. Too high and too fast is not a stabilized approach, and the fix for an unstable approach is a go-around, not forcing the airplane down. The friend's hours do not make them pilot in command: under 91.3 the responsibility and the final authority are yours. Deferring to a senior pilot against your own judgement is a recognised hazard — brief roles before the flight.",
     ref: "14 CFR 91.3; AFH ch. 9; PHAK ch. 2",
     fu: [
-      { when: "always", ask: "Suppose you had pressed on with that landing because you did not want to look timid in front of your friend. Which hazardous attitude would that be, and what is its antidote?",
+      { when: "always", ref: "PHAK ch. 2", ask: "Suppose you had pressed on with that landing because you did not want to look timid in front of your friend. Which hazardous attitude would that be, and what is its antidote?",
         pts: [
           M("macho", "Macho", ["macho", "showing off"]),
           N("ant", "Antidote: taking chances is foolish", ["taking chances is foolish"]),
@@ -5397,7 +5397,7 @@ const ORAL_QUESTIONS = (() => {
           M("m", "Mitigate it — reduce it, for example more fuel, a higher altitude, a better time of day", ["mitigate", "reduce"]),
         ],
         answer: "TEAM: Transfer, Eliminate, Accept, Mitigate.", ref: "PHAK ch. 2" },
-      { when: "unsat", ask: "A simpler way in: PAVE is a checklist of four places where risk comes from. What are they?",
+      { when: "unsat", ref: "PHAK ch. 2", ask: "A simpler way in: PAVE is a checklist of four places where risk comes from. What are they?",
         say: [["PAVE", "like pave a road"]],
         need: 3,
         pts: [
@@ -5424,7 +5424,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Detect the change, Estimate the need to counter or react to it, Choose a desirable outcome, Identify actions to control the change, Do the necessary action, Evaluate the effect of the action.",
     ref: "PHAK ch. 2",
     fu: [
-      { when: "unsat", ask: "Forget the letters. In flight you notice the oil temperature creeping up. In plain words, what steps does a good decision go through from there?",
+      { when: "unsat", ref: "PHAK ch. 2", ask: "Forget the letters. In flight you notice the oil temperature creeping up. In plain words, what steps does a good decision go through from there?",
         need: 3,
         pts: [
           M("see", "Notice it and work out how serious it is", ["recognise the problem", "assess it"]),
@@ -5447,7 +5447,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "One is anti-authority — antidote: follow the rules, they are usually right. Two is impulsivity — not so fast, think first. Three is resignation — I'm not helpless, I can make a difference.",
     ref: "PHAK ch. 2",
     fu: [
-      { when: "always", ask: "Two more. 'I've flown through worse than this, watch me.' And: 'Those accidents happen to careless pilots, not to me.' Which attitudes are those?",
+      { when: "always", ref: "PHAK ch. 2", ask: "Two more. 'I've flown through worse than this, watch me.' And: 'Those accidents happen to careless pilots, not to me.' Which attitudes are those?",
         pts: [
           M("macho", "First: macho", ["macho", "I can do it"]),
           M("inv", "Second: invulnerability", ["invulnerability", "it won't happen to me"]),
@@ -5541,7 +5541,7 @@ const ORAL_QUESTIONS = (() => {
           M("un", "'Unable'", ["unable"]),
           N("pic", "The pilot in command stays responsible for the safety of the flight, whatever the instruction", ["I'm still responsible"]),
         ],
-        answer: "'Unable' — and say what you can do instead. A clearance or instruction does not relieve the pilot in command of responsibility for the safe operation of the aircraft.", ref: "14 CFR 91.3; AIM 4-4-1" },
+        answer: "'Unable' — and say what you can do instead. A clearance or instruction does not relieve the pilot in command of responsibility for the safe operation of the aircraft.", ref: "14 CFR 91.123, 91.3" },
     ] },
 
   /* ---------------- airport operations: more angles (fragment C) ---------------- */
@@ -5566,7 +5566,7 @@ const ORAL_QUESTIONS = (() => {
           N("why", "So that it lines up with the runway numbers, which are magnetic", ["matches the runway numbers"]),
         ],
         no: ["Says true north"],
-        answer: "Magnetic — winds you hear from a tower, ATIS or AWOS are magnetic so they compare directly with runway headings. Written weather (METAR, TAF, winds aloft) is in true.", ref: "AIM 7-1" },
+        answer: "Magnetic — winds you hear from a tower, ATIS or AWOS are magnetic so they compare directly with runway headings. Written weather (METAR, TAF, winds aloft) is in true.", ref: "AIM 7-1-10, 4-3-6" },
       { when: "always", ask: "You listened to information Charlie ten minutes ago. When you call the tower, the controller says 'information Delta is current'. What do you do?",
         pts: [
           M("get", "Get the new information — listen again, or ask for the changes", ["listen to Delta", "get the new ATIS"]),
@@ -5594,7 +5594,7 @@ const ORAL_QUESTIONS = (() => {
           M("to", "'Cleared for takeoff'", ["cleared for takeoff"]),
           M("ld", "'Cleared to land' (or cleared touch-and-go, or cleared for the option)", ["cleared to land"]),
         ],
-        answer: "'Cleared for takeoff' and 'cleared to land' (or 'cleared touch-and-go' / 'cleared for the option'). With a tower operating, no takeoff or landing without a clearance.", ref: "14 CFR 91.129(i)" },
+        answer: "'Cleared for takeoff' and 'cleared to land' (or 'cleared touch-and-go' / 'cleared for the option'). With a tower operating, no takeoff or landing without a clearance.", ref: "14 CFR 91.129(i); AIM 5-2-5" },
     ] },
 
   { id: "apt-incursion", area: "apt", lvl: 1, kind: "explain",
@@ -5612,15 +5612,15 @@ const ORAL_QUESTIONS = (() => {
       N("lts", "Lights on when crossing or entering a runway", ["landing light on", "strobes on"]),
     ],
     answer: "A runway incursion is any occurrence at an airport involving the incorrect presence of an aircraft, vehicle or person on the protected area of a surface designated for landing and takeoff. Avoiding one: brief the taxi route on the airport diagram, including hot spots; write down and read back the clearance with every hold-short; keep your head up and the cockpit quiet while moving, doing checklists only when stopped; know the signs and markings; never cross a hold line without a clearance at a towered airport; look both ways and up final before entering any runway; and if in any doubt, stop and ask — 'request progressive taxi'.",
-    ref: "AIM 4-3-18, 2-3; AC 91-73; PHAK ch. 14",
+    ref: "AIM 4-3-18, 2-3-5; AC 91-73B; PHAK ch. 14",
     fu: [
       { when: "sat", ask: "On the airport diagram you see a circle or oval labelled 'HS 1'. What is that?",
         pts: [
           M("hs", "A hot spot — a place where pilots often get confused, with a history or risk of collisions or runway incursions", ["hot spot", "confusing intersection"]),
           N("do", "So brief it beforehand and take extra care there", ["extra attention there"]),
         ],
-        answer: "A hot spot: a location on the movement area with a history of, or potential risk for, collision or runway incursion, where heightened attention is necessary. They are numbered on the diagram and described in the Chart Supplement.", ref: "AIM 4-3-18; Chart Supplement" },
-      { when: "always", ask: "Scenario. At a big unfamiliar airport you have turned onto a taxiway and you no longer know where you are. What do you do?",
+        answer: "A hot spot: a location on the movement area with a history of, or potential risk for, collision or runway incursion, where heightened attention is necessary. They are numbered on the diagram and described in the Chart Supplement.", ref: "PHAK ch. 14; Chart Supplement" },
+      { when: "always", ref: "AIM 4-3-18", ask: "Scenario. At a big unfamiliar airport you have turned onto a taxiway and you no longer know where you are. What do you do?",
         pts: [
           M("stop", "Stop the airplane (not on a runway)", ["stop"]),
           M("tell", "Tell ground control you are unsure of your position and ask for help — progressive taxi", ["tell ground", "request progressive taxi"]),
@@ -5687,7 +5687,7 @@ const ORAL_QUESTIONS = (() => {
       N("left", "With left turns unless told or shown otherwise", ["left traffic"]),
     ],
     answer: "Departure leg (straight out on runway heading; 'upwind' strictly is a leg parallel to the runway in the landing direction), crosswind (90° to the runway off the departure end), downwind (parallel to the runway, opposite to the landing direction), base (90° to the runway off the approach end) and final (aligned with the runway). Standard pattern: left turns, usually 1,000 ft AGL.",
-    ref: "AIM 4-3-2, 4-3-3; AFH ch. 8",
+    ref: "AIM 4-3-3; AC 90-66C; AFH ch. 8",
     fu: [
       { when: "sat", ask: "You have taken off from an untowered airport and want to leave the pattern. How do you depart?",
         pts: [
@@ -5695,12 +5695,12 @@ const ORAL_QUESTIONS = (() => {
           M("when", "After passing the end of the runway and reaching pattern altitude", ["once at pattern altitude", "beyond the departure end"]),
           N("say", "Announce it on the common frequency", ["call departing"]),
         ],
-        answer: "Continue straight out, or exit with a 45° turn in the direction of the traffic pattern beyond the departure end of the runway after reaching pattern altitude — and announce your departure direction on the CTAF.", ref: "AIM 4-3-3; AC 90-66" },
+        answer: "Continue straight out, or exit with a 45° turn in the direction of the traffic pattern beyond the departure end of the runway after reaching pattern altitude — and announce your departure direction on the CTAF.", ref: "AIM 4-3-3; AC 90-66C" },
       { when: "always", ask: "If you are staying in the pattern, when do you start your turn from the departure leg to crosswind?",
         pts: [
           M("a", "Past the departure end of the runway and within 300 feet of pattern altitude", ["within three hundred feet of pattern altitude", "seven hundred feet for a thousand-foot pattern"]),
         ],
-        answer: "Beyond the departure end of the runway, within 300 feet of pattern altitude — about 700 ft AGL for a 1,000 ft pattern.", ref: "AIM 4-3-3" },
+        answer: "Beyond the departure end of the runway, within 300 feet of pattern altitude — about 700 ft AGL for a 1,000 ft pattern.", ref: "AIM 4-3-3; AC 90-66C" },
     ] },
 
   { id: "apt-overfly-entry", area: "apt", lvl: 2, kind: "scenario",
@@ -5715,14 +5715,14 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Descends into the pattern from above while over the airport", "Joins by flying the pattern backwards or with right turns"],
     answer: "Preferred: cross midfield at least 500 ft above pattern altitude (which also lets you see the windsock and traffic), continue until about 2 miles clear, descend to pattern altitude, then turn back to join on a 45° to the downwind at midfield. Alternative, when the pattern is not busy: cross midfield at pattern altitude and turn directly onto downwind, yielding to aircraft on the 45° and downwind. Never descend onto the pattern from above, and keep announcing on the CTAF.",
-    ref: "AC 90-66; AIM 4-3-3; AFH ch. 8",
+    ref: "AC 90-66C; AIM 4-3-3; AFH ch. 8",
     fu: [
       { when: "always", ask: "Is a long straight-in approach allowed at an airport without a tower?",
         pts: [
           M("ok", "It is allowed, but it must not cut in front of or disrupt aircraft already in the pattern", ["legal but don't disrupt the pattern", "fit in with the traffic"]),
           M("say", "Announce it clearly — distance out on final", ["call a five-mile final"]),
         ],
-        answer: "It is not prohibited, but the recommended entry is the 45° to downwind. A pilot flying straight in must not disrupt the flow of traffic in the pattern and should announce position and intentions early and often.", ref: "AC 90-66; AIM 4-3-3" },
+        answer: "It is not prohibited, but the recommended entry is the 45° to downwind. A pilot flying straight in must not disrupt the flow of traffic in the pattern and should announce position and intentions early and often.", ref: "AC 90-66C; AIM 4-3-3" },
     ] },
 
   { id: "apt-runway-pick", area: "apt", lvl: 1, kind: "scenario",
@@ -5737,9 +5737,9 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Picks runway 9 or 36 (a tailwind)"],
     answer: "Runway 27: its heading of 270° is 30° from the wind, giving mostly headwind. Runway 18 is 60° off — mostly crosswind — and 9 and 36 would be landing with a tailwind. If other aircraft are established on another runway, the wind favours yours only slightly, and it is within your limits, the safe course is to conform to the flow or agree a plan on the CTAF; two opposing patterns is the hazard.",
-    ref: "AIM 4-3-3; AC 90-66; AFH ch. 8",
+    ref: "AIM 4-3-3; AC 90-66C; AFH ch. 8",
     fu: [
-      { when: "sat", ask: "And if the wind is reported calm, how do you choose?",
+      { when: "sat", ref: "AIM 4-3-3; Chart Supplement", ask: "And if the wind is reported calm, how do you choose?",
         pts: [
           M("a", "Use the runway others are using, or the airport's designated calm-wind runway if it has one", ["whatever traffic is using", "calm wind runway", "check the Chart Supplement"]),
           N("b", "Otherwise weigh length, slope, obstacles, sun and noise rules", ["the longer runway", "away from the sun"]),
@@ -5766,7 +5766,7 @@ const ORAL_QUESTIONS = (() => {
           M("lift", "Whenever the wings are producing lift — from the moment it lifts off until it touches down", ["from rotation to touchdown", "any time it is flying"]),
           M("hcs", "Strongest when the airplane is heavy, clean (flaps up) and slow", ["heavy, clean and slow"]),
         ],
-        answer: "Vortices are a by-product of lift, so they trail from rotation to touchdown. They are strongest when the generating aircraft is heavy, clean and slow.", ref: "AIM 7-4-3" },
+        answer: "Vortices are a by-product of lift, so they trail from rotation to touchdown. They are strongest when the generating aircraft is heavy, clean and slow.", ref: "AIM 7-4-2, 7-4-3" },
       { when: "sat", ask: "A helicopter is hovering beside the taxiway you want to use. Any hazard?",
         pts: [
           M("wash", "Yes — its rotor downwash can upset a light airplane", ["rotor wash", "downwash"]),
@@ -5787,7 +5787,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Lands anyway because the tower cleared them", "Waits for the tower to tell them to go around"],
     answer: "Go around. A landing clearance is not a guarantee; the pilot in command remains responsible for not landing on an occupied runway. Full power, pitch for a climb, retract the flaps in stages, then tell the tower 'going around' — aviate before communicating. If needed, sidestep slightly so you can keep the aircraft on the runway in sight, and follow the tower's instructions for re-entering the pattern.",
-    ref: "14 CFR 91.3, 91.113; AFH ch. 9; AIM 4-3",
+    ref: "14 CFR 91.3, 91.113(g); AIM 4-3-5; AFH ch. 9",
     fu: [
       { when: "sat", ask: "Turn it round. On short final everything looks fine to you, but the tower says 'go around'. Do you have to?",
         pts: [
@@ -5810,14 +5810,14 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says you may land on the arrows / before the white bar"],
     answer: "White arrows leading to a white threshold bar mark a displaced threshold: the pavement before the bar is available for taxi, takeoff and landing rollout, but not for touchdown — usually because of obstacles under the approach. Yellow chevrons mark a blast pad or stopway, unusable for taxi, takeoff or landing (a stopway is there only for an aborted takeoff). An X at the runway end means the runway is closed.",
-    ref: "AIM 2-3-3",
+    ref: "AIM 2-3-3, 2-3-6",
     fu: [
       { when: "always", ask: "After landing you turn off the runway. How do you know when you are officially clear of it?",
         pts: [
           M("line", "When the whole airplane has crossed the holding position lines — the four yellow lines, two solid and two dashed", ["past the hold short line", "all of the airplane across the lines"]),
           N("side", "Coming off the runway you meet the dashed side first, and may cross without asking", ["dashed side first"]),
         ],
-        answer: "You are clear when the entire aircraft is past the runway holding position markings. Approaching from the runway you are on the dashed side and cross without a clearance — and should not stop until fully across.", ref: "AIM 2-3-5, 4-3-20" },
+        answer: "You are clear when the entire aircraft is past the runway holding position markings. Approaching from the runway you are on the dashed side and cross without a clearance — and should not stop until fully across.", ref: "AIM 2-3-5, 4-3-21" },
     ] },
 
   { id: "apt-sign-read", area: "apt", lvl: 2, kind: "scenario",
@@ -5854,9 +5854,9 @@ const ORAL_QUESTIONS = (() => {
       N("ma", "A missed approach (for instrument practice)", ["missed approach"]),
     ],
     answer: "'Cleared for the option' permits a touch-and-go, low approach, missed approach, stop-and-go or full-stop landing at the pilot's discretion.",
-    ref: "AIM 4-3-22",
+    ref: "AIM 4-3-23",
     fu: [
-      { when: "always", ask: "If the tower instead says 'cleared to land' and you want to do a touch-and-go, can you?",
+      { when: "always", ref: "AIM 4-3-23", ask: "If the tower instead says 'cleared to land' and you want to do a touch-and-go, can you?",
         pts: [M("no", "No — 'cleared to land' means a full stop; ask for the touch-and-go", ["need to request it", "not without asking"])],
         answer: "No. 'Cleared to land' is for a full-stop landing. Request the touch-and-go or the option; the tower may be planning other traffic around your stopping." },
     ] },
@@ -5873,14 +5873,14 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Stops on the runway to do the checklist", "Turns onto another runway to exit without being told to"],
     answer: "Slow to taxi speed on the centreline, then exit at the first available taxiway or as instructed. Do not stop or reverse course on the runway, and do not exit onto another runway unless told to. Taxi fully across the holding position markings, stop, and remain on the tower frequency until instructed to contact ground; then obtain a taxi clearance before moving on. Run the after-landing checklist once clear and stopped.",
-    ref: "AIM 4-3-20; 14 CFR 91.129(i)",
+    ref: "AIM 4-3-21; 14 CFR 91.129(i)",
     fu: [
       { when: "always", ask: "Same landing, but at an airport with no tower. What do you do and say once you are off the runway?",
         pts: [
           M("clear", "Taxi completely clear of the runway, past the hold line", ["get fully off the runway"]),
           M("say", "Announce on the common frequency that you are clear of the runway", ["clear of runway two seven", "call clear"]),
         ],
-        answer: "Clear the runway promptly, taxi past the holding position markings, and announce on the CTAF: '…traffic, Cessna 123 clear of runway 27, …'.", ref: "AIM 4-1-9" },
+        answer: "Clear the runway promptly, taxi past the holding position markings, and announce on the CTAF: '…traffic, Cessna 123 clear of runway 27, …'.", ref: "AIM 4-1-9, 4-3-21" },
     ] },
 
   /* ---------------- aerodynamics: more angles (fragment C) ---------------- */
@@ -5895,7 +5895,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says angle of attack is the angle between the nose and the horizon"],
     answer: "Angle of attack is the angle between the wing's chord line and the relative wind. The relative wind is parallel and opposite to the flight path, so angle of attack is not pitch attitude: in a descent with the nose below the horizon the wing can still be at a high angle of attack. Lift increases with angle of attack up to the critical angle (roughly 16–18° for a typical light-airplane wing), beyond which the wing stalls.",
-    ref: "PHAK ch. 4, 5",
+    ref: "PHAK ch. 4, 5; AFH ch. 5",
     fu: [
       { when: "always", ask: "You slow down from cruise to slow flight and hold the same altitude. What has to happen to the angle of attack, and why?",
         pts: [
@@ -5925,7 +5925,7 @@ const ORAL_QUESTIONS = (() => {
           M("g", "About 1.4 G", ["one point four G", "almost one and a half G"]),
           M("vs", "The stall speed goes up — by nearly 20 percent (48 knots becomes about 57)", ["about twenty percent higher", "around fifty-seven knots"]),
         ],
-        answer: "Load factor is 1 ÷ cosine of the bank angle: about 1.41 G at 45°. Stall speed rises with the square root of the load factor, about 19% — a 48 KIAS flaps-up stall becomes roughly 57 KIAS.", ref: "PHAK ch. 5" },
+        answer: "Load factor is 1 ÷ cosine of the bank angle: about 1.41 G at 45°. Stall speed rises with the square root of the load factor, about 19% — a 48 KIAS flaps-up stall becomes roughly 57 KIAS.", ref: "PHAK ch. 5; AFH ch. 10" },
       { when: "always", ask: "In a steep turn the airplane wants to keep rolling steeper by itself. Why?",
         pts: [
           M("a", "The outside wing travels faster than the inside wing, so it makes more lift — the overbanking tendency", ["overbanking tendency", "outside wing goes faster"]),
@@ -6027,7 +6027,7 @@ const ORAL_QUESTIONS = (() => {
           N("lim", "Utility category means lighter, a forward centre of gravity, nothing and nobody in the back", ["no back-seat passengers or baggage"]),
         ],
         no: ["Says spins are fine at any time"],
-        answer: "Intentional spins are prohibited in the normal category. The C172S limitations approve them only in the utility category (2,200 lb, a restricted forward CG range, rear seat and baggage area empty) — and the school may not permit them at all.", ref: "C172S POH section 2" },
+        answer: "Intentional spins are prohibited in the normal category. The C172S limitations approve them only in the utility category (2,200 lb, a restricted forward CG range, rear seat and baggage area empty) — and the school may not permit them at all.", ref: "C172S POH section 2; AFH ch. 5" },
     ] },
 
   { id: "aero-slips", area: "aero", lvl: 1, kind: "explain",
@@ -6094,7 +6094,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Raises all the flaps immediately"],
     answer: "Flaps increase the wing's camber, giving more lift at a given speed as well as more drag; the stall speed with flaps up is higher (48 against 40 KIAS). Retracting everything at approach speed removes lift the airplane needs. Go-around: full power, pitch for a climb, flaps to 20° promptly (the last 10° is mostly drag), then, with a positive rate of climb and the speed increasing, to 10° and up.",
-    ref: "AFH ch. 9; C172S POH section 4",
+    ref: "AFH ch. 9; PHAK ch. 6; C172S POH section 4",
     fu: [
       { when: "always", ask: "Flaps do two things at once. On landing, what do those two things let you do?",
         pts: [
@@ -6166,7 +6166,7 @@ const ORAL_QUESTIONS = (() => {
           M("more", "More bank at higher speed", ["more bank"]),
           N("rule", "Rule of thumb: a tenth of the airspeed plus five — about 15 degrees at 100 knots", ["airspeed divided by ten plus five"]),
         ],
-        answer: "More. The bank for a standard-rate turn increases with true airspeed — roughly airspeed ÷ 10, plus 5: about 15° at 100 knots.", ref: "PHAK ch. 5; Instrument Flying Handbook" },
+        answer: "More. The bank for a standard-rate turn increases with true airspeed — roughly airspeed ÷ 10, plus 5: about 15° at 100 knots.", ref: "PHAK ch. 5, 8; Instrument Flying Handbook (FAA-H-8083-15B)" },
     ] },
 
   { id: "aero-glide-factors", area: "aero", lvl: 2, kind: "explain",
@@ -6181,7 +6181,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says raising the nose to slow down stretches the glide"],
     answer: "The C172S maximum-glide chart gives about 1.5 NM per 1,000 ft above the terrain — about 18 NM from 12,000 ft — at 68 KIAS, flaps up, propeller windmilling, no wind. Any other speed, any flap, slip or turn reduces it. A headwind reduces the ground distance and a tailwind increases it. Weight does not change the glide ratio, only the speed at which it is achieved (the published speed is for maximum weight).",
-    ref: "C172S POH section 3 (maximum glide); AFH ch. 18; PHAK ch. 5",
+    ref: "C172S POH section 3 (maximum glide); AFH ch. 3; PHAK ch. 5",
     fu: [
       { when: "always", ask: "Quick sum. The engine quits when you are 3,000 feet above the ground, in still air. There is an airport 6 nautical miles away. Will you make it?",
         gloss: "Three thousand feet at a mile and a half per thousand is four and a half miles — short of six.",
@@ -6284,7 +6284,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the engine will stop when the battery is flat", "Continues to the destination to avoid the inconvenience"],
     answer: "The alternator is offline and the battery is discharging. Shed load (the checklist's list — avionics bus 1, pitot heat if not needed, unnecessary lights and equipment), tell ATC while you can, and land as soon as practical: the lit airport 10 miles away, not the destination 40 miles on. The engine is unaffected — the magnetos are self-powered. What goes with the battery: radios, transponder, exterior and panel lights, the electric flaps (plan a no-flap landing) and eventually the displays; the standby battery then carries the essential bus and PFD for a limited time. Have a flashlight in hand.",
-    ref: "C172S POH section 3 (electrical power supply malfunctions), section 7",
+    ref: "C172S POH section 3 (electrical power supply malfunctions), section 7; AFH ch. 18",
     fu: [
       { when: "miss:eng", ask: "When the battery finally goes flat, does the engine stop?",
         pts: [M("no", "No — the magnetos make their own spark, independent of the electrical system", ["no", "magnetos are self-powered"])],
@@ -6294,7 +6294,7 @@ const ORAL_QUESTIONS = (() => {
           M("green", "A steady green light", ["steady green"]),
           N("ack", "Acknowledge by flashing the landing or navigation lights — if they still work", ["flash my lights"]),
         ],
-        answer: "A steady green light signal: cleared to land. Acknowledge at night by flashing the landing or navigation lights.", ref: "14 CFR 91.125" },
+        answer: "A steady green light signal: cleared to land. Acknowledge at night by flashing the landing or navigation lights.", ref: "14 CFR 91.125; AIM 4-3-13" },
     ] },
 
   { id: "emer-icing", area: "emer", lvl: 1, kind: "scenario",
@@ -6312,7 +6312,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Carries on, expecting the ice to melt or blow off", "Uses full flaps and a normal slow approach with ice on the wings"],
     answer: "The school's memory items: pitot heat ON, autopilot disconnect, exit the icing conditions — turn back or change altitude for a temperature less conducive to icing — cabin heat ON and defroster outlets OPEN; then the rest of the checklist. The 172 is not approved for flight into known icing. With ice aboard expect more drag, less lift, a higher stall speed and more power required: the POH calls for flaps left retracted with a significant build-up, an approach at 65 to 75 KIAS depending on the amount of ice, a forward slip if needed to see, and a landing in a level attitude — and for avoiding a go-around, since climb performance is badly reduced.",
-    ref: "C172S POH section 3 (inadvertent icing encounter); AFH ch. 18; AIM 7-1",
+    ref: "C172S POH section 3 (inadvertent icing encounter); PHAK ch. 7, 12",
     fu: [
       { when: "always", ask: "Why does the checklist want the autopilot off in ice?",
         pts: [
@@ -6325,7 +6325,7 @@ const ORAL_QUESTIONS = (() => {
           M("fly", "Pitot heat on, and fly by known pitch attitude and power setting", ["pitch and power", "don't chase the airspeed"]),
         ],
         no: ["Dives to regain the airspeed"],
-        answer: "The pitot tube is blocked by ice; the reading is false. Pitot heat ON, and fly known pitch attitudes and power settings (the standby airspeed indicator shares the same pitot source).", ref: "PHAK ch. 8; C172S POH section 7" },
+        answer: "The pitot tube is blocked by ice; the reading is false. Pitot heat ON, and fly known pitch attitudes and power settings (the standby airspeed indicator shares the same pitot source).", ref: "PHAK ch. 8; AFH ch. 18; C172S POH section 7" },
     ] },
 
   { id: "emer-precautionary", area: "emer", lvl: 2, kind: "scenario",
@@ -6364,7 +6364,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Continues the takeoff and plans to sort it out in the air"],
     answer: "Engine failure during the takeoff roll: throttle IDLE, brakes APPLY, stop straight ahead. If there is a risk of fire — the raw fuel smell — secure the airplane: mixture IDLE CUT-OFF, fuel shutoff valve OFF, magnetos OFF, master and standby battery OFF, announce, and evacuate. A problem on the ground with runway remaining is never taken into the air.",
-    ref: "C172S POH section 3 (engine failure during takeoff roll)",
+    ref: "C172S POH section 3 (engine failure during takeoff roll); AFH ch. 6",
     fu: [
       { when: "always", ask: "Before you ever start the roll, what do you decide in advance about when you will abort a takeoff? Give me some reasons to stop.",
         gloss: "A pre-takeoff briefing: the pilot decides beforehand what will make them stop, so there is no hesitation.",
@@ -6490,7 +6490,7 @@ const ORAL_QUESTIONS = (() => {
       N("out", "Then get out; life jackets inflated only once outside the cabin", ["evacuate", "inflate life jackets outside"]),
     ],
     answer: "Ditching: Mayday and 7700 with your position, ELT on; secure or jettison heavy objects; seats and belts secure; flaps FULL; establish 300 ft/min descent at 55 KIAS with power (with no power the POH gives 65 KIAS flaps up or 60 KIAS with 10° flaps); cabin doors unlatched; touch down in a level attitude at the established rate of descent rather than flaring; then evacuate, inflating life vests once clear. In high wind and heavy seas land into the wind; in light wind with heavy swells land parallel to the swells.",
-    ref: "C172S POH section 3 (ditching)",
+    ref: "C172S POH section 3 (ditching); AFH ch. 18; AIM 6-3-3",
     fu: [
       { when: "always", ask: "You are down on the water and the door will not open. Why not, and what do you do?",
         pts: [
@@ -6534,7 +6534,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Continues home because that is where the car is", "Hesitates to declare an emergency for fear of paperwork"],
     answer: "Treat it as an emergency: turn toward the nearest suitable airport, call the tower (or the frequency in use, or 121.5) — 'Mayday' or at least 'medical emergency, request priority and an ambulance' — and squawk 7700 if not already identified. Then fly a normal, stabilized approach; a botched landing helps nobody. Under 91.3(b) the pilot in command may deviate from any rule to the extent the emergency requires.",
-    ref: "14 CFR 91.3; AIM 6-1, 6-3",
+    ref: "14 CFR 91.3; AIM 6-1-2, 6-3-1",
     fu: [
       { when: "sat", ask: "That airport's airspace normally needs radio contact before you enter. Suppose you cannot raise the tower straight away. Do you hold outside and wait?",
         pts: [
@@ -6588,12 +6588,12 @@ const ORAL_QUESTIONS = (() => {
     need: 2,
     no: ["Says it only counts if somebody is actually hurt or something is damaged"],
     answer: "14 CFR 91.13: no person may operate an aircraft in a careless or reckless manner so as to endanger the life or property of another. Careless is a lack of due care — a skipped checklist, no fuel check, not looking before taxiing. Reckless is a conscious disregard of a known risk — buzzing, showing off, pressing on into weather you know is below minimums. It applies in the air and on the airport surface, and no one has to be hurt: endangering is enough.",
-    ref: "14 CFR 91.13",
+    ref: "14 CFR 91.13(a), (b)",
     fu: [
-      { when: "always", ask: "Does that rule apply while you are taxiing on the ramp, or only once you are flying?",
+      { when: "always", ref: "14 CFR 91.13(a)", ask: "Does that rule apply while you are taxiing on the ramp, or only once you are flying?",
         pts: [M("yes", "It applies on the ground as well", ["both", "taxiing too", "on the airport surface"])],
         answer: "Both. 91.13(b) covers operating an aircraft on the airport surface other than for the purpose of air navigation." },
-      { when: "unsat", ask: "Put simply: who or what must be put at risk for flying to count as careless or reckless?",
+      { when: "unsat", ref: "14 CFR 91.13(a), (b)", ask: "Put simply: who or what must be put at risk for flying to count as careless or reckless?",
         pts: [M("other", "The life or property of another person", ["other people", "someone else's property"])],
         answer: "The life or property of another — that is the test in 91.13." },
     ] },
@@ -6610,9 +6610,9 @@ const ORAL_QUESTIONS = (() => {
     ],
     need: 3,
     answer: "Student pilot certificate, medical certificate and a government-issued photo ID (14 CFR 61.3), plus the logbook containing the solo endorsements. 61.51(i) requires a student to carry the logbook on solo cross-country flights; schools commonly require it on every solo, so carry it.",
-    ref: "14 CFR 61.3, 61.51(i), 61.87",
+    ref: "14 CFR 61.3, 61.87(n), 61.51(i)",
     fu: [
-      { when: "miss:log", ask: "Where is your instructor's permission to fly solo written down — and do you take that with you?",
+      { when: "miss:log", ref: "14 CFR 61.87(n), 61.51(i)", ask: "Where is your instructor's permission to fly solo written down — and do you take that with you?",
         pts: [M("log", "In the logbook, as an endorsement — and yes, carry it", ["in my logbook", "the endorsement"])],
         answer: "The solo endorsement is in the logbook. Carry the logbook: it is required on solo cross-countries and schools expect it on every solo." },
       { when: "sat", ask: "And which documents must be in the airplane itself?",
@@ -6640,7 +6640,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says 50 nautical miles (that is the distance that makes a flight count as cross-country time)"],
     answer: "The solo endorsement in the logbook is good for 90 days and is for the specific make and model (61.87(n)). Without the cross-country training and endorsements of 61.93, a student may not fly more than 25 NM from the airport where the flight began, and may not land anywhere but that airport.",
-    ref: "14 CFR 61.87(n), 61.93(a)",
+    ref: "14 CFR 61.87(n), 61.93(a)(1)",
     fu: [
       { when: "always", ask: "There is another airport ten miles away. With just your basic solo endorsement, can you fly over and land there?",
         gloss: "Being inside the distance limit is not enough: landing somewhere else needs its own sign-off.",
@@ -6682,10 +6682,10 @@ const ORAL_QUESTIONS = (() => {
     answer: "There is no fixed list. Good answers: run PAVE and IMSAFE honestly; complete a FRAT; set personal minimums and hold them; get a thorough weather briefing with NOTAMs and TFRs; do a careful preflight; use checklists; carry fuel beyond the legal reserve and pick an alternate; use flight following or tell someone the plan; ask your instructor; and make the go/no-go and divert decisions early.",
     ref: "PHAK ch. 2; FAA Risk Management Handbook (FAA-H-8083-2)",
     fu: [
-      { when: "unsat", ask: "Start with the pilot. How do you decide whether you yourself are fit to fly today?",
+      { when: "unsat", ref: "PHAK ch. 2; AIM 8-1-1", ask: "Start with the pilot. How do you decide whether you yourself are fit to fly today?",
         pts: [M("imsafe", "The IMSAFE checklist — illness, medication, stress, alcohol, fatigue, emotion", ["I'm safe", "am I sick, tired, stressed"])],
         answer: "IMSAFE: Illness, Medication, Stress, Alcohol, Fatigue, Emotion (some schools say Eating)." },
-      { when: "sat", ask: "Once you have identified a risk, what are your choices for dealing with it?",
+      { when: "sat", ref: "PHAK ch. 2", ask: "Once you have identified a risk, what are your choices for dealing with it?",
         pts: [
           M("reduce", "Reduce it — change the plan: another time, route, altitude, more fuel, take an instructor", ["mitigate it", "change the plan"]),
           M("cancel", "Eliminate it — do not go, or divert", ["cancel", "don't fly"]),
@@ -6711,7 +6711,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Your own numbers — typically a ceiling, a visibility, a maximum wind, gust and crosswind, and a fuel margin — all stricter than the legal minimums and never looser than your instructor's endorsement limits or the school's solo rules. They apply to Boeing Field, Bremerton and the route between for the whole period, are set on the ground ahead of time, and are not relaxed on the day.",
     ref: "PHAK ch. 2; your instructor's solo endorsement",
     fu: [
-      { when: "always", ask: "The weather is legal but below your personal minimums, and you really want to go. What do you do?",
+      { when: "always", ref: "PHAK ch. 2", ask: "The weather is legal but below your personal minimums, and you really want to go. What do you do?",
         pts: [
           M("no", "Do not go — delay or cancel", ["I don't go", "wait", "reschedule"]),
           N("why", "Because minimums are set ahead of time so that pressure on the day cannot move them", ["that's the point of having them"]),
@@ -6740,7 +6740,7 @@ const ORAL_QUESTIONS = (() => {
           N("fdc", "They are issued as FDC NOTAMs", ["it's an F-D-C NOTAM"]),
           N("ex", "Gives an example: VIP visit, wildfire, stadium, air show", ["president", "wildfires", "football game"]),
         ],
-        answer: "A temporary flight restriction closes or restricts airspace for a period — VIP movement, disaster and wildfire relief, stadiums, air shows, space operations. TFRs are issued as FDC NOTAMs; check tfr.faa.gov, Flight Service or the EFB in the briefing and again just before departure.", ref: "14 CFR 91.137–91.145; AIM 3-5-3" },
+        answer: "A temporary flight restriction closes or restricts airspace for a period — VIP movement, disaster and wildfire relief, stadiums, air shows, space operations. TFRs are issued as FDC NOTAMs; check tfr.faa.gov, Flight Service or the EFB in the briefing and again just before departure.", ref: "AIM 3-5-3; 14 CFR 91.137, 91.141, 91.145" },
     ] },
 
   { id: "apt-presolo-signs", area: "apt", lvl: 1, kind: "scenario",
@@ -6759,7 +6759,7 @@ const ORAL_QUESTIONS = (() => {
     answer: "Sign 1 is a runway holding position sign (mandatory): runway 9-27 is ahead, with the runway 9 threshold to the left and 27 to the right; at a towered airport do not pass it without a clearance. Sign 2 is a no-entry sign (mandatory): aircraft are prohibited from entering. Sign 3: the black panel with the yellow C is a location sign — you are on taxiway C; the yellow panels are direction signs — taxiway A intersects, to the left and to the right.",
     ref: "AIM 2-3-8, 2-3-9, 2-3-10",
     fu: [
-      { when: "always", ask: "In general, what does a red sign with white writing tell you?",
+      { when: "always", ref: "AIM 2-3-8", ask: "In general, what does a red sign with white writing tell you?",
         pts: [M("mand", "It is mandatory — an instruction you must obey: hold short or do not enter", ["mandatory", "stop", "you need a clearance"])],
         answer: "Red with white characters is a mandatory instruction sign: a runway holding position, an ILS critical area hold, or no entry." },
     ] },
@@ -6775,9 +6775,9 @@ const ORAL_QUESTIONS = (() => {
     ],
     need: 2,
     answer: "Continue straight out, or exit with a 45° turn in the direction of the traffic pattern (left in left traffic, right in right traffic) beyond the departure end of the runway, after reaching pattern altitude — announcing your intentions on the CTAF.",
-    ref: "AIM 4-3-3; AC 90-66",
+    ref: "AIM 4-3-3; AC 90-66C",
     fu: [
-      { when: "always", ask: "And arriving at that airport: how do you find out which way the pattern goes — left or right turns?",
+      { when: "always", ref: "AIM 4-3-3, 4-3-4; 14 CFR 91.126(b); Chart Supplement", ask: "And arriving at that airport: how do you find out which way the pattern goes — left or right turns?",
         pts: [
           M("src", "From the Chart Supplement, the chart, or the segmented circle's pattern indicators", ["chart supplement", "the sectional says R-P", "segmented circle"]),
           N("std", "Left turns unless published otherwise", ["standard is left"]),
@@ -6797,15 +6797,15 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says the fuel gauges are mechanical and keep working"],
     answer: "The fuel quantity indications are electrically powered and displayed on the G1000, so with all electrical power lost there is no fuel quantity indication. The engine is unaffected (magneto ignition). Work from the fuel you visually confirmed before flight, the planned burn and elapsed time, and land as soon as practical.",
-    ref: "C172S POH section 7",
+    ref: "C172S POH section 7; PHAK ch. 7",
     fu: [
-      { when: "always", ask: "So with no gauges, how do you know how much fuel you have left?",
+      { when: "always", ref: "PHAK ch. 7; 14 CFR 91.103", ask: "So with no gauges, how do you know how much fuel you have left?",
         pts: [
           M("time", "Time flown multiplied by the planned fuel burn, starting from a known quantity", ["time and fuel burn", "I know my burn rate and the time"]),
           N("vis", "The starting quantity was checked by looking in the tanks", ["I dipped the tanks", "visual check"]),
         ],
         answer: "From a known starting quantity (checked visually on the preflight), the planned fuel burn and the clock. The gauges are only ever a cross-check." },
-      { when: "sat", ask: "Does the engine need the electrical system to keep running? Why?",
+      { when: "sat", ref: "C172S POH section 7; PHAK ch. 7", ask: "Does the engine need the electrical system to keep running? Why?",
         pts: [M("mag", "No — the magnetos make their own spark", ["magnetos are self-powered", "no, the mags"])],
         answer: "No. The two engine-driven magnetos generate the ignition spark independently of the battery and alternator." },
     ] },
@@ -6819,7 +6819,7 @@ const ORAL_QUESTIONS = (() => {
       M("brk", "Brakes — apply", ["brakes on", "brake"]),
     ],
     answer: "THROTTLE — IDLE. BRAKES — APPLY.",
-    ref: "School emergency placard; C172S POH section 3",
+    ref: "School emergency placard; C172S POH section 3; AFH ch. 6",
     fu: [
       { when: "always", ask: "You have stopped on the runway and you smell raw fuel. What do you do with the engine controls?",
         gloss: "With a fire risk, the engine is made safe before getting out.",
@@ -6845,7 +6845,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says airspeed anywhere but first", "Says they would turn back to the runway"],
     answer: "AIRSPEED — 68 KIAS flaps up / 65 KIAS flaps down. Then MIXTURE — IDLE CUTOFF, FUEL SHUTOFF — PULL OFF, MAGNETOS — OFF.",
-    ref: "School emergency placard; C172S POH section 3 (the POH prints 70 KIAS flaps up; the school teaches 68)",
+    ref: "School emergency placard; C172S POH section 3 (the POH prints 70 KIAS flaps up; the school teaches 68); AFH ch. 18",
     fu: [
       { when: "miss:spd", ask: "What is the very first item, before you touch the engine controls?",
         pts: [M("spd", "Airspeed — 68 knots, 65 with flaps down", ["sixty-eight", "pitch for best glide"])],
@@ -6873,7 +6873,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Starts the restart before setting the airspeed"],
     answer: "AIRSPEED — 68 KIAS. LANDING AREA — SELECT. FUEL PUMP — ON, FUEL SHUTOFF — PUSH IN (ON), FUEL SELECTOR — BOTH, MIXTURE — RICH. MAGNETOS — CHECK (L / R / BOTH).",
-    ref: "School emergency placard; C172S POH section 3",
+    ref: "School emergency placard; C172S POH section 3; AFH ch. 18",
     fu: [
       { when: "always", ask: "The engine does not restart. Which checklist comes next?",
         pts: [M("forced", "The forced landing checklist — an emergency landing without engine power", ["forced landing", "emergency landing"])],
@@ -6921,7 +6921,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     need: 3,
     answer: "STBY BATT — OFF, MASTER — OFF. CABIN VENTS / AIR / HEAT — CLOSED. FIRE EXTINGUISHER — AS REQUIRED.",
-    ref: "School emergency placard; C172S POH section 3",
+    ref: "School emergency placard; C172S POH section 3; AFH ch. 18",
     fu: [
       { when: "always", ask: "Once the fire is out, what do you do about the smoke, and where do you go?",
         pts: [
@@ -6961,7 +6961,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     no: ["Says they would restart the engine once the fire is out"],
     answer: "MIXTURE — IDLE CUTOFF, FUEL SHUTOFF — PULL OFF, FUEL PUMP — OFF. MASTER — OFF.",
-    ref: "School emergency placard; C172S POH section 3",
+    ref: "School emergency placard; C172S POH section 3; AFH ch. 18",
     fu: [
       { when: "always", ask: "What comes after those memory items?",
         need: 2,
@@ -6984,7 +6984,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     need: 3,
     answer: "STBY BATT — OFF, MASTER — OFF. CABIN VENTS / AIR / HEAT — CLOSED. FIRE EXTINGUISHER — AS REQUIRED.",
-    ref: "School emergency placard; C172S POH section 3",
+    ref: "School emergency placard; C172S POH section 3; AFH ch. 18",
     fu: [
       { when: "always", ask: "With the master and standby battery off, does the engine keep running? Why?",
         pts: [M("mag", "Yes — the magnetos make their own spark", ["yes, the mags", "ignition is separate"])],
@@ -7030,14 +7030,14 @@ const ORAL_QUESTIONS = (() => {
       M("alt", "Alternate static air — pull on", ["alternate static on", "pull the alternate static"]),
     ],
     answer: "ALTERNATE STATIC AIR — PULL ON.",
-    ref: "School emergency placard; C172S POH section 3",
+    ref: "School emergency placard; C172S POH section 3; AFH ch. 18",
     fu: [
       { when: "always", ask: "Where does the alternate static source take its air from, and what does that do to the readings?",
         pts: [
           M("cabin", "From inside the cabin", ["cabin air"]),
           M("high", "Airspeed and altitude read slightly high", ["reads a little high", "small errors"]),
         ],
-        answer: "The alternate static source is inside the cabin, where pressure is slightly lower, so the altimeter and airspeed indicator read slightly high.", ref: "C172S POH sections 3, 7" },
+        answer: "The alternate static source is inside the cabin, where pressure is slightly lower, so the altimeter and airspeed indicator read slightly high.", ref: "C172S POH sections 3, 7; PHAK ch. 8" },
     ] },
 
   { id: "perf-mem-vspeeds", area: "perf", lvl: 1, kind: "recall",
@@ -7143,7 +7143,7 @@ const ORAL_QUESTIONS = (() => {
     ],
     need: 3,
     answer: "A hot spot is a location on an airport movement area with a history or potential risk of collision or runway incursion, where heightened attention is necessary; they are marked on the airport diagram. At Boeing Field: HS 1 — Taxiway Z restricted access area; HS 2 — Runway 14R-32L at Taxiway A7, risk of departing on the wrong runway; HS 3 — extensive helicopter operations near Taxiway B5.",
-    ref: "FAA airport diagram and Chart Supplement hot spot list — KBFI",
+    ref: "FAA airport diagram and Chart Supplement hot spot list — KBFI; PHAK ch. 14",
     fu: [
       { when: "always", ask: "Boeing has two parallel runways close together. What mistake does the airport warn pilots about, and how do you guard against it?",
         pts: [
@@ -7480,7 +7480,7 @@ const ORAL_QUESTIONS = (() => {
     need: 2,
     no: ["Says they must talk to a Bremerton tower"],
     answer: "Bremerton National (KPWT) is non-towered, in Class E airspace: no radio contact or clearance is required, though monitoring and self-announcing on CTAF 123.05 is good practice. It lies inside the Sea-Tac 30 NM Mode C veil, so a Mode C transponder (91.215(b)(2)) and ADS-B Out (91.225(d)(2)) are required.",
-    ref: "14 CFR 91.215(b)(2), 91.225(d)(2); Chart Supplement NW — KPWT",
+    ref: "14 CFR 91.215(b)(2), 91.225(d)(2); AIM 3-2-6; Chart Supplement NW — KPWT",
     fu: [
       { when: "miss:xpdr", ask: "Bremerton is within 30 miles of Sea-Tac. What equipment does that require?",
         pts: [M("x", "A transponder with altitude reporting (Mode C) and ADS-B Out", ["Mode C", "A-D-S-B"])],
@@ -7506,12 +7506,12 @@ const ORAL_QUESTIONS = (() => {
     need: 2,
     no: ["Says a clearance is required to enter Class D"],
     answer: "Tacoma Narrows (KTIW) is Class D from the surface to 2,800 MSL while the tower is open (0800–2000 local), Class E otherwise. 1,500 ft above the field is inside it: establish two-way radio contact with Tacoma Tower on 118.5 before entering (91.129(c)); no clearance is needed. It is inside the Sea-Tac Mode C veil, so a Mode C transponder and ADS-B Out are required.",
-    ref: "14 CFR 91.129(c), 91.215, 91.225; Chart Supplement NW — KTIW",
+    ref: "14 CFR 91.129(c), 91.215, 91.225; AIM 3-2-5; Chart Supplement NW — KTIW",
     fu: [
       { when: "always", ask: "You call Tacoma Tower and they answer, 'Aircraft calling Tacoma Tower, stand by.' May you enter the Class D?",
         gloss: "Contact only counts once the controller has used the airplane's own call sign.",
         pts: [M("no", "No — they did not use your call sign, so two-way contact is not established", ["no, they didn't say my tail number"])],
-        answer: "No. Two-way communication is established only when the controller responds with your call sign.", ref: "AIM 3-2-5" },
+        answer: "No. Two-way communication is established only when the controller responds with your call sign.", ref: "AIM 3-2-5; 14 CFR 91.129(c)" },
     ] },
 
   { id: "local-over-seatac", area: "local", lvl: 1, kind: "scenario",
@@ -7528,15 +7528,15 @@ const ORAL_QUESTIONS = (() => {
     need: 3,
     no: ["Says establishing radio contact is enough, without a clearance"],
     answer: "Sea-Tac (KSEA) is the Class B surface area, surface to 10,000 ft. Required: an ATC clearance to enter (91.131(a)(1)), a two-way radio, a Mode C transponder and ADS-B Out. A solo student also needs a 61.95(a) endorsement for that Class B airspace within the preceding 90 days — and a separate 61.95(b) endorsement to take off or land at Sea-Tac.",
-    ref: "14 CFR 91.131, 91.215(b)(1), 91.225(d)(1), 61.95",
+    ref: "14 CFR 91.131, 91.215(b)(1), 91.225(d)(1), 61.95; AIM 3-2-3",
     fu: [
       { when: "always", ask: "As a student pilot flying solo, what else do you need before you may enter that Class B airspace?",
         pts: [
           M("end", "A logbook endorsement from the instructor for that specific Class B airspace", ["an endorsement", "instructor's sign-off"]),
           N("90", "Given within the previous 90 days", ["ninety days"]),
         ],
-        answer: "Ground and flight training in that Class B airspace and a logbook endorsement for it, within the preceding 90 days (61.95(a)).", ref: "14 CFR 61.95" },
-      { when: "miss:clr", ask: "What exact words do you need to hear from the controller before you cross into Class B?",
+        answer: "Ground and flight training in that Class B airspace and a logbook endorsement for it, within the preceding 90 days (61.95(a)).", ref: "14 CFR 61.95(a)" },
+      { when: "miss:clr", ref: "AIM 3-2-3; 14 CFR 91.131(a)(1)", ask: "What exact words do you need to hear from the controller before you cross into Class B?",
         pts: [M("clr", "\"Cleared into the Class Bravo airspace\"", ["cleared into the Bravo"])],
         answer: "A specific clearance: \"cleared into the Class Bravo airspace.\" Radio contact alone is not enough." },
     ] },
@@ -7560,14 +7560,14 @@ const ORAL_QUESTIONS = (() => {
     answer: "The flight is in Boeing Field's Class D and Bremerton's Class E surface area, beneath the Seattle Class B. Class D and E below 10,000 MSL: 3 SM visibility; 500 ft below, 1,000 ft above and 2,000 ft horizontally from clouds (91.155). In a surface area, the ceiling must be at least 1,000 ft to operate beneath it, and ground visibility at least 3 SM. A solo student also needs at least 3 SM by day (5 SM at night) and visual reference to the surface (61.89), and the instructor's endorsement may be stricter.",
     ref: "14 CFR 91.155, 61.89(a)(6), (7)",
     fu: [
-      { when: "always", ask: "Those are the legal minimums. Would you actually make the flight in three miles and a thousand-foot ceiling?",
+      { when: "always", ref: "PHAK ch. 2", ask: "Those are the legal minimums. Would you actually make the flight in three miles and a thousand-foot ceiling?",
         gloss: "The right answer is no: legal is not the same as safe.",
         pts: [
           M("no", "No — personal minimums (and the instructor's limits) are higher than legal", ["no", "my personal minimums are higher"]),
         ],
         no: ["Says yes, because it is legal"],
         answer: "No. Legal minimums are a floor. Personal minimums, the instructor's endorsement limits and the school's solo rules are all higher." },
-      { when: "miss:ceil", ask: "How low can the cloud ceiling be for you to fly in the pattern at Boeing Field under VFR?",
+      { when: "miss:ceil", ref: "14 CFR 91.155(c)", ask: "How low can the cloud ceiling be for you to fly in the pattern at Boeing Field under VFR?",
         pts: [M("c", "1,000 feet", ["a thousand feet"])],
         answer: "The ceiling must be at least 1,000 ft to operate beneath it within the surface area of controlled airspace (91.155(c))." },
     ] },
