@@ -193,6 +193,16 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
   text-to-speech. Rewording a question orphans its saved misses — harmless.
 - Typed answers allow one typo in the first five letters; short `alt`s must
   match a whole word, so "ad" can't match inside "radio".
+- **School quizzes** section: `memory` (the school's memory-items sheet),
+  `presolo` (its pre-solo quiz) and `kbfi` (Boeing Field local). Memory cards
+  (`MEMORY_CARDS`) are the first N lines of the matching placard checklist in
+  `emergencies.js`, N = the sheet's blanks — keep them in sync. They run on the
+  acronym runner in **checklist mode** (`title` set): numbered slots, `h` branch
+  headings, `g` steps in any order, and typed answers checked strictly via `all`
+  (control AND position). Local facts (frequencies, VFR routes, hot spots,
+  nearby airspace) come from the FAA Chart Supplement and King County's VFR
+  routes sheet of 25 Sep 2026 — re-verify when those change. Topic `recall`
+  sets also feed the mock oral.
 - Diagrams are illustrative. Mind handedness: the prop turns clockwise from
   the cockpit; in a top view with the nose left, the pilot's left is DOWN.
 
@@ -221,6 +231,8 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
 - Schema, scoring and spaced misses deck: see `js/oralbank.js` header; storage
   keys `c172-oral-{prefs,cards,history,session}` (all optional, try/catch).
   Keyed by question id, so never rename ids. Class prefix `cr-`.
+- Area `local` holds the Boeing Field questions; the school's pre-solo quiz and
+  memory items are all in the Stage 1 scope.
 - Keys: 1–9/0 points, Shift+digit red flags, Enter/→ next, ← back, S skip
   follow-up, D "I don't know", G gloss, V student view, Esc.
 - Practice aid only; the bank's numbers must agree with the other modes' data.

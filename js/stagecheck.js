@@ -70,7 +70,7 @@ const STAGE1_SECTIONS = [
   { id: "comms", name: "Lost comms & airports", sub: "Light guns, CTAF, signs and markings",
     topics: ["lightgun", "untowered", "signs"] },
   { id: "school", name: "School quizzes", sub: "The memory-items sheet and the pre-solo quiz",
-    topics: ["memory"] },
+    topics: ["memory", "presolo", "kbfi"] },
 ];
 
 /* -------------------------------- helpers -------------------------------- */
@@ -918,6 +918,559 @@ const STAGE1_TOPICS = {
         { q: "Static port iced over. The memory item?", o: ["Alternate static air — PULL ON", "Pitot heat on", "Break the VSI glass", "Cabin heat off"],
           why: "The alternate static source is in the cabin; expect the altimeter and airspeed to read slightly high on it." },
         { q: "Max flap extended speed for 10° of flaps in the C172S?", o: ["110 KIAS", "85 KIAS", "129 KIAS", "100 KIAS"], why: "110 for 10°; 85 for 20° and 30°." },
+      ] },
+    ],
+  },  /* ============================ PRE-SOLO QUIZ ============================
+     The school's pre-solo written, question by question. General answers
+     here; everything about Boeing Field and its neighbours is in `kbfi`.
+     Regs: 14 CFR 61.3, 61.51(i), 61.87(n), 61.89, 61.93, 91.13, 91.103,
+     91.113, 91.119; AIM 4-3-3, 5-1-3, 7-1 (wind shear), 7-4 (wake). The
+     emergency flows are the MEMORY_CARDS (the school placard), not retyped. */
+  presolo: {
+    name: "Pre-solo quiz", tag: "SOLO", color: "#ff4757", sub: "The school's pre-solo written",
+    learn: [
+      { h: "How to use this", html: `
+        <p>The school's pre-solo quiz, in its own order. The Boeing Field questions — frequencies, the named VFR
+        departures and arrivals, hot spots, Bremerton / Tacoma / Sea-Tac — are in the <b>Boeing Field (KBFI)</b> topic.</p>
+        <p class="s1-note">Where a question says "your" (your definition, your minimums), the examiner wants your own words.
+        The regulation is the floor; your instructor's endorsement and the school's rules can be stricter.</p>` },
+      { h: "Careless or reckless operation (91.13)", html: `
+        <p><b>No person may operate an aircraft in a careless or reckless manner so as to endanger the life or property of another.</b></p>
+        <ul class="s1-list">
+          <li><b>Careless</b> — not paying the attention a reasonable pilot would: a skipped checklist, no fuel check, not looking before taxiing.</li>
+          <li><b>Reckless</b> — knowing the risk and doing it anyway: buzzing, showing off, flying into weather you know is below minimums.</li>
+          <li>It applies <b>in the air and on the ground</b> (91.13(b) covers the airport surface), and nobody has to get hurt — <i>endangering</i> is enough.</li>
+        </ul>` },
+      { h: "Preflight action (91.103)", html: `
+        <p>Before every flight the PIC must become familiar with <b>all available information</b> concerning that flight.</p>
+        <ul class="s1-list">
+          <li><b>Every flight:</b> <b>runway lengths</b> at the airports of intended use and <b>takeoff and landing distance</b> data.</li>
+          <li><b>IFR, or not in the vicinity of an airport:</b> weather reports and forecasts, fuel requirements, alternatives, known ATC delays.</li>
+          <li>The school's acronym is <b>NWKRAFT</b> — drilled in the <b>enVironment</b> topic.</li>
+        </ul>` },
+      { h: "Minimum safe altitudes (91.119)", html: `
+        <table class="s1-table">
+          <tr><th>Anywhere</th><td>High enough that, if the engine fails, you can make an <b>emergency landing without undue hazard</b> to persons or property on the surface.</td></tr>
+          <tr><th>Congested</th><td><b>1,000 ft above the highest obstacle</b> within a horizontal radius of <b>2,000 ft</b> (cities, towns, settlements, open-air assemblies of people).</td></tr>
+          <tr><th>Other than congested</th><td><b>500 ft above the surface.</b></td></tr>
+          <tr><th>Sparsely populated / open water</th><td>No closer than <b>500 ft to any person, vessel, vehicle or structure</b>.</td></tr>
+        </table>
+        <p class="s1-note">All "except when necessary for takeoff or landing". The "anywhere" rule always applies on top of the others.</p>` },
+      { h: "An airport without a control tower", html: `
+        <ul class="s1-list">
+          <li><b>Runway in use:</b> the wind from the <b>AWOS / ASOS</b>; <b>listen on the CTAF</b> to what other traffic is using (or ask UNICOM for an advisory);
+              if still unsure, <b>overfly above pattern altitude</b> and read the windsock and segmented circle.</li>
+          <li><b>Pattern direction and altitude:</b> the <b>Chart Supplement</b>, the sectional ("RP" = right pattern), and the segmented circle's traffic pattern indicators. Left traffic unless published otherwise.</li>
+          <li><b>Entering:</b> at pattern altitude, on a <b>45° to the downwind, abeam midfield</b>. Self-announce from about 10 miles and on each leg.</li>
+          <li><b>Departing:</b> <b>straight out</b>, or a <b>45° turn in the direction of the pattern</b> (left in left traffic) beyond the departure end, after reaching pattern altitude.</li>
+        </ul>
+        <p class="s1-note">More, with the figures, in <b>Untowered airports</b>.</p>` },
+      { h: "Three signs", html: `
+        <div class="s1-signs">
+          <figure>${Diagrams.sign([sgn("mandatory", "9-27")])}<figcaption><b>Runway holding position</b> — mandatory. Runway 9-27 is ahead: the 9 threshold is to your left, 27 to your right. At a towered airport, don't pass it without a clearance.</figcaption></figure>
+          <figure>${Diagrams.sign([sgn("noentry", "")])}<figcaption><b>No entry</b> — mandatory. Aircraft may not enter (a one-way taxiway, or a road that looks like one).</figcaption></figure>
+          <figure>${Diagrams.sign([sgn("direction", "← A"), sgn("location", "C"), sgn("direction", "A →")])}<figcaption><b>You are on taxiway C</b> (black, yellow letter). <b>Taxiway A crosses ahead</b> — it goes both left and right (yellow, black letters and arrows).</figcaption></figure>
+        </div>` },
+      { h: "Five ways to mitigate risk", html: `
+        <p>There is no fixed list — give five that are real for <i>this</i> flight. Good ones:</p>
+        <ul class="s1-list">
+          <li>Run <b>PAVE</b> and <b>IMSAFE</b> honestly, and fill in a <b>FRAT</b>.</li>
+          <li>Set <b>personal minimums</b> and hold them; make the <b>go / no-go and divert decisions early</b>.</li>
+          <li>Get a <b>thorough weather briefing</b> and check NOTAMs and TFRs.</li>
+          <li>A careful <b>preflight</b>, and <b>checklists</b> for every phase.</li>
+          <li>Extra <b>fuel</b> beyond the legal reserve, and an <b>alternate</b> already picked.</li>
+          <li><b>Flight following</b>, or tell someone where you're going.</li>
+          <li><b>Ask your instructor</b> when anything doesn't look right.</li>
+        </ul>` },
+      { h: "Wake turbulence", html: `
+        <p>Counter-rotating <b>wingtip vortices</b>, made whenever a wing is producing lift — from rotation to touchdown.
+        Strongest behind an airplane that is <b>heavy, clean and slow</b>. They <b>sink</b> and <b>drift with the wind</b>;
+        a <b>light quartering tailwind</b> is the worst case because it can hold a vortex over the runway.</p>
+        <table class="s1-table">
+          <tr><th>Landing behind a larger airplane that landed</th><td>Stay <b>at or above its flight path</b>; touch down <b>beyond its touchdown point</b>.</td></tr>
+          <tr><th>Landing behind one that departed</th><td>Touch down <b>well before its rotation point</b>.</td></tr>
+          <tr><th>Taking off behind one that departed</th><td><b>Lift off before its rotation point</b> and climb <b>above or upwind</b> of its path.</td></tr>
+          <tr><th>Taking off behind one that landed</th><td>Lift off <b>beyond its touchdown point</b>.</td></tr>
+        </table>
+        <p class="s1-note">You can always ask the tower for more time or spacing. Stay well clear of hovering helicopters — AIM 7-4 says three rotor diameters.</p>` },
+      { h: "Low-level wind shear", html: `
+        <p>A <b>sudden change in wind speed and/or direction over a short distance</b>. Close to the ground it can take away
+        airspeed and lift when you are slow, low and configured to land.</p>
+        <ul class="s1-list">
+          <li><b>Indications:</b> a wind shear / <b>LLWAS</b> alert on the ATIS or from the tower, <b>PIREPs</b>, strong or <b>gusty</b> surface winds,
+              <b>thunderstorms</b> and microbursts (virga, blowing dust), a <b>frontal passage</b>, a low-level <b>temperature inversion</b> with strong wind above it,
+              and in the airplane, unexplained <b>airspeed or groundspeed changes</b>.</li>
+          <li><b>Approach and landing:</b> fly a <b>stabilized approach</b>, add <b>half the gust factor</b> to the approach speed, keep a hand on the throttle and be
+              <b>ready to go around</b> — or wait it out. Never fly under or near a thunderstorm.</li>
+        </ul>` },
+      { h: "NOTAMs and TFRs", html: `
+        <table class="s1-table">
+          <tr><th>NOTAM (D)</th><td>"Distant" — airport and navaid information: closed runways and taxiways, lighting, navaids, obstructions, services.</td></tr>
+          <tr><th>FDC NOTAM</th><td>Flight Data Center — <b>regulatory</b>: changes to charts and instrument procedures, and <b>TFRs</b>.</td></tr>
+        </table>
+        <p>The FAA's current list also has <b>pointer</b>, <b>SAA</b> (special activity airspace) and <b>military</b> NOTAMs; many schools still teach the two as "D and FDC".</p>
+        <ul class="s1-list">
+          <li><b>Where:</b> Flight Service (<b>1-800-WX-BRIEF</b> or 1800wxbrief.com), <b>FAA NOTAM Search</b>, or your EFB's briefing.</li>
+          <li><b>TFR</b> — a <b>temporary flight restriction</b>: airspace closed or restricted for a time (VIP movement, wildfire and disaster relief, stadiums, air shows, space operations).
+              Issued as an <b>FDC NOTAM</b>; check <b>tfr.faa.gov</b>, Flight Service or the EFB, and check again just before you go.</li>
+        </ul>` },
+      { h: "Solo privileges and limits", html: `
+        <table class="s1-table">
+          <tr><th>Solo endorsement</th><td>Good for <b>90 days</b> — a logbook endorsement for the specific make and model from the instructor who gave the training (61.87(n)).</td></tr>
+          <tr><th>How far</th><td>No flight more than <b>25 NM</b> from the airport you departed, and <b>no landing anywhere else</b>, without the 61.93 cross-country training and endorsements.</td></tr>
+          <tr><th>Another airport within 25 NM</th><td>Only with a 61.93(b)(1) endorsement: your instructor has flown the route with you both ways, trained you there, and endorsed you to practise takeoffs and landings there.</td></tr>
+          <tr><th>Student limits (61.89)</th><td>No passengers, no flying for hire, at least <b>3 SM</b> visibility by day (<b>5 SM</b> at night), always with <b>visual reference to the surface</b>, and never contrary to your instructor's limitations.</td></tr>
+        </table>` },
+      { h: "Documents", html: `
+        <table class="s1-table">
+          <tr><th>In the airplane, always</th><td><b>ARROW</b> — Airworthiness certificate · Registration · Radio station license (international only) · Operating limitations · Weight &amp; balance. Drilled in <b>Documents</b>.</td></tr>
+          <tr><th>On you, solo</th><td><b>Student pilot certificate</b> · <b>medical certificate</b> · <b>government photo ID</b> (61.3) · <b>logbook with your solo endorsements</b>.</td></tr>
+        </table>
+        <p class="s1-note">61.51(i) requires the logbook on solo cross-countries; schools commonly require it on every solo — carry it.</p>` },
+      { h: "Right of way (91.113)", html: `
+        <ul class="s1-list">
+          <li><b>Converging</b>, same category: the aircraft <b>on the right</b> has the right of way.</li>
+          <li><b>Head-on:</b> both turn <b>right</b>. <b>Overtaking:</b> pass on the <b>right</b>; the one being overtaken has the right of way.</li>
+          <li>An aircraft <b>in distress</b> has the right of way over everyone.</li>
+          <li>Different categories — the less manoeuvrable goes first: <b>balloon → glider → airship → airplane / rotorcraft</b>. An aircraft towing or refuelling another has priority over other engine-driven aircraft.</li>
+          <li><b>Landing:</b> aircraft on final or landing have priority; of two approaching, the <b>lower</b> one — but not by cutting in front.</li>
+        </ul>
+        <p class="s1-note">Having the right of way never removes the duty to see and avoid.</p>` },
+      { h: "Airspeeds — C172S, KIAS", html: `
+        <table class="s1-table wide">
+          <tr><th>V<sub>SO</sub></th><td><b>40</b></td><td>Stall speed (minimum steady flight speed) in the <b>landing configuration</b> — bottom of the white arc.</td></tr>
+          <tr><th>V<sub>S</sub> / V<sub>S1</sub></th><td><b>48</b></td><td>Stall speed in a specified configuration — here <b>clean</b>, flaps up. Bottom of the green arc.</td></tr>
+          <tr><th>V<sub>R</sub></th><td><b>55</b></td><td>Rotation.</td></tr>
+          <tr><th>V<sub>X</sub></th><td><b>62</b></td><td>Best <b>angle</b> of climb — most altitude over a given <b>distance</b>.</td></tr>
+          <tr><th>V<sub>Y</sub></th><td><b>74</b></td><td>Best <b>rate</b> of climb — most altitude in a given <b>time</b>.</td></tr>
+          <tr><th>Best glide</th><td><b>68</b></td><td>Most distance for the altitude you have (65 with flaps 10°).</td></tr>
+          <tr><th>V<sub>A</sub></th><td><b>105 · 98 · 90</b></td><td>Maneuvering speed at 2,550 · 2,200 · 1,900 lb — above it, full or abrupt control movement can overstress the airplane. It <b>drops as weight drops</b>.</td></tr>
+          <tr><th>V<sub>FE</sub></th><td><b>110 · 85</b></td><td>Maximum flap extended speed: 110 for 10°, 85 for 20–30° (top of the white arc).</td></tr>
+          <tr><th>V<sub>NO</sub></th><td><b>129</b></td><td>Maximum structural cruising speed — top of the green arc; above it, smooth air only.</td></tr>
+          <tr><th>V<sub>NE</sub></th><td><b>163</b></td><td>Never exceed — the red line.</td></tr>
+        </table>` },
+      { h: "Limitations and the engine", html: `
+        <table class="s1-table">
+          <tr><th>Maximum gross weight</th><td><b>2,550 lb</b> takeoff (2,558 lb ramp).</td></tr>
+          <tr><th>Fuel</th><td><b>53 gal usable</b> of 56 total — 28 per tank.</td></tr>
+          <tr><th>Oil</th><td><b>8 qt</b> capacity. For the minimum, know the <b>POH minimum</b> and the <b>school's fleet minimum</b>.</td></tr>
+          <tr><th>Engine</th><td><b>Lycoming IO-360-L2A</b> — <b>180 hp at 2,700 RPM</b>; four cylinders, horizontally opposed, air-cooled, fuel-injected, normally aspirated, direct drive.</td></tr>
+          <tr><th>Fuel quantity, no electrical power</th><td>The indications are on the G1000 and are <b>electrically powered</b> — with <b>all</b> electrical power gone there is <b>no fuel quantity indication</b>.
+              The engine keeps running (magnetos). Go by the fuel you saw in the tanks, your burn and the clock — and land.</td></tr>
+        </table>
+        <p class="s1-note">While the standby battery lasts, the essential bus keeps the PFD alive. Check your POH section 7 for exactly what it shows in that state.</p>` },
+      { h: "Engine failure in flight", html: `
+        ${memTable(MEMORY_CARDS.find((c) => c.id === "ef-restart"))}
+        <p class="s1-note">The placard's memory items, as in <b>Memory items</b>. If it won't restart, the forced-landing checklist follows — fly both in the Emergencies mode.</p>` },
+      { h: "Engine fire on the ground while starting", html: `
+        ${memTable(MEMORY_CARDS.find((c) => c.id === "fire-start"))}
+        <p class="s1-note">Keep cranking: it draws the flames back into the engine. After the memory items — extinguisher in hand, evacuate, fight the fire as required.</p>` },
+      { h: "Light gun, lost comms, spin recovery", html: `
+        <ul class="s1-list">
+          <li><b>Light gun signals</b> — the table and every signal, on the ground and in flight, are in <b>Light gun &amp; lost comms</b>.</li>
+          <li><b>Lost comms into a towered airport:</b> troubleshoot · squawk <b>7600</b> · stay <b>outside or above the Class D</b> until you have the flow of traffic · join the pattern and <b>watch the tower for light signals</b> · acknowledge by <b>rocking the wings</b> (day) or flashing the landing or nav lights (night).</li>
+          <li><b>Spin recovery — PARE:</b> <b>P</b>ower idle · <b>A</b>ilerons neutral · <b>R</b>udder full opposite the rotation · <b>E</b>levator briskly forward. Neutralize the rudder when the rotation stops, then recover from the dive. See <b>Lift, stalls &amp; spins</b>.</li>
+        </ul>` },
+      { h: "Your personal minimums", html: `
+        <p>The quiz asks for <b>your</b> numbers for the Bremerton flight. There is no book answer; a good one has:</p>
+        <ul class="s1-list">
+          <li>A <b>ceiling</b> and a <b>visibility</b> higher than the legal minimum, for both airports and the route between.</li>
+          <li>A maximum <b>wind</b>, <b>gust</b> and <b>crosswind</b> you have actually flown.</li>
+          <li><b>Fuel</b> on landing above the legal reserve, and daylight in hand.</li>
+          <li>Nothing looser than your <b>instructor's endorsement limits</b> or the school's solo rules.</li>
+          <li>They are set <b>on the ground, ahead of time</b> — and not relaxed on the day.</li>
+        </ul>
+        <p class="s1-note">Write yours into the worksheet in <b>External pressures</b>.</p>` },
+    ],
+    drill: [
+      { type: "quiz", qs: [
+        { q: "91.13 — what makes an operation \"careless or reckless\"?",
+          o: ["It endangers the life or property of another", "It breaks any other regulation", "It results in an accident", "It is done without a flight plan"],
+          why: "\"…in a careless or reckless manner so as to endanger the life or property of another.\" Nobody has to be hurt." },
+        { q: "You taxi fast across a busy ramp while looking at your phone. Does 91.13 apply on the ground?",
+          o: ["Yes — it covers operating on the airport surface too", "No — only once airborne", "Only at towered airports", "Only if you hit something"],
+          why: "91.13(b) covers operation other than for air navigation, on the airport surface." },
+        { q: "Minimum safe altitude over a congested area?",
+          o: ["1,000 ft above the highest obstacle within 2,000 ft horizontally", "500 ft above the surface", "1,000 ft above the surface", "2,000 ft above the highest obstacle within 1,000 ft"],
+          why: "91.119(b) — cities, towns, settlements and open-air assemblies of people." },
+        { q: "Minimum safe altitude over an area that is NOT congested?",
+          o: ["500 ft above the surface", "1,000 ft above the surface", "500 ft from any structure", "No minimum"],
+          why: "91.119(c). Over open water or sparsely populated areas the rule changes to a distance." },
+        { q: "Over open water or a sparsely populated area, how low?",
+          o: ["No closer than 500 ft to any person, vessel, vehicle or structure", "500 ft above the surface", "1,000 ft above the surface", "Any height — there is no rule"],
+          why: "91.119(c): a 500 ft bubble around people and things, rather than a height." },
+        { q: "The 91.119 rule that applies EVERYWHERE?",
+          o: ["High enough to make an emergency landing without undue hazard to people or property below if the engine fails", "At least 500 ft AGL", "At least 1,000 ft AGL", "Above the traffic pattern altitude"],
+          why: "91.119(a). It applies on top of the congested and uncongested numbers." },
+        { q: "Untowered airport, nobody on the frequency. How do you pick the runway?",
+          o: ["Wind from the AWOS/ASOS, then overfly above the pattern to check the windsock and segmented circle", "Use the longest runway", "Use the runway pointing closest to your arrival heading", "Land straight in on whichever you see first"],
+          why: "AIM 4-3-3. When there is traffic, listen on the CTAF and use the runway in use." },
+        { q: "Departing an untowered airport's pattern, the AIM recommends…",
+          o: ["Straight out, or a 45° turn in the direction of the pattern after reaching pattern altitude", "A 90° turn against the pattern as soon as airborne", "Climbing over the field in the pattern to cruise altitude", "A downwind departure at 500 ft AGL"],
+          why: "AIM 4-3-3: beyond the departure end, at pattern altitude; left in left traffic, right in right traffic." },
+        { q: "You stop at this sign. What is it telling you?", fig: () => Diagrams.sign([sgn("mandatory", "9-27")]),
+          o: ["Hold short — runway 9-27 is ahead; the 9 end is to your left", "You are on runway 9-27", "Runway 9-27 is 9,270 ft long", "Taxiways 9 and 27 are ahead"],
+          why: "Red with white numbers: runway holding position. The numbers are arranged like the runway ends." },
+        { q: "This sign faces you at a taxiway entrance. You…", fig: () => Diagrams.sign([sgn("noentry", "")]),
+          o: ["Do not enter — aircraft are prohibited", "Hold for a clearance, then enter", "Enter with caution", "Are leaving the movement area"],
+          why: "No-entry is a mandatory sign: one-way taxiways and pavement that isn't for aircraft." },
+        { q: "Read this sign array.", fig: () => Diagrams.sign([sgn("direction", "← A"), sgn("location", "C"), sgn("direction", "A →")]),
+          o: ["You are on taxiway C; taxiway A crosses, going left and right", "You are on taxiway A; C is ahead", "Taxiway C is closed; use A", "Hold short of taxiway A"],
+          why: "Black with a yellow letter is where you are; yellow with arrows is where the other taxiway goes." },
+        { q: "The ceiling is forecast right at your personal minimum. Which choice actually mitigates the risk?",
+          o: ["Decide on the ground: delay or cancel, with a backup plan", "Take off and have a look", "Fly lower to stay under it", "Go, but fly faster to beat the weather"],
+          why: "Mitigation is done early and on the ground. The other three accept the risk and add to it." },
+        { q: "Which of these is NOT a way to mitigate risk?",
+          o: ["Skipping the checklist to save time on a short flight", "Carrying more fuel than the legal reserve", "Asking for flight following", "Running IMSAFE and a FRAT"],
+          why: "Checklists, margins, a second set of eyes and an honest self-check all reduce risk." },
+        { q: "Landing behind a large airplane that just landed on your runway. Your approach?",
+          o: ["Stay at or above its flight path and touch down beyond its touchdown point", "Stay below its flight path and land short of its touchdown point", "Follow its exact path", "Fly a normal approach — the wake is gone once it is on final"],
+          why: "The vortices sink below its path and stop once its nosewheel is down." },
+        { q: "Taking off behind a large airplane that just departed. Where do you lift off?",
+          o: ["Before its rotation point, then climb above or upwind of its path", "At the same point it rotated", "Well past its rotation point", "It does not matter on a long runway"],
+          why: "The wake starts at rotation. If you can't out-climb it, wait." },
+        { q: "Wake vortices are strongest when the generating airplane is…",
+          o: ["Heavy, clean and slow", "Light, dirty and fast", "Heavy, dirty and fast", "Light, clean and slow"],
+          why: "AIM 7-4: the most lift demanded of the wing at the highest angle of attack." },
+        { q: "Which surface wind keeps a wake vortex over the runway longest?",
+          o: ["A light quartering tailwind", "A strong headwind", "A strong direct crosswind", "Calm with thermals"],
+          why: "It can hold the upwind vortex on the runway and carry it into the touchdown zone." },
+        { q: "Wind shear is…",
+          o: ["A sudden change in wind speed or direction over a short distance", "Any wind stronger than 25 knots", "Turbulence above 10,000 ft", "The crosswind component on final"],
+          why: "It can be horizontal or vertical. Low to the ground is where it hurts." },
+        { q: "Which is a sign that low-level wind shear may be present?",
+          o: ["A thunderstorm or frontal passage near the airport", "Calm wind with unlimited visibility", "A steady 5-knot wind down the runway", "High pressure and no cloud"],
+          why: "Also: LLWAS alerts, PIREPs, strong gusts, a temperature inversion, unexplained airspeed changes." },
+        { q: "ATIS: wind 12 gusting 20. How much do you add to the approach speed?",
+          o: ["4 knots — half the gust factor", "8 knots — the gust factor", "20 knots", "Nothing"],
+          why: "Gust factor = 20 − 12 = 8; add half. And be ready to go around." },
+        { q: "The two NOTAM types the quiz is after?",
+          o: ["NOTAM (D) and FDC NOTAMs", "AIRMETs and SIGMETs", "METARs and TAFs", "Class I and Class II"],
+          why: "(D) = airport and navaid information; FDC = regulatory, including TFRs. The FAA also lists pointer, SAA and military NOTAMs." },
+        { q: "Which is NOT a place to get NOTAMs?",
+          o: ["The Chart Supplement", "Flight Service — 1-800-WX-BRIEF", "FAA NOTAM Search", "Your EFB's briefing"],
+          why: "The Chart Supplement is published on a cycle; NOTAMs are what changed since." },
+        { q: "How is a TFR published?",
+          o: ["As an FDC NOTAM — also shown on tfr.faa.gov and in your EFB", "On the sectional chart", "In the Chart Supplement", "Only on the ATIS"],
+          why: "They can appear at short notice. Check in the briefing and again before departure." },
+        { q: "How long is a solo endorsement good for?",
+          o: ["90 days", "30 days", "6 calendar months", "24 calendar months"],
+          why: "61.87(n): for the specific make and model, from the instructor who gave the training within the preceding 90 days." },
+        { q: "How far from your departure airport may you fly solo without cross-country endorsements?",
+          o: ["25 NM", "50 NM", "10 NM", "100 NM"],
+          why: "61.93(a): the cross-country requirements apply before any flight more than 25 NM from where it started." },
+        { q: "An airport sits 10 NM away. Solo, with only your basic solo endorsement, may you land there?",
+          o: ["No — landing anywhere but the departure airport needs its own endorsement", "Yes — it is inside 25 NM", "Yes, if it is untowered", "Yes, for touch-and-goes only"],
+          why: "61.93: 25 NM is how far you may fly. Landing elsewhere needs 61.93 training and an endorsement." },
+        { q: "\"Direct drive\" tells you the propeller…",
+          o: ["Is bolted to the crankshaft and turns at engine RPM", "Is driven through a reduction gearbox", "Changes pitch automatically", "Is driven by a belt"],
+          why: "The IO-360-L2A makes its 180 hp at 2,700 RPM — engine and prop alike." },
+        { q: "All electrical power is lost, standby battery included. The fuel quantity indicators…",
+          o: ["Go blank — they are electrically powered", "Keep reading — they are mechanical floats with direct gauges", "Read full", "Switch to the standby instruments"],
+          why: "Fuel quantity is shown on the G1000. The standby instruments are airspeed, attitude and altitude only." },
+        { q: "Same category, converging at your altitude. An airplane is on your right. Who gives way?",
+          o: ["You do — the aircraft on the right has the right of way", "It does — the aircraft on the left has the right of way", "The faster one", "The higher one"],
+          why: "91.113(d)." },
+        { q: "You converge with a glider. Who has the right of way?",
+          o: ["The glider", "You — powered aircraft have priority", "Whichever is on the right", "Whichever is lower"],
+          why: "Balloon → glider → airship → airplane/rotorcraft: the less manoeuvrable goes first." },
+        { q: "Which aircraft has the right of way over ALL others?",
+          o: ["An aircraft in distress", "The largest", "The one on an IFR flight plan", "The one closest to the airport"],
+          why: "91.113(c)." },
+        { q: "On a solo, what must you personally have with you?",
+          o: ["Student pilot certificate, medical, photo ID and your logbook with its endorsements", "Only the logbook", "Pilot certificate and the airplane's registration", "Nothing — the school keeps the paperwork"],
+          why: "61.3 for certificate, medical and ID. 61.51(i) requires the logbook on solo cross-countries; schools want it on every solo." },
+        { q: "What does Vno mean?",
+          o: ["Maximum structural cruising speed — exceed it only in smooth air", "Never-exceed speed", "Normal operating climb speed", "Maximum speed with flaps extended"],
+          why: "129 KIAS, the top of the green arc. The yellow arc above it is for smooth air." },
+        { q: "The airplane is lighter than gross. Maneuvering speed (Va)…",
+          o: ["Goes down — 105 at 2,550 lb, 98 at 2,200, 90 at 1,900", "Goes up", "Stays at 105", "No longer applies"],
+          why: "A lighter airplane reaches the limit load factor at a lower speed." },
+        { q: "Vso is the stall speed…",
+          o: ["In the landing configuration — 40 KIAS", "Clean, flaps up — 48 KIAS", "At maneuvering speed", "With the engine at full power"],
+          why: "Vs1 is the specified (clean) configuration: 48 KIAS." },
+        { q: "Vx or Vy to clear trees at the end of the runway?",
+          o: ["Vx, 62 KIAS — the most altitude over a given distance", "Vy, 74 KIAS — the most altitude over a given distance", "Vx, 74 KIAS", "Best glide, 68 KIAS"],
+          why: "Vy (74) gains the most altitude in a given time." },
+        { q: "Vne of the C172S?",
+          o: ["163 KIAS", "129 KIAS", "140 KIAS", "110 KIAS"],
+          why: "The red line. 129 is Vno." },
+        { q: "Maximum takeoff weight of the C172S?",
+          o: ["2,550 lb", "2,300 lb", "2,400 lb", "2,558 lb"],
+          why: "2,558 lb is the ramp weight — the extra 8 lb is burned taxiing." },
+        { q: "How much of the 56 gallons is usable?",
+          o: ["53 gal", "56 gal", "50 gal", "48 gal"],
+          why: "3 gallons are unusable." },
+        { q: "The dipstick reads lower than you expected. Which number decides go or no-go?",
+          o: ["The POH minimum and the school's fleet minimum — whichever is higher", "Anything above half the 8-quart capacity", "Whatever the last pilot flew with", "Only the oil pressure after start"],
+          why: "Capacity is 8 quarts. Know both minimums before you solo." },
+      ] },
+      { type: "match", title: "Match each airspeed to what it means", pairs: [
+        ["Vso", "Stall speed in the landing configuration"],
+        ["Vs1", "Stall speed clean, flaps up"],
+        ["Vx", "Best angle of climb"],
+        ["Vy", "Best rate of climb"],
+        ["Va", "Maneuvering speed"],
+        ["Vfe", "Maximum flap extended speed"],
+        ["Vno", "Maximum structural cruising speed"],
+        ["Vne", "Never exceed"],
+      ] },
+      { type: "match", title: "Minimum safe altitudes — 91.119", pairs: [
+        ["Anywhere", "An emergency landing without undue hazard if the engine fails"],
+        ["Congested area", "1,000 ft above the highest obstacle within 2,000 ft"],
+        ["Other than congested", "500 ft above the surface"],
+        ["Sparsely populated or open water", "500 ft from any person, vessel, vehicle or structure"],
+      ] },
+      { type: "sort", title: "Whose document is it?", buckets: ["The airplane (ARROW)", "You, on a solo"], items: [
+        { t: "Airworthiness certificate", b: 0, why: "A — displayed in the airplane." },
+        { t: "Registration", b: 0, why: "R — the airplane's." },
+        { t: "Operating limitations (POH, placards)", b: 0, why: "O — POH Section 2, placards and markings." },
+        { t: "Weight & balance data", b: 0, why: "W — this airplane's, POH Section 6." },
+        { t: "Student pilot certificate", b: 1, why: "61.3 — your pilot certificate." },
+        { t: "Medical certificate", b: 1, why: "61.3." },
+        { t: "Government photo ID", b: 1, why: "61.3." },
+        { t: "Logbook with the solo endorsement", b: 1, why: "The endorsement is what makes the solo legal; 61.51(i) requires it on solo cross-countries." },
+      ] },
+      { type: "sort", title: "Who has the right of way?", buckets: ["You do", "The other aircraft"], items: [
+        { t: "Converging — an airplane is on your LEFT", b: 0, why: "You are on its right: the aircraft on the right has the right of way." },
+        { t: "Converging — an airplane is on your RIGHT", b: 1, why: "The aircraft on the right has the right of way." },
+        { t: "You are being overtaken", b: 0, why: "The overtaken aircraft has the right of way; the other passes on the right." },
+        { t: "A glider crossing ahead", b: 1, why: "Gliders come before airplanes." },
+        { t: "A balloon drifting toward your course", b: 1, why: "A balloon has the right of way over every other category." },
+        { t: "An airplane that has declared an emergency", b: 1, why: "Distress beats everything." },
+        { t: "You are on final; another airplane waits at the hold line", b: 0, why: "Aircraft on final or landing have priority over those on the surface." },
+        { t: "Both on approach — the other airplane is lower", b: 1, why: "The lower aircraft has the right of way (but may not cut in)." },
+      ] },
+      { type: "recall", from: "Pre-solo quiz · numbers", items: [
+        { q: "Solo endorsement — valid for how many days?", a: "90 days", alt: ["90"] },
+        { q: "Farthest you may fly from the departure airport without cross-country endorsements (NM)?", a: "25 NM", alt: ["25"] },
+        { q: "Vso — stall, landing configuration?", a: "40 KIAS", alt: ["40"] },
+        { q: "Vs1 — stall, clean?", a: "48 KIAS", alt: ["48"] },
+        { q: "Vx — best angle of climb?", a: "62 KIAS", alt: ["62"] },
+        { q: "Vy — best rate of climb?", a: "74 KIAS", alt: ["74"] },
+        { q: "Best glide speed, flaps up?", a: "68 KIAS", alt: ["68"] },
+        { q: "Va at maximum gross weight (2,550 lb)?", a: "105 KIAS", alt: ["105"] },
+        { q: "Vfe — flaps 10°, then flaps 20–30°?", a: "110 KIAS · 85 KIAS", all: [["110"], ["85"]] },
+        { q: "Vno — maximum structural cruising speed?", a: "129 KIAS", alt: ["129"] },
+        { q: "Vne — never exceed?", a: "163 KIAS", alt: ["163"] },
+        { q: "Maximum takeoff weight (lb)?", a: "2,550 lb", alt: ["2550"] },
+        { q: "Usable fuel (gal)?", a: "53 gal", alt: ["53"] },
+        { q: "Oil capacity (qt)?", a: "8 quarts", alt: ["8"] },
+        { q: "Congested area: how many feet above the highest obstacle?", a: "1,000 ft (within 2,000 ft horizontally)", alt: ["1000"] },
+        { q: "Other than congested: how many feet above the surface?", a: "500 ft", alt: ["500"] },
+        { q: "Transponder code for lost communications?", a: "7600", alt: ["7600"] },
+        { q: "Spin recovery — the four letters?", a: "PARE — Power idle · Ailerons neutral · Rudder opposite · Elevator forward", alt: ["PARE"] },
+      ] },
+    ],
+  },
+
+  /* ========================= BOEING FIELD (KBFI) =========================
+     Local facts only, as researched Nov 2026: FAA Chart Supplement NW
+     (29 Oct – 24 Dec 2026), FAA airport diagram and hot-spot list, and King
+     County's "Airport VFR Routes" sheet of 25 Sep 2026. Routes and
+     frequencies change — re-verify against the current sheet before editing,
+     and add nothing that is not on it. */
+  kbfi: {
+    name: "Boeing Field (KBFI)", tag: "BFI", color: "#1abc9c", sub: "Frequencies · VFR routes · hot spots · the neighbours",
+    learn: [
+      { h: "Frequencies and runways", html: `
+        <table class="s1-table wide">
+          <tr><th>ATIS</th><td><b>127.75</b></td><td></td></tr>
+          <tr><th>Ground</th><td><b>121.9</b></td><td>Clearance Delivery is 132.4.</td></tr>
+          <tr><th>Tower</th><td><b>118.3</b></td><td><b>Runway 14L / 32R</b> — the short runway (3,709 × 100 ft). Arrivals from the north and east (from 312° clockwise to 127°).</td></tr>
+          <tr><th>Tower</th><td><b>120.6</b></td><td><b>Runway 14R / 32L</b> — the long runway (10,007 × 200 ft). Arrivals from the south and west (128° to 311°); all jets, heavies and IFR.</td></tr>
+        </table>
+        <ul class="s1-list">
+          <li><b>Two tower frequencies, one per runway.</b> The tower is open 24 hours — there is no CTAF.</li>
+          <li><b>Pattern altitude:</b> <b>1,000 ft MSL</b> for 14L / 32R, <b>800 ft MSL</b> for 14R / 32L. Field elevation is 22 ft.</li>
+          <li><b>Right traffic</b> for <b>14R</b> and <b>32R</b> — so each runway's pattern stays on its own side of the field.</li>
+          <li><b>North flow</b> = landing and departing Runway <b>32</b>. <b>South flow</b> = Runway <b>14</b>.</li>
+          <li>Class D from the surface to 2,500 ft MSL, under and beside the Seattle Class B (its floor is as low as 1,100 ft MSL over the field) — read the floors off the current Seattle chart.</li>
+        </ul>
+        <p class="s1-note">The Chart Supplement says VFR pilots should review and expect the VFR procedures before arriving or departing.</p>` },
+      { h: "Hot spots", html: `
+        <p>A <b>hot spot</b> is a location on an airport movement area with a <b>history or potential risk of collision or runway incursion</b>,
+        where pilots and drivers need <b>heightened attention</b>. They are circled on the airport diagram and numbered HS 1, HS 2…</p>
+        <table class="s1-table">
+          <tr><th>HS 1</th><td><b>Taxiway Z</b> — restricted access area.</td></tr>
+          <tr><th>HS 2</th><td><b>Runway 14R-32L at Taxiway A7</b> — risk of departing on the <b>wrong runway</b>.</td></tr>
+          <tr><th>HS 3</th><td>Extensive <b>helicopter operations</b> near <b>Taxiway B5</b>.</td></tr>
+        </table>
+        <p class="s1-note">The airport also warns about lining up on or landing on the wrong runway: the parallels are offset and have displaced thresholds. Confirm the runway number before you cross the hold line and again on final.</p>` },
+      { h: "VFR departures — north flow (Runway 32)", html: `
+        <table class="s1-table wide">
+          <tr><th>Dawgs</th><td>Right turn eastbound, staying <b>north of the VA Hospital</b>; turn north toward <b>I-90</b> at the western shoreline of Lake Washington (the Mount Baker Tunnel). On course once out of the Class D.</td><td>Heavy floatplane traffic at or below 1,500 over Lake Washington.</td></tr>
+          <tr><th>Alki</th><td>Left crosswind departure, northwest-bound to <b>Alki Beach</b>.</td><td>Cross Alki Beach <b>at or below 1,500</b>.</td></tr>
+          <tr><th>Blake</th><td>Left crosswind departure, westbound toward <b>Blake Island</b>.</td><td><b>At or below 1,700</b> until the ridgeline, then cross the shoreline <b>at or below 1,900</b>.</td></tr>
+          <tr><th>Rainier Beach Transition</th><td>Right downwind departure; overfly <b>Rainier Beach</b>, then direct to cross <b>Renton (KRNT) midfield</b>. Hold the heading toward SR-169 / the Cedar Hills landfill until clear of Renton's Class D.</td><td>Over Rainier Beach at <b>1,500</b>; there, climb to <b>1,900</b>.</td></tr>
+        </table>` },
+      { h: "VFR departures — south flow (Runway 14)", html: `
+        <table class="s1-table wide">
+          <tr><th>Sammamish</th><td>Left downwind departure to midfield, then a right turn to overfly the <b>I-90 bridge at Mercer Island</b>; northeast to the <b>north tip of Mercer Island</b>; leave the Class D toward Bellevue.</td><td><b>At or below 1,500</b> until clear of the Class D.</td></tr>
+          <tr><th>Vashon</th><td>Depart <b>full length Runway 14R</b>. Straight out to 700, then a continuous <b>right turn to downwind</b>, staying over or inside the <b>Duwamish River</b>. At the South Park Bridge / white Boeing tent hangars turn <b>left, westbound</b> toward the north tip of <b>Vashon Island</b>, passing south of Lincoln Park.</td><td><b>700</b> on the downwind; then climb, staying <b>below the Sea-Tac Class B</b>.</td></tr>
+          <tr><th>Mountain</th><td>Ground track about <b>115°</b> until 1 NM off the departure end; slight right toward <b>Southcenter Mall</b>; southeast to the mall, then south until clear of the Class D.</td><td><b>At or below 1,100</b> until clear of the Class D.</td></tr>
+        </table>` },
+      { h: "VFR arrivals", html: `
+        <table class="s1-table wide">
+          <tr><th colspan="4">North flow (Runway 32)</th></tr>
+          <tr><th>Vashon</th><td>Call Tower <b>120.6</b> over <b>north Vashon Island</b>.</td><td>Eastbound (about an 080° track) toward midfield; enter <b>left downwind</b> over or east of the Duwamish River.</td><td>After the ridgeline, <b>at or below 1,000</b>; on the downwind <b>at or below 700</b>.</td></tr>
+          <tr><th>Cougar</th><td>Call Tower <b>118.3</b> over <b>downtown Bellevue</b>.</td><td>To the north tip of Mercer Island, then direct <b>Seward Park</b> to enter <b>right downwind</b>.</td><td>None published.</td></tr>
+          <tr><th colspan="4">South flow (Runway 14)</th></tr>
+          <tr><th>520</th><td>Call Tower <b>118.3</b> over the <b>SR-520 floating bridge</b>.</td><td>Over I-90 at the western shoreline of Lake Washington (Mount Baker Tunnel), staying <b>north of the VA Hospital</b>; a modified <b>straight-in</b> to 14L or 14R.</td><td></td></tr>
+          <tr><th>Blake</th><td>Call Tower <b>120.6</b> over <b>Blake Island</b>.</td><td>Eastbound over the north end of <b>Lincoln Park</b>. With no other instruction, turn left and follow the ridgeline northwest to join the <b>right downwind</b>.</td><td></td></tr>
+          <tr><th>Valley</th><td>Call Tower <b>118.3</b> over <b>Kent</b>.</td><td>Northbound along <b>SR-167</b>; pass over the east side of the Tukwila Family Fun Center to enter <b>left downwind</b>.</td><td><b>At or below 1,600</b> until abeam IKEA.</td></tr>
+        </table>
+        <p class="s1-note"><b>Do not overfly the VA Hospital</b> — it is charted on every route map. All altitudes are MSL.
+        These are from King County's VFR routes sheet dated <b>25 Sep 2026</b>; routes get revised (the old Kent arrival for north flow was discontinued in March 2026), so
+        <b>the school's current sheet governs</b>. The tower can always assign something else.</p>` },
+      { h: "1,500 ft AGL over Bremerton, Tacoma Narrows and Sea-Tac", html: `
+        <table class="s1-table wide">
+          <tr><th></th><th>Airspace</th><th>Communications</th><th>Equipment</th></tr>
+          <tr><th>Bremerton<br>KPWT</th><td><b>Class E</b> to the surface. No tower.</td><td><b>None required.</b> Self-announce on CTAF <b>123.05</b>; AWOS on 121.2.</td><td>Mode C transponder and ADS-B Out.</td></tr>
+          <tr><th>Tacoma Narrows<br>KTIW</th><td><b>Class D</b>, surface to 2,800 MSL, while the tower is open (0800–2000 local); Class E otherwise.</td><td><b>Two-way radio contact</b> with Tacoma Tower <b>118.5</b> before entering. No clearance needed.</td><td>Mode C transponder and ADS-B Out.</td></tr>
+          <tr><th>Sea-Tac<br>KSEA</th><td><b>Class B</b>, surface to 10,000.</td><td>An <b>ATC clearance</b> to enter, and two-way radio.</td><td>Mode C transponder and ADS-B Out.</td></tr>
+        </table>
+        <ul class="s1-list">
+          <li>All three sit inside the Sea-Tac <b>30 NM Mode C veil</b> — that is why the transponder and ADS-B Out are needed even over untowered Bremerton.</li>
+          <li><b>Solo students and Class B:</b> you need a <b>61.95 endorsement</b> for that Class B airspace, good for 90 days — and a separate one to take off or land at Sea-Tac itself.</li>
+          <li>Bremerton uses <b>right traffic for Runway 02</b>.</li>
+        </ul>` },
+      { h: "Legal VFR minimums — Bremerton and back", html: `
+        <p>The flight leaves Boeing's <b>Class D</b>, passes under the Seattle Class B, and ends in Bremerton's <b>Class E</b> surface area. Class D and Class E below 10,000 MSL have the same numbers:</p>
+        <table class="s1-table">
+          <tr><th>Visibility</th><td><b>3 statute miles</b></td></tr>
+          <tr><th>Clouds</th><td><b>500 ft below · 1,000 ft above · 2,000 ft horizontal</b></td></tr>
+          <tr><th>In a surface area</th><td>A ceiling of at least <b>1,000 ft</b> and ground visibility of at least <b>3 SM</b> to operate beneath the ceiling (91.155(c), (d)).</td></tr>
+          <tr><th>As a student, solo</th><td>At least <b>3 SM</b> flight or surface visibility by day (5 SM at night), and <b>visual reference to the surface</b> (61.89).</td></tr>
+        </table>
+        <p class="s1-note">Your instructor's endorsement limits may be stricter — and legal is not the same as wise. Your personal minimums come next, in <b>Pre-solo quiz</b>.</p>` },
+    ],
+    drill: [
+      { type: "match", title: "Match each frequency to its use", pairs: [
+        ["127.75", "Boeing ATIS"],
+        ["121.9", "Boeing Ground"],
+        ["118.3", "Boeing Tower — Runway 14L / 32R"],
+        ["120.6", "Boeing Tower — Runway 14R / 32L"],
+        ["132.4", "Boeing Clearance Delivery"],
+        ["123.05", "Bremerton CTAF"],
+        ["118.5", "Tacoma Tower"],
+      ] },
+      { type: "quiz", qs: [
+        { q: "You will land on the short runway, 14L / 32R. Which Boeing Tower frequency?",
+          o: ["118.3", "120.6", "121.9", "127.75"], why: "118.3 works 14L / 32R; 120.6 works the long runway, 14R / 32L." },
+        { q: "You are inbound to Boeing from Blake Island, to the west. Which Tower frequency?",
+          o: ["120.6", "118.3", "132.4", "123.05"], why: "Arrivals from the south and west (128°–311°) call 120.6; from the north and east, 118.3." },
+        { q: "Traffic pattern altitude for Runway 14L / 32R at Boeing?",
+          o: ["1,000 ft MSL", "800 ft MSL", "1,500 ft MSL", "1,200 ft MSL"], why: "1,000 MSL for the short runway, 800 MSL for the long one. Field elevation is 22 ft." },
+        { q: "Traffic pattern altitude for Runway 14R / 32L at Boeing?",
+          o: ["800 ft MSL", "1,000 ft MSL", "700 ft MSL", "1,100 ft MSL"], why: "The long runway's pattern is 800 MSL." },
+        { q: "Which Boeing Field runways use RIGHT traffic?",
+          o: ["14R and 32R", "14L and 32L", "14L and 14R", "All four"], why: "That keeps each runway's pattern on its own side of the field." },
+        { q: "\"North flow\" at Boeing means you are using…",
+          o: ["Runway 32", "Runway 14", "The short runway only", "The long runway only"], why: "North flow = 32L / 32R. South flow = 14L / 14R." },
+        { q: "What is a hot spot?",
+          o: ["A place on the airport with a history or risk of collision or runway incursion, needing heightened attention", "An area of the ramp where engines may be run up", "A runway with a displaced threshold", "A spot where the ground frequency changes"],
+          why: "Circled and numbered on the airport diagram." },
+        { q: "Boeing hot spot HS 2 — Runway 14R-32L at Taxiway A7 — warns of…",
+          o: ["Departing on the wrong runway", "Helicopter operations", "A restricted access area", "A blind spot from the tower"], why: "Confirm the runway number on the sign and the heading before you add power." },
+        { q: "Which Boeing hot spot is about helicopters?",
+          o: ["HS 3 — near Taxiway B5", "HS 1 — Taxiway Z", "HS 2 — Taxiway A7", "There isn't one"], why: "HS 1 is the Taxiway Z restricted access area; HS 2 is the wrong-runway risk at A7." },
+        { q: "North flow. Tower assigns the Dawgs departure. You…",
+          o: ["Turn right, eastbound, north of the VA Hospital, then north toward I-90 at the Lake Washington shoreline", "Turn left crosswind to Alki Beach", "Fly a right downwind to Rainier Beach, then Renton midfield", "Go straight out to 700 and turn right to follow the Duwamish"],
+          why: "Dawgs heads for the Mount Baker Tunnel on I-90. Watch for floatplanes at or below 1,500 over the lake." },
+        { q: "Alki departure — how high crossing Alki Beach?",
+          o: ["At or below 1,500 MSL", "At or below 1,900 MSL", "At or above 1,500 MSL", "At 700 MSL"], why: "A left crosswind departure from Runway 32, northwest-bound." },
+        { q: "Blake departure — the two altitude limits?",
+          o: ["At or below 1,700 to the ridgeline, then at or below 1,900 crossing the shoreline", "At or below 1,500 the whole way", "700 on the downwind, then climb", "At or below 1,100 until clear of the Class D"], why: "Left crosswind departure, westbound toward Blake Island." },
+        { q: "Rainier Beach Transition — what do you do at Rainier Beach?",
+          o: ["Climb from 1,500 to 1,900 and fly direct to cross Renton midfield", "Descend to 700 and follow the river", "Turn north for the I-90 bridge", "Contact Tower on 120.6"], why: "A right downwind departure; hold the heading toward SR-169 until clear of Renton's Class D." },
+        { q: "South flow. The Sammamish departure takes you over…",
+          o: ["The I-90 bridge at Mercer Island, then the north tip of Mercer Island", "Southcenter Mall", "The Duwamish River to Vashon Island", "Alki Beach"], why: "Left downwind to midfield, right turn to the bridge; at or below 1,500 until clear of the Class D." },
+        { q: "Vashon departure — which runway, and the first altitude?",
+          o: ["Full length 14R, straight out to 700, then a right turn to downwind over the Duwamish", "14L, straight out to 1,500", "32R, left crosswind at 1,700", "14R, straight out to 1,100 toward Southcenter"], why: "Then left, westbound, at the South Park Bridge, climbing below the Sea-Tac Class B." },
+        { q: "Mountain departure — the altitude limit?",
+          o: ["At or below 1,100 MSL until clear of the Class D", "At or below 1,500 MSL", "At or below 1,900 MSL", "700 MSL"], why: "Track about 115° for a mile, then toward Southcenter Mall and south." },
+        { q: "Vashon arrival (north flow). Where do you call Tower, and on what frequency?",
+          o: ["Over north Vashon Island, on 120.6", "Over Blake Island, on 118.3", "Over Kent, on 118.3", "Over downtown Bellevue, on 120.6"], why: "Then eastbound toward midfield, at or below 1,000 after the ridgeline, left downwind at or below 700." },
+        { q: "Cougar arrival — the route?",
+          o: ["Call over downtown Bellevue; north tip of Mercer Island; direct Seward Park to a right downwind", "Call over Kent; north along SR-167 to a left downwind", "Call over the SR-520 bridge; straight in to 14L", "Call over Blake Island; over Lincoln Park"], why: "North flow, Tower 118.3." },
+        { q: "520 arrival — how do you join?",
+          o: ["A modified straight-in to 14L or 14R, staying north of the VA Hospital", "Left downwind for Runway 32", "Right downwind over Seward Park", "Overhead the field, then a teardrop"], why: "South flow: call 118.3 over the SR-520 floating bridge, then over I-90 at the Lake Washington shoreline." },
+        { q: "Blake arrival (south flow) — with no other instruction after Lincoln Park?",
+          o: ["Turn left and follow the ridgeline northwest to join the right downwind", "Fly straight in to 14R", "Hold over Lincoln Park", "Turn right and follow the Duwamish south"], why: "Call 120.6 over Blake Island; eastbound over the north end of Lincoln Park." },
+        { q: "Valley arrival — where do you call, and the altitude?",
+          o: ["Over Kent on 118.3; at or below 1,600 along SR-167 until abeam IKEA", "Over Kent on 120.6; at or below 1,000", "Over Renton on 118.3; at 1,900", "Over Southcenter on 118.3; at or below 1,100"], why: "Then over the east side of the Tukwila Family Fun Center to a left downwind." },
+        { q: "Which landmark is marked \"do not overfly\" on every Boeing VFR route map?",
+          o: ["The VA Hospital", "The Space Needle", "Southcenter Mall", "Seward Park"], why: "Dawgs and the 520 arrival both say to stay north of it." },
+        { q: "1,500 ft AGL over Bremerton (KPWT). What do you need?",
+          o: ["Mode C transponder and ADS-B Out — no radio contact is required", "A clearance from Seattle Approach", "Two-way radio contact with Bremerton Tower", "Nothing at all"], why: "Class E with no tower, but inside the Sea-Tac 30 NM Mode C veil. Self-announcing on 123.05 is good practice." },
+        { q: "1,500 ft AGL over Tacoma Narrows (KTIW), tower open. What do you need?",
+          o: ["Two-way radio contact with Tacoma Tower before entering, plus Mode C and ADS-B Out", "An ATC clearance", "Nothing — it is Class E", "Only a transponder"], why: "Class D to 2,800 MSL while the tower is open. Contact, not a clearance (91.129)." },
+        { q: "1,500 ft AGL over Sea-Tac (KSEA). What do you need?",
+          o: ["An ATC clearance into the Class B, two-way radio, Mode C and ADS-B Out", "Two-way radio contact only", "Just a transponder", "Nothing below 3,000 ft"], why: "Class B from the surface. A solo student also needs a 61.95 endorsement for it." },
+        { q: "Why is a transponder required over untowered Bremerton?",
+          o: ["It is inside the 30 NM Mode C veil around Sea-Tac", "Bremerton is Class C", "All Class E requires one", "Only at night"], why: "91.215(b)(2) and 91.225 — Mode C and ADS-B Out within 30 NM of a Class B primary airport." },
+        { q: "Legal VFR minimums in Boeing's Class D and Bremerton's Class E, below 10,000 ft?",
+          o: ["3 SM; 500 below, 1,000 above, 2,000 horizontal", "1 SM, clear of clouds", "3 SM, clear of clouds", "5 SM; 1,000 below, 1,000 above, 1 SM horizontal"], why: "91.155. Remember it as 3-152." },
+        { q: "To fly beneath the ceiling inside a Class D or E surface area, the ceiling must be at least…",
+          o: ["1,000 ft", "500 ft", "1,500 ft", "3,000 ft"], why: "91.155(c) — and ground visibility at least 3 SM to take off, land or enter the pattern (91.155(d))." },
+        { q: "As a solo student, the lowest daytime visibility you may fly in?",
+          o: ["3 SM", "1 SM", "5 SM", "10 SM"], why: "61.89(a)(6): 3 SM by day, 5 SM at night — and always with visual reference to the surface." },
+      ] },
+      { type: "match", title: "Match each departure to what you do", pairs: [
+        ["Dawgs", "Right turn east, north of the VA Hospital, to I-90 at the lake shore"],
+        ["Alki", "Left crosswind, northwest to the beach at or below 1,500"],
+        ["Blake (departure)", "Left crosswind, west; 1,700 to the ridgeline, then 1,900"],
+        ["Rainier Beach Transition", "Right downwind; 1,500 then 1,900 to cross Renton midfield"],
+        ["Sammamish", "Left downwind, then the I-90 bridge and north tip of Mercer Island"],
+        ["Vashon (departure)", "Full length 14R, 700 over the Duwamish, then left westbound"],
+        ["Mountain", "Track 115°, toward Southcenter Mall, at or below 1,100"],
+      ] },
+      { type: "match", title: "Arrivals — where do you call the tower?", pairs: [
+        ["Vashon arrival", "Over north Vashon Island"],
+        ["Cougar arrival", "Over downtown Bellevue"],
+        ["520 arrival", "Over the SR-520 floating bridge"],
+        ["Blake arrival", "Over Blake Island"],
+        ["Valley arrival", "Over Kent"],
+      ] },
+      { type: "sort", title: "North flow or south flow?", buckets: ["North flow — Runway 32", "South flow — Runway 14"], items: [
+        { t: "Dawgs departure", b: 0, why: "Right turn eastbound off Runway 32." },
+        { t: "Alki departure", b: 0, why: "Left crosswind off Runway 32." },
+        { t: "Blake departure", b: 0, why: "Left crosswind off Runway 32, westbound." },
+        { t: "Rainier Beach Transition", b: 0, why: "Right downwind departure from Runway 32." },
+        { t: "Sammamish departure", b: 1, why: "Left downwind off Runway 14 to the I-90 bridge." },
+        { t: "Vashon departure", b: 1, why: "Full length Runway 14R." },
+        { t: "Mountain departure", b: 1, why: "Off Runway 14 toward Southcenter Mall." },
+        { t: "Vashon arrival", b: 0, why: "Left downwind for Runway 32." },
+        { t: "Cougar arrival", b: 0, why: "Right downwind for Runway 32, via Seward Park." },
+        { t: "520 arrival", b: 1, why: "Modified straight-in to Runway 14L or 14R." },
+        { t: "Blake arrival", b: 1, why: "Right downwind for Runway 14." },
+        { t: "Valley arrival", b: 1, why: "Left downwind for Runway 14, from Kent." },
+      ] },
+      { type: "sort", title: "Which airport is it?", buckets: ["Bremerton (KPWT)", "Tacoma Narrows (KTIW)", "Sea-Tac (KSEA)"], items: [
+        { t: "Class E surface area — no tower", b: 0, why: "Bremerton is untowered." },
+        { t: "No radio contact required to overfly", b: 0, why: "Class E. Self-announce on CTAF 123.05 anyway." },
+        { t: "Class D while the tower is open", b: 1, why: "Tacoma Narrows — surface to 2,800 MSL, 0800–2000 local." },
+        { t: "Two-way radio contact before entering; no clearance", b: 1, why: "Class D — Tacoma Tower 118.5." },
+        { t: "Class B from the surface", b: 2, why: "Sea-Tac — surface to 10,000." },
+        { t: "An ATC clearance is required to enter", b: 2, why: "Class B (91.131)." },
+        { t: "A solo student needs a 61.95 endorsement", b: 2, why: "For Class B airspace — and another to land at the airport itself." },
+      ] },
+      { type: "recall", from: "Boeing Field · frequencies and altitudes", items: [
+        { q: "Boeing ATIS?", a: "127.75", alt: ["127.75"] },
+        { q: "Boeing Ground?", a: "121.9", alt: ["121.9", "121.90"] },
+        { q: "Boeing Tower for Runway 14L / 32R (the short runway)?", a: "118.3", alt: ["118.3", "118.30"] },
+        { q: "Boeing Tower for Runway 14R / 32L (the long runway)?", a: "120.6", alt: ["120.6", "120.60"] },
+        { q: "Pattern altitude for 14L / 32R (ft MSL)?", a: "1,000 ft MSL", alt: ["1000"] },
+        { q: "Pattern altitude for 14R / 32L (ft MSL)?", a: "800 ft MSL", alt: ["800"] },
+        { q: "Alki departure — cross Alki Beach at or below?", a: "1,500 ft MSL", alt: ["1500"] },
+        { q: "Blake departure — at or below what until the ridgeline, then crossing the shoreline?", a: "1,700 · then 1,900 ft MSL", all: [["1700"], ["1900"]] },
+        { q: "Mountain departure — at or below what until clear of the Class D?", a: "1,100 ft MSL", alt: ["1100"] },
+        { q: "Vashon departure — altitude straight out and on the downwind?", a: "700 ft MSL", alt: ["700"] },
+        { q: "Valley arrival — at or below what until abeam IKEA?", a: "1,600 ft MSL", alt: ["1600"] },
+        { q: "Bremerton (KPWT) CTAF?", a: "123.05", alt: ["123.05"] },
+        { q: "Tacoma Tower (KTIW)?", a: "118.5", alt: ["118.5", "118.50"] },
+        { q: "Visibility needed in Class D and E below 10,000 ft (SM)?", a: "3 SM", alt: ["3"] },
       ] },
     ],
   },
