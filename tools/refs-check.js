@@ -17,7 +17,7 @@ const INDEX = JSON.parse(read("tools/ref-index.json"));
 
 const ctx = { window: {}, console };
 vm.createContext(ctx);
-["js/diagrams.js", "js/emergencies.js", "js/oralbank.js", "js/stagecheck.js", "js/refs.js"].forEach((f) =>
+["js/sequence.js", "js/maneuvers.js", "js/diagrams.js", "js/emergencies.js", "js/oralbank.js", "js/stagecheck.js", "js/refs.js"].forEach((f) =>
   vm.runInContext(read(f) + `\n;this.__last = 1;`, ctx, { filename: f }));
 vm.runInContext("this.REF_TITLES = " + JSON.stringify(INDEX) + "; this.D = { Q: ORAL_QUESTIONS, T: STAGE1_TOPICS, S: STAGE1_SYSTEMS, R: Refs };", ctx);
 const { Q, T, S, R } = ctx.D;

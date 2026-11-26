@@ -93,6 +93,13 @@ const ManeuverDrill = (() => {
     lab.appendChild(document.createTextNode(" Include the pre-maneuver flow (height · area · checks · radio · clearing turns)"));
     box.appendChild(lab);
 
+    // the same flows as talk-through checklists, for chair flying (they live on the Stage 1 page)
+    const cf = document.createElement("button");
+    cf.className = "btn man-chairfly";
+    cf.textContent = "📋 Chair-fly checklists";
+    cf.addEventListener("click", () => { $("modeStudy").click(); if (window.StudyDrill) StudyDrill.openTopic("chairfly"); });
+    box.appendChild(cf);
+
     const note = document.createElement("p");
     note.className = "man-note";
     note.textContent = "Simulated engine failure and the other checklists live in the Emergencies tab.";

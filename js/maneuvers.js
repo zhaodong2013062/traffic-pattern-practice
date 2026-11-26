@@ -10,7 +10,7 @@
                    PA.V.A steep turns, PA.V.B ground reference, PA.VII.A-C
                    slow flight & stalls, PA.IX.A emergency descent.
      Procedures    FAA-H-8083-3C Airplane Flying Handbook (ch. 5 slow flight &
-                   stalls, ch. 7 ground reference, ch. 9 steep turns), and the
+                   stalls, ch. 7 ground reference, ch. 10 steep turns), and the
                    Southeastern Oklahoma State C172 Maneuvers Guide (rev
                    1/25/2024) for the C172 power / flap / airspeed profile.
      Speeds        C172S POH: Vx 62, Vy 74, Va 105 @2550 / 98 @2200 / 90 @1900,
