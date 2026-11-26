@@ -333,7 +333,8 @@ const OralDrill = (() => {
   }
   function readingList(s) {
     const n = {};
-    const add = (ref) => String(ref || "").split(";").map((x) => x.trim()).filter(Boolean).forEach((x) => { n[x] = (n[x] || 0) + 1; });
+    // count each parsed source once per miss ("14 CFR 91.155, 91.151" is two bookmarks)
+    const add = (ref) => Refs.parse(ref).forEach((t) => { n[t.label] = (n[t.label] || 0) + 1; });
     s.rows.forEach(({ q, r, ev }) => {
       if (ev.g !== "sat") add(q.ref);
       (q.fu || []).forEach((f) => { const fr = (r.fu || {})[f.id]; if (fr && !fr.skipped && (fr.ov || fr.g) !== "sat") add(f.ref); });
@@ -610,7 +611,7 @@ const OralDrill = (() => {
         ${it.no && it.no.length ? it.no.map((t, k) => flagRow(t, k, d.flags.includes(k), k + 1, true)).join("") : ""}</div>
       ${overrideHTML(d)}
       <div class="cr-model"><p class="cr-label">MODEL ANSWER</p><p>${esc(it.answer)}</p></div>
-      <div class="cr-ref"><p class="cr-label">STUDY</p><p>${esc(it.ref || q.ref || "")}</p></div>
+      <div class="cr-ref"><p class="cr-label">BOOKMARK THIS</p>${Refs.html(it.ref || q.ref || "", false)}</div>
       <div class="cr-actions">
         <button class="btn" data-act="back">◀ Back to the question</button>
         <button class="btn primary" data-act="next">Next ▶</button>
@@ -672,7 +673,7 @@ const OralDrill = (() => {
       `<li class="${new Set(rec.hit).has(p.k) ? "ok" : p.must ? "miss" : ""}">${new Set(rec.hit).has(p.k) ? "✔" : p.must ? "✘" : "·"} ${esc(p.t)}</li>`).join("")}
       ${(rec.flags || []).map((n) => `<li class="miss">✘ said: ${esc(it.no[n])}</li>`).join("")}</ul>
       <div class="cr-model"><p class="cr-label">MODEL ANSWER</p><p>${esc(it.answer)}</p></div>
-      <p class="cr-ref">${esc(it.ref || q.ref || "")}</p>`;
+      <div class="cr-ref">${Refs.html(it.ref || q.ref || "")}</div>`;
     const rows = s.rows.map(({ q, r, ev }) => `<details style="${areaStyle(q)}">
       <summary class="cr-rowhead">${gradeChip(ev)} <span>${esc(q.ask)}</span></summary>
       ${itemRows(q, q, r, "")}
@@ -692,8 +693,8 @@ const OralDrill = (() => {
       }).join("")}</div>
       <div class="cr-missed"><p class="cr-label">POINTS TO STUDY</p>
         ${Object.keys(mp).length ? Object.keys(mp).map((id) => `<h4 style="--cr-area:${esc(AREA[id].color)}">${esc(AREA[id].name)}</h4><ul>${mp[id].map((m) =>
-          `<li>${m.html}${m.ref ? `<small>${esc(m.ref)}</small>` : ""}</li>`).join("")}</ul>`).join("") : `<p class="cr-muted">Nothing missed.</p>`}</div>
-      ${rl.length ? `<div class="cr-refs"><p class="cr-label">READING LIST</p><ul>${rl.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+          `<li>${m.html}${m.ref ? Refs.html(m.ref, false) : ""}</li>`).join("")}</ul>`).join("") : `<p class="cr-muted">Nothing missed.</p>`}</div>
+      ${rl.length ? `<div class="cr-refs"><p class="cr-label">READING LIST — BOOKMARK THESE</p>${Refs.html(rl.join("; "), false)}</div>` : ""}
       <div class="cr-rows"><p class="cr-label">EVERY QUESTION</p>${rows}</div>
       <div class="cr-actions">
         ${nonSat ? `<button class="btn primary" data-act="review-these">Review these misses now</button>` : ""}

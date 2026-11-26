@@ -392,6 +392,7 @@ const StudyDrill = (() => {
       if (b.html) blk.appendChild(el(`<div class="s1-html">${b.html}</div>`));
       if (b.fig) blk.appendChild(el(`<div class="s1-fig">${b.fig()}</div>`));
       if (b.widget) { const w = el(`<div class="s1-widget"></div>`); blk.appendChild(w); WIDGETS[b.widget](w); }
+      if (b.ref) blk.appendChild(el(refHTML(b.ref)));
       body.appendChild(blk);
     });
     const go = el(`<button class="btn primary wide">Drill it 🎯</button>`);
@@ -509,10 +510,14 @@ const StudyDrill = (() => {
       if (a.type === "quiz") a.qs.forEach((q) => pool.push({ ...q, from: t.name, ord: order.indexOf(id) }));
     }));
     const sysOrd = Math.max(0, order.indexOf("systems"));
-    STAGE1_SYSTEMS.forEach((s) => (s.qs || []).forEach((q) => pool.push({ ...q, from: "Systems · " + s.name, ord: sysOrd })));
+    STAGE1_SYSTEMS.forEach((s) => (s.qs || []).forEach((q) => pool.push({ ...q, ref: q.ref || s.ref, from: "Systems · " + s.name, ord: sysOrd })));
     // a random fifteen — twelve questions plus three typed must-know recalls — then
     // asked topic by topic the way the oral flows
-    const mustPool = STAGE1_SYSTEMS.flatMap((s) => (s.must || []).map((m) => ({ q: m.q, a: m.a, must: m, sys: s.id, from: "Systems · " + s.name, ord: sysOrd })));
+    const mustPool = STAGE1_SYSTEMS.flatMap((s) => (s.must || []).map((m) => ({ q: m.q, a: m.a, must: m, sys: s.id, ref: m.ref || s.ref, from: "Systems · " + s.name, ord: sysOrd })));
+    // typed recall sets in the topics (memory-item V-speeds, pre-solo numbers…) join the must-knows
+    Object.entries(STAGE1_TOPICS).forEach(([id, t]) => t.drill.forEach((a) => {
+      if (a.type === "recall" && a.items) a.items.forEach((m) => mustPool.push({ q: m.q, a: m.a, must: m, ref: m.ref || a.ref, from: t.name, ord: order.indexOf(id) }));
+    }));
     const qs = [...shuffle(pool).slice(0, 12), ...shuffle(mustPool).slice(0, 3)].sort((x, y) => x.ord - y.ord || (x.from < y.from ? -1 : x.from > y.from ? 1 : 0));
     stopVoice();
     root.innerHTML = `<div class="s1-topic" style="--c:#34ace0">
@@ -546,6 +551,8 @@ const StudyDrill = (() => {
         if (then) then();
       }, calm() ? 0 : 550);
     };
+    // the ref goes under the examiner's reply as its own line, so text-to-speech doesn't read it out
+    const bookmark = (q) => { if (q.ref) { const m = el(`<div class="s1-msg ex s1-msg-ref">${refHTML(q.ref)}</div>`); chat.appendChild(m); scroll(m); } };
     const me = (text, cls) => { const m = el(`<div class="s1-msg me ${cls}"><div class="s1-bubble">${esc(text)}</div></div>`); chat.appendChild(m); scroll(m); };
     const button = (label, fn) => { replies.innerHTML = ""; const b = nextBtn(label, fn); replies.appendChild(b); scroll(b); };
 
@@ -573,7 +580,7 @@ const StudyDrill = (() => {
             me(v, ok ? "ok" : "bad");
             const reply = ok ? `<b>${pickOne(["Good.", "Correct.", "That's right."])}</b> ${esc(q.a)}${lvl === 2 ? ` <span class="s1-muted">(close enough — say it exactly on the day)</span>` : ""}`
               : `<b>${pickOne(["Not quite.", "Hmm — no."])}</b> I was after: <b>${esc(q.a)}</b>. You should know that one cold.`;
-            examiner(reply, () => { k++; button(k < qs.length ? "Next question →" : "Wrap up →", ask); });
+            examiner(reply, () => { bookmark(q); k++; button(k < qs.length ? "Next question →" : "Wrap up →", ask); });
           });
           return;
         }
@@ -588,7 +595,7 @@ const StudyDrill = (() => {
             const reply = o.ok
               ? `<b>${pickOne(["Good.", "Correct.", "That's right.", "Exactly."])}</b> ${esc(q.why || "")}`
               : `<b>${pickOne(["Not quite.", "Hmm — no.", "Let's look at that again."])}</b> The answer I was after: <b>${esc(q.o[0])}</b>. ${esc(q.why || "")}`;
-            examiner(reply, () => { k++; button(k < qs.length ? "Next question →" : "Wrap up →", ask); });
+            examiner(reply, () => { bookmark(q); k++; button(k < qs.length ? "Next question →" : "Wrap up →", ask); });
           });
           replies.appendChild(b);
         });
@@ -673,6 +680,7 @@ const StudyDrill = (() => {
   /* ============================ DRILL RUNNER ============================ */
   const UNITS = { acronym: (a) => a.items.length, quiz: (a) => a.qs.length, match: (a) => a.pairs.length,
     sort: (a) => a.items.length, inop: (a) => a.cases.length, systems: () => 3,
+    recall: (a) => (a.items || []).length || 1,
     systask: (a) => a.tasks.reduce((n, t) => n + taskUnits(t), 0) };
   function runDrill(acts, body, done) {
     let k = 0, right = 0, total = 0;
@@ -697,6 +705,8 @@ const StudyDrill = (() => {
 
   // the keyboard hint, shown only where there is a keyboard (CSS hides it on touch)
   const KEYS = (n) => `<p class="s1-keys">Keys: <kbd>1</kbd>–<kbd>${n}</kbd> to answer · <kbd>Enter</kbd> for next</p>`;
+  // the "📑 Bookmark" chips for a ref (refs.js) — empty when there's no ref
+  const refHTML = (ref) => (ref && typeof Refs !== "undefined" ? Refs.html(ref) : "<span></span>");
   const nextBtn = (label, fn) => {
     const b = el(`<button class="btn primary wide s1-next">${label}</button>`);
     b.addEventListener("click", fn);
@@ -1023,16 +1033,16 @@ const StudyDrill = (() => {
         // switching modes restarts this part's share of the progress bar
         if (live()) { run.done = run.partStart; paint(); }
         box.innerHTML = `<div class="s1-block s1-acro">
-          <div class="s1-acro-top"><h3>Spell out <b>${a.word}</b></h3>
-            <div class="s1-seg"><button data-m="tiles" class="${mode === "tiles" ? "on" : ""}">Tiles</button>
+          <div class="s1-acro-top"><h3>${a.title ? a.title : `Spell out <b>${a.word}</b>`}</h3>
+            <div class="s1-seg"><button data-m="tiles" class="${mode === "tiles" ? "on" : ""}">${a.title ? "In order" : "Tiles"}</button>
             <button data-m="type" class="${mode === "type" ? "on" : ""}">Type it</button>
-            <button data-m="rapid" class="${mode === "rapid" ? "on" : ""}">⚡ Rapid fire</button></div></div>
+            ${a.title ? "" : `<button data-m="rapid" class="${mode === "rapid" ? "on" : ""}">⚡ Rapid fire</button>`}</div></div>
           <div class="s1-slots"></div><div class="s1-tiles"></div><div class="s1-fb"></div></div>`;
         box.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.m; render(); }));
         if (mode === "rapid") return rapid();
         const slots = box.querySelector(".s1-slots");
-        a.items.forEach((it) => slots.appendChild(el(
-          `<div class="s1-slot"><b>${it.l}</b><span class="s1-slot-w">${mode === "type" ? `<input type="text" autocomplete="off" spellcheck="false" autocapitalize="off">` : ""}</span></div>`)));
+        a.items.forEach((it) => (it.h && slots.appendChild(el(`<p class="s1-slot-h">${esc(it.h)}</p>`)), slots.appendChild(el(
+          `<div class="s1-slot"><b>${it.l}</b><span class="s1-slot-w">${mode === "type" ? `<input type="text" autocomplete="off" spellcheck="false" autocapitalize="off">` : ""}</span></div>`))));
         mode === "tiles" ? tiles() : typed();
       };
 
@@ -1044,8 +1054,9 @@ const StudyDrill = (() => {
         shuffle(a.items.map((it, k) => ({ ...it, k }))).forEach((it) => {
           const b = el(`<button class="s1-tile">${esc(it.w)}</button>`);
           b.addEventListener("click", () => {
-            // a repeated word (two A's) is fine in either tile
-            if (a.items[n].w === it.w) {
+            // a repeated word (two A's) is fine in either tile; checklist items that
+            // share a group (g) may go in any order, as in the emergency drill
+            if (a.items[n].w === it.w || (it.g && a.items[n].g === it.g)) {
               b.disabled = true; b.classList.add("used");
               slotEls[n].querySelector(".s1-slot-w").textContent = it.w;
               slotEls[n].classList.remove("cur"); slotEls[n].classList.add("ok");
@@ -1072,8 +1083,15 @@ const StudyDrill = (() => {
         box.querySelector(".s1-acro").appendChild(check);
         check.addEventListener("click", () => {
           let right = 0;
+          // a checklist step (with `all`) must name the control AND its position, strictly;
+          // steps sharing a group may be typed in any order within it
+          const used = new Set();
+          const fits = (c, v) => c.all ? recallMatch({ all: c.all }, v) > 0 : accepts(c, v);
           inputs.forEach((inp, k) => {
-            const it = a.items[k], ok = accepts(it, inp.value);
+            const it = a.items[k];
+            const pool = a.items.map((c, j) => ({ c, j })).filter(({ c, j }) => !used.has(j) && (j === k || (it.g && c.g === it.g)));
+            const m = pool.find(({ c }) => fits(c, inp.value)), ok = !!m;
+            if (m) used.add(m.j);
             inp.disabled = true;
             inp.parentElement.parentElement.classList.add(ok ? "ok" : "bad");
             if (!ok) inp.parentElement.appendChild(el(`<em>${esc(it.w)}</em>`));
@@ -1157,7 +1175,7 @@ const StudyDrill = (() => {
       const finish = (right, msg) => {
         stop();
         box.querySelector(".s1-tiles").innerHTML = "";
-        box.querySelector(".s1-fb").innerHTML = `<p class="s1-ok">✓ ${msg}</p>`;
+        box.querySelector(".s1-fb").innerHTML = `<p class="s1-ok">✓ ${msg}</p>${a.ref ? refHTML(a.ref) : ""}`;
         box.querySelector(".s1-seg").remove();
         box.querySelector(".s1-acro").appendChild(nextBtn("Next →", () => done(right, a.items.length)));
       };
@@ -1192,7 +1210,7 @@ const StudyDrill = (() => {
             card.querySelector(".s1-keys")?.remove();
             const why = card.querySelector(".s1-why");
             why.hidden = false;
-            why.innerHTML = `<b>${o.ok ? "✓ Correct." : "✗ Not quite."}</b> ${esc(q.why || "")}`;
+            why.innerHTML = `<b>${o.ok ? "✓ Correct." : "✗ Not quite."}</b> ${esc(q.why || "")}${q.ref ? refHTML(q.ref) : ""}`;
             why.className = "s1-why " + (o.ok ? "good" : "badwhy");
             card.appendChild(nextBtn(k + 1 < qs.length || qs.length === 1 ? "Next →" : "Finish", () => { k++; show(); }));
           });
@@ -1228,7 +1246,7 @@ const StudyDrill = (() => {
             sel = null; matched++;
             hit(true); tick();
             if (matched === a.pairs.length) {
-              box.querySelector(".s1-fb").innerHTML = `<p class="s1-ok">✓ All matched${miss ? ` · ${miss} miss${miss > 1 ? "es" : ""}` : " — no misses"}.</p>`;
+              box.querySelector(".s1-fb").innerHTML = `<p class="s1-ok">✓ All matched${miss ? ` · ${miss} miss${miss > 1 ? "es" : ""}` : " — no misses"}.</p>${a.ref ? refHTML(a.ref) : ""}`;
               box.querySelector(".s1-block").appendChild(nextBtn("Next →", () => done(Math.max(0, a.pairs.length - miss), a.pairs.length)));
             }
           } else {
@@ -1262,7 +1280,7 @@ const StudyDrill = (() => {
           box.querySelector(".s1-keys")?.remove();
           const why = box.querySelector(".s1-why");
           why.hidden = false; why.className = "s1-why " + (ok ? "good" : "badwhy");
-          why.innerHTML = `<b>${ok ? "✓" : "✗"} ${esc(a.buckets[it.b])}.</b> ${esc(it.why)}`;
+          why.innerHTML = `<b>${ok ? "✓" : "✗"} ${esc(a.buckets[it.b])}.</b> ${esc(it.why)}${(it.ref || a.ref) ? refHTML(it.ref || a.ref) : ""}`;
           box.querySelector(".s1-sort").appendChild(nextBtn(k + 1 < items.length || items.length === 1 ? "Next →" : "Finish", () => { k++; show(); }));
         }));
       };
@@ -1295,7 +1313,7 @@ const StudyDrill = (() => {
           box.querySelector(".s1-flowwrap").innerHTML = inopFlowHTML(c.req ? "205" : "go");
           const why = box.querySelector(".s1-why");
           why.hidden = false; why.className = "s1-why " + (ok ? "good" : "badwhy");
-          why.innerHTML = `<b>${ok ? "✓" : "✗"}</b> ${esc(c.why)}`;
+          why.innerHTML = `<b>${ok ? "✓" : "✗"}</b> ${esc(c.why)}${(c.ref || a.ref) ? refHTML(c.ref || a.ref) : ""}`;
           box.querySelector(".s1-inop").appendChild(nextBtn(k + 1 < cases.length || cases.length === 1 ? "Next item →" : "Finish", () => { k++; show(); }));
         }));
       };
@@ -1313,7 +1331,7 @@ const StudyDrill = (() => {
       let k = 0, right = 0;
       const sysName = (it) => (sysById(it.sys) || {}).name || "";
       const record = (it, ok) => { if (ok) right++; hit(ok, cardKey.must(it.sys, it)); tick(); };
-      const shell = (it, extra) => `<div class="s1-block s1-recall"><p class="s1-rc-from"><b>★ Must know</b> · ${esc(sysName(it))}${extra || ""}</p>`;
+      const shell = (it, extra) => `<div class="s1-block s1-recall"><p class="s1-rc-from"><b>★ Must know</b> · ${esc(sysName(it) || a.from || "")}${extra || ""}</p>`;
       const input = (ph) => `<div class="s1-rc-row"><input class="s1-rc-in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${ph}" aria-label="Your answer">
         <button class="btn primary" data-act="go">Check</button></div>`;
 
@@ -1337,11 +1355,11 @@ const StudyDrill = (() => {
           if (lvl) {
             record(it, true);
             inp.classList.add("ok");
-            fb.innerHTML = `<p class="s1-ok">✓ ${esc(it.a)}</p>${lvl === 2 ? `<p class="s1-muted">Close enough — mind the spelling; the examiner wants it exactly.</p>` : ""}`;
+            fb.innerHTML = `<p class="s1-ok">✓ ${esc(it.a)}</p>${lvl === 2 ? `<p class="s1-muted">Close enough — mind the spelling; the examiner wants it exactly.</p>` : ""}${(it.ref || a.ref) ? refHTML(it.ref || a.ref) : ""}`;
             blk.appendChild(next());
           } else {
             inp.classList.add("bad");
-            fb.innerHTML = `<p class="bad">✗ Not what I was looking for.</p><p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p>
+            fb.innerHTML = `<p class="bad">✗ Not what I was looking for.</p><p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p>${(it.ref || a.ref) ? refHTML(it.ref || a.ref) : ""}
               <p class="s1-muted">Be honest — did you have it, just worded differently?</p>
               <div class="s1-rc-self"><button class="btn" data-self="1">I had it</button><button class="btn" data-self="0">Missed it</button></div>`;
             fb.querySelectorAll("[data-self]").forEach((b) => b.addEventListener("click", () => {
@@ -1356,7 +1374,7 @@ const StudyDrill = (() => {
         box.querySelector('[data-act="show"]').addEventListener("click", () => {
           if (locked) return;
           lockUI(); record(it, false);
-          fb.innerHTML = `<p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p><p class="s1-muted">It's in your review deck.</p>`;
+          fb.innerHTML = `<p class="s1-rc-ans">The answer: <b>${esc(it.a)}</b></p><p class="s1-muted">It's in your review deck.</p>${(it.ref || a.ref) ? refHTML(it.ref || a.ref) : ""}`;
           blk.appendChild(next());
         });
         inp.focus();

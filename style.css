@@ -547,6 +547,8 @@ body.study-mode .btn.mode.active { border-color: #2ed573; color: #8ff0bd; }
 .s1-slot.ok { border: 1px solid var(--ok); background: #0f2e1d; }
 .s1-slot.bad { border: 1px solid var(--bad); background: #34151a; }
 .s1-slot-w { flex: 1; font-weight: 600; }
+/* a checklist's branch heading ("If the engine starts:") between its numbered slots */
+.s1-slot-h { margin: 8px 0 0; color: var(--muted); font-style: italic; font-size: 13px; }
 .s1-slot-w input {
   width: 100%; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
   border-radius: 6px; padding: 7px 9px; font-size: 14px;
@@ -1393,3 +1395,22 @@ body.oral-mode .btn.mode.active { border-color: #f6c90e; color: #ffe27a; }
   .cr-area, .cr-chip, .cr-pt { transition: none; }
   .cr-area:hover { transform: none; }
 }
+
+/* ---------- bookmark chips (refs.js): where in the FAR/AIM, PHAK or AFH to read more ---------- */
+.refs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.refs-lead { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.ref {
+  display: inline-flex; flex-direction: column; gap: 1px; padding: 5px 9px; border-radius: 8px;
+  border: 1px solid var(--line); background: var(--panel-2); color: var(--ink);
+  font-size: 13px; font-weight: 700; line-height: 1.2; text-decoration: none; max-width: 100%;
+}
+.ref i { font-style: normal; font-weight: 400; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+a.ref:hover, a.ref:focus-visible { border-color: #34ace0; }
+a.ref::after { content: " ↗"; font-size: 10px; color: var(--muted); }
+a.ref:has(i)::after { content: none; }
+.ref-cfr { border-left: 3px solid #ff9f43; }
+.ref-aim { border-left: 3px solid #34ace0; }
+.ref-phak, .ref-afh { border-left: 3px solid #2ed573; }
+.ref-text { font-weight: 600; color: var(--muted); }
+.s1-msg-ref { margin: -4px 0 6px 40px; }
+.cr-missed li .refs { margin-top: 4px; }
