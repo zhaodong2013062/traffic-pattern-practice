@@ -513,6 +513,10 @@ const StudyDrill = (() => {
     // a random fifteen — twelve questions plus three typed must-know recalls — then
     // asked topic by topic the way the oral flows
     const mustPool = STAGE1_SYSTEMS.flatMap((s) => (s.must || []).map((m) => ({ q: m.q, a: m.a, must: m, sys: s.id, from: "Systems · " + s.name, ord: sysOrd })));
+    // typed recall sets in the topics (memory-item V-speeds, pre-solo numbers…) join the must-knows
+    Object.entries(STAGE1_TOPICS).forEach(([id, t]) => t.drill.forEach((a) => {
+      if (a.type === "recall" && a.items) a.items.forEach((m) => mustPool.push({ q: m.q, a: m.a, must: m, from: t.name, ord: order.indexOf(id) }));
+    }));
     const qs = [...shuffle(pool).slice(0, 12), ...shuffle(mustPool).slice(0, 3)].sort((x, y) => x.ord - y.ord || (x.from < y.from ? -1 : x.from > y.from ? 1 : 0));
     stopVoice();
     root.innerHTML = `<div class="s1-topic" style="--c:#34ace0">
@@ -673,6 +677,7 @@ const StudyDrill = (() => {
   /* ============================ DRILL RUNNER ============================ */
   const UNITS = { acronym: (a) => a.items.length, quiz: (a) => a.qs.length, match: (a) => a.pairs.length,
     sort: (a) => a.items.length, inop: (a) => a.cases.length, systems: () => 3,
+    recall: (a) => (a.items || []).length || 1,
     systask: (a) => a.tasks.reduce((n, t) => n + taskUnits(t), 0) };
   function runDrill(acts, body, done) {
     let k = 0, right = 0, total = 0;
@@ -1023,16 +1028,16 @@ const StudyDrill = (() => {
         // switching modes restarts this part's share of the progress bar
         if (live()) { run.done = run.partStart; paint(); }
         box.innerHTML = `<div class="s1-block s1-acro">
-          <div class="s1-acro-top"><h3>Spell out <b>${a.word}</b></h3>
-            <div class="s1-seg"><button data-m="tiles" class="${mode === "tiles" ? "on" : ""}">Tiles</button>
+          <div class="s1-acro-top"><h3>${a.title ? a.title : `Spell out <b>${a.word}</b>`}</h3>
+            <div class="s1-seg"><button data-m="tiles" class="${mode === "tiles" ? "on" : ""}">${a.title ? "In order" : "Tiles"}</button>
             <button data-m="type" class="${mode === "type" ? "on" : ""}">Type it</button>
-            <button data-m="rapid" class="${mode === "rapid" ? "on" : ""}">⚡ Rapid fire</button></div></div>
+            ${a.title ? "" : `<button data-m="rapid" class="${mode === "rapid" ? "on" : ""}">⚡ Rapid fire</button>`}</div></div>
           <div class="s1-slots"></div><div class="s1-tiles"></div><div class="s1-fb"></div></div>`;
         box.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.m; render(); }));
         if (mode === "rapid") return rapid();
         const slots = box.querySelector(".s1-slots");
-        a.items.forEach((it) => slots.appendChild(el(
-          `<div class="s1-slot"><b>${it.l}</b><span class="s1-slot-w">${mode === "type" ? `<input type="text" autocomplete="off" spellcheck="false" autocapitalize="off">` : ""}</span></div>`)));
+        a.items.forEach((it) => (it.h && slots.appendChild(el(`<p class="s1-slot-h">${esc(it.h)}</p>`)), slots.appendChild(el(
+          `<div class="s1-slot"><b>${it.l}</b><span class="s1-slot-w">${mode === "type" ? `<input type="text" autocomplete="off" spellcheck="false" autocapitalize="off">` : ""}</span></div>`))));
         mode === "tiles" ? tiles() : typed();
       };
 
@@ -1044,8 +1049,9 @@ const StudyDrill = (() => {
         shuffle(a.items.map((it, k) => ({ ...it, k }))).forEach((it) => {
           const b = el(`<button class="s1-tile">${esc(it.w)}</button>`);
           b.addEventListener("click", () => {
-            // a repeated word (two A's) is fine in either tile
-            if (a.items[n].w === it.w) {
+            // a repeated word (two A's) is fine in either tile; checklist items that
+            // share a group (g) may go in any order, as in the emergency drill
+            if (a.items[n].w === it.w || (it.g && a.items[n].g === it.g)) {
               b.disabled = true; b.classList.add("used");
               slotEls[n].querySelector(".s1-slot-w").textContent = it.w;
               slotEls[n].classList.remove("cur"); slotEls[n].classList.add("ok");
@@ -1072,8 +1078,15 @@ const StudyDrill = (() => {
         box.querySelector(".s1-acro").appendChild(check);
         check.addEventListener("click", () => {
           let right = 0;
+          // a checklist step (with `all`) must name the control AND its position, strictly;
+          // steps sharing a group may be typed in any order within it
+          const used = new Set();
+          const fits = (c, v) => c.all ? recallMatch({ all: c.all }, v) > 0 : accepts(c, v);
           inputs.forEach((inp, k) => {
-            const it = a.items[k], ok = accepts(it, inp.value);
+            const it = a.items[k];
+            const pool = a.items.map((c, j) => ({ c, j })).filter(({ c, j }) => !used.has(j) && (j === k || (it.g && c.g === it.g)));
+            const m = pool.find(({ c }) => fits(c, inp.value)), ok = !!m;
+            if (m) used.add(m.j);
             inp.disabled = true;
             inp.parentElement.parentElement.classList.add(ok ? "ok" : "bad");
             if (!ok) inp.parentElement.appendChild(el(`<em>${esc(it.w)}</em>`));
@@ -1313,7 +1326,7 @@ const StudyDrill = (() => {
       let k = 0, right = 0;
       const sysName = (it) => (sysById(it.sys) || {}).name || "";
       const record = (it, ok) => { if (ok) right++; hit(ok, cardKey.must(it.sys, it)); tick(); };
-      const shell = (it, extra) => `<div class="s1-block s1-recall"><p class="s1-rc-from"><b>★ Must know</b> · ${esc(sysName(it))}${extra || ""}</p>`;
+      const shell = (it, extra) => `<div class="s1-block s1-recall"><p class="s1-rc-from"><b>★ Must know</b> · ${esc(sysName(it) || a.from || "")}${extra || ""}</p>`;
       const input = (ph) => `<div class="s1-rc-row"><input class="s1-rc-in" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="${ph}" aria-label="Your answer">
         <button class="btn primary" data-act="go">Check</button></div>`;
 

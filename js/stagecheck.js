@@ -69,10 +69,112 @@ const STAGE1_SECTIONS = [
     topics: ["stabilized"] },
   { id: "comms", name: "Lost comms & airports", sub: "Light guns, CTAF, signs and markings",
     topics: ["lightgun", "untowered", "signs"] },
+  { id: "school", name: "School quizzes", sub: "The memory-items sheet and the pre-solo quiz",
+    topics: ["memory"] },
 ];
 
 /* -------------------------------- helpers -------------------------------- */
 const sgn = (k, t) => ({ k, t });
+
+/* ----------------------------- memory items ------------------------------
+   The school's "Memory Items Quiz C172" sheet: each card is the first N lines
+   of the matching checklist in emergencies.js (the school placard), N being
+   the number of blanks on the sheet. Steps sharing a `g` may go in any order
+   (the same groups as the emergency drill). `all` is the typed check: every
+   group of alternatives must appear — the control AND its position. */
+const MEM_OFF = ["off"], MEM_ON = ["on"];
+const MEM = {
+  thr:   ["throttle", "power"],
+  mix:   ["mixture", "mix"],
+  ico:   ["idle cutoff", "idle cut off", "cutoff", "cut off", "ico"],
+  shut:  ["fuel shutoff", "fuel shut off", "shutoff", "shut off", "shut-off"],
+  mags:  ["magneto", "mags", "ignition", "key"],
+  pump:  ["fuel pump", "aux pump", "pump"],
+  stby:  ["standby", "stby"],
+  mstr:  ["master"],
+  vents: ["vent", "cabin air", "cabin heat", "heat"],
+};
+const memStep = (w, all, o) => Object.assign({ w, all }, o || {});
+const MEMORY_CARDS = [
+  { id: "ef-takeoff", name: "Engine failure — during takeoff", group: "ENGINE FAILURE", steps: [
+    memStep("THROTTLE — IDLE", [MEM.thr, ["idle", "close"]]),
+    memStep("BRAKES — APPLY", [["brake"], ["apply", "on", "brake"]]),
+  ] },
+  { id: "ef-after", name: "Engine failure — after takeoff", group: "ENGINE FAILURE", steps: [
+    memStep("AIRSPEED — 68 KIAS FLAPS UP / 65 KIAS FLAPS DOWN", [["68"]]),
+    memStep("MIXTURE — IDLE CUTOFF", [MEM.mix, MEM.ico], { g: "a" }),
+    memStep("FUEL SHUTOFF — PULL OFF", [MEM.shut, ["off", "pull"]], { g: "a" }),
+    memStep("MAGNETOS — OFF", [MEM.mags, MEM_OFF], { g: "a" }),
+  ] },
+  { id: "ef-restart", name: "Engine failure — in flight (restart)", group: "ENGINE FAILURE", steps: [
+    memStep("AIRSPEED — 68 KIAS", [["68"]]),
+    memStep("LANDING AREA — SELECT", [["landing", "field", "area", "spot"], ["select", "pick", "find", "choose"]]),
+    memStep("FUEL PUMP — ON", [MEM.pump, MEM_ON], { g: "a" }),
+    memStep("FUEL SHUTOFF — PUSH IN (ON)", [MEM.shut, ["on", "in", "push"]], { g: "a" }),
+    memStep("FUEL SELECTOR — BOTH", [["selector", "fuel valve", "tank"], ["both"]], { g: "a" }),
+    memStep("MIXTURE — RICH", [MEM.mix, ["rich"]], { g: "a" }),
+    memStep("MAGNETOS — CHECK (L / R / BOTH)", [MEM.mags, ["check", "both", "left", "right"]]),
+  ] },
+  { id: "fire-start", name: "Engine fire — on start", group: "FIRE", steps: [
+    memStep("MAGNETOS — START (keep cranking)", [["start", "crank"]]),
+    memStep("THROTTLE — 1800 RPM FOR 2 MIN", [["1800"]], { h: "If the engine starts:" }),
+    memStep("ENGINE — SHUTDOWN (and inspect)", [["shut", "cutoff", "cut off", "secure"]]),
+    memStep("THROTTLE — FULL", [MEM.thr, ["full", "open"]], { g: "b", h: "If the engine fails to start:" }),
+    memStep("MIXTURE — IDLE CUTOFF", [MEM.mix, MEM.ico], { g: "b" }),
+    memStep("MAGNETOS — START (keep cranking)", [["start", "crank"]]),
+    memStep("FUEL SHUTOFF — PULL OFF", [MEM.shut, ["off", "pull"]], { g: "c" }),
+    memStep("FUEL PUMP — OFF", [MEM.pump, MEM_OFF], { g: "c" }),
+    memStep("MAGNETOS — OFF", [MEM.mags, MEM_OFF], { g: "c" }),
+    memStep("STBY BATT — OFF", [MEM.stby, MEM_OFF], { g: "d" }),
+    memStep("MASTER — OFF", [MEM.mstr, MEM_OFF], { g: "d" }),
+  ] },
+  { id: "fire-cabin", name: "Cabin fire", group: "FIRE", steps: [
+    memStep("STBY BATT — OFF", [MEM.stby, MEM_OFF], { g: "a" }),
+    memStep("MASTER — OFF", [MEM.mstr, MEM_OFF], { g: "a" }),
+    memStep("CABIN VENTS / AIR / HEAT — CLOSED", [MEM.vents, ["close", "off", "shut"]]),
+    memStep("FIRE EXTINGUISHER — AS REQUIRED", [["extinguish"]]),
+  ] },
+  { id: "fire-wing", name: "Wing fire", group: "FIRE", steps: [
+    memStep("LIGHTS — OFF", [["light"], MEM_OFF], { g: "a" }),
+    memStep("PITOT HEAT — OFF", [["pitot"], MEM_OFF], { g: "a" }),
+    memStep("SIDESLIP — AS NECESSARY", [["slip"]]),
+  ] },
+  { id: "fire-engine", name: "Engine fire — in flight", group: "FIRE", steps: [
+    memStep("MIXTURE — IDLE CUTOFF", [MEM.mix, MEM.ico], { g: "a" }),
+    memStep("FUEL SHUTOFF — PULL OFF", [MEM.shut, ["off", "pull"]], { g: "a" }),
+    memStep("FUEL PUMP — OFF", [MEM.pump, MEM_OFF], { g: "a" }),
+    memStep("MASTER — OFF", [MEM.mstr, MEM_OFF]),
+  ] },
+  { id: "fire-elec", name: "Electrical fire — in flight", group: "FIRE", steps: [
+    memStep("STBY BATT — OFF", [MEM.stby, MEM_OFF], { g: "a" }),
+    memStep("MASTER — OFF", [MEM.mstr, MEM_OFF], { g: "a" }),
+    memStep("CABIN VENTS / AIR / HEAT — CLOSED", [MEM.vents, ["close", "off", "shut"]]),
+    memStep("FIRE EXTINGUISHER — AS REQUIRED", [["extinguish"]]),
+  ] },
+  { id: "icing", name: "Icing — during flight", group: "ICING", steps: [
+    memStep("PITOT HEAT — ON", [["pitot"], MEM_ON], { g: "a" }),
+    memStep("AUTOPILOT — DISCONNECT", [["autopilot", "auto pilot", "a/p"], ["disconnect", "off", "disengage"]], { g: "a" }),
+    memStep("ICING CONDITIONS — EXIT (turn back / change altitude)", [["exit", "turn", "climb", "descend", "altitude", "get out", "leave"]]),
+    memStep("CABIN HEAT — PULL ON", [["cabin heat", "heat"], ["on", "pull", "full"]], { g: "b" }),
+    memStep("DEFROSTER OUTLETS — OPEN", [["defrost"], ["open", "on"]], { g: "b" }),
+  ] },
+  { id: "static", name: "Static source blockage", group: "ICING", steps: [
+    memStep("ALTERNATE STATIC AIR — PULL ON", [["alternate static", "alt static", "alternate air"], ["on", "pull"]]),
+  ] },
+];
+// the sheet's V-speed box (C172S POH, KIAS)
+const MEMORY_SPEEDS = [
+  { q: "Best glide, flaps up (Vg)?", a: "68 KIAS", alt: ["68"] },
+  { q: "Best glide, flaps 10° (Vg)?", a: "65 KIAS", alt: ["65"] },
+  { q: "Stall speed clean, flaps up (Vs1)?", a: "48 KIAS", alt: ["48"] },
+  { q: "Stall speed in the landing configuration (Vso)?", a: "40 KIAS", alt: ["40"] },
+  { q: "Max flap extended speed, flaps 10° (Vfe)?", a: "110 KIAS", alt: ["110"] },
+  { q: "Max flap extended speed, flaps 20° (Vfe)?", a: "85 KIAS", alt: ["85"] },
+  { q: "Max flap extended speed, flaps 30° (Vfe)?", a: "85 KIAS", alt: ["85"] },
+];
+const memLetters = (c) => c.steps.map((st, k) => ({ l: String(k + 1), w: st.w, all: st.all, g: st.g && c.id + st.g, h: st.h }));
+const memTable = (c) => `<table class="s1-table">${c.steps.map((st, k) =>
+  `${st.h ? `<tr><td colspan="2"><i>${st.h}</i></td></tr>` : ""}<tr><th>${k + 1}</th><td><b>${st.w}</b></td></tr>`).join("")}</table>`;
 
 const STAGE1_TOPICS = {
   /* =============================== PILOT ================================ */
@@ -776,6 +878,46 @@ const STAGE1_TOPICS = {
           why: "AIM 2-3-4: continuous double lines = the pavement beyond isn't for aircraft; dashed = it is." },
         { q: "What kind of sign?", fig: () => Diagrams.sign([sgn("destination", "RAMP →")]),
           o: ["Destination — the ramp is to the right", "Location — you're on the ramp", "Direction to taxiway R", "Information"], why: "Yellow with black letters and an arrow, naming a place rather than a taxiway." },
+      ] },
+    ],
+  },
+  /* ============================ MEMORY ITEMS ============================ */
+  memory: {
+    name: "Memory items", tag: "MEM", color: "#ff4757", sub: "The school's memory-items quiz",
+    learn: [
+      { h: "How the sheet works", html: `
+        <p>The school quizzes these <b>from memory, in order</b> — the first lines of each emergency checklist,
+        plus the V-speeds that go with them. Steps in the same bracket of the
+        <b>Emergencies</b> drill (mixture · fuel shutoff · mags, for example) may be said in any order.</p>
+        <p class="s1-note">The placard and your instructor govern. Fly these flows in the Emergencies mode too.</p>` },
+      ...["ENGINE FAILURE", "FIRE", "ICING"].map((grp) => ({ h: grp.charAt(0) + grp.slice(1).toLowerCase(), html:
+        MEMORY_CARDS.filter((c) => c.group === grp).map((c) => `<h4>${c.name}</h4>${memTable(c)}`).join("") })),
+      { h: "V-speeds", html: `<table class="s1-table">${MEMORY_SPEEDS.map((v) =>
+        `<tr><th>${v.q.replace(/\?$/, "")}</th><td><b>${v.a}</b></td></tr>`).join("")}</table>` },
+    ],
+    drill: [
+      ...MEMORY_CARDS.map((c) => ({ type: "acronym", word: c.name, title: `<b>${c.name}</b> — from memory, in order`, items: memLetters(c) })),
+      { type: "recall", from: "Memory items · V-speeds", items: MEMORY_SPEEDS },
+      { type: "quiz", qs: [
+        { q: "Engine failure after takeoff. What comes first?", o: ["Airspeed — pitch for 68 KIAS (65 with flaps down)", "Mixture — idle cutoff", "Try a restart", "Turn back to the runway"],
+          why: "Fly the airplane first: best glide. Then secure the engine — mixture, fuel shutoff, mags." },
+        { q: "Engine failure in flight, plenty of altitude. After airspeed 68 and picking a landing area?", o: ["Fuel pump on, fuel shutoff in, selector BOTH, mixture rich — then check the mags", "Master off", "Mixture idle cutoff", "Squawk 7700 and call mayday first"],
+          why: "The restart flow gets fuel to the engine, then checks the magnetos (L / R / BOTH)." },
+        { q: "Engine fire during start. The first item, whether or not it catches?", o: ["Keep cranking — magnetos START", "Mixture idle cutoff", "Master off", "Evacuate immediately"],
+          why: "Cranking draws the fire back into the engine. If it starts: 1800 RPM for two minutes, then shut down and inspect." },
+        { q: "Engine fire during start — the engine will NOT start. Throttle and mixture?", o: ["Throttle FULL, mixture IDLE CUTOFF — and keep cranking", "Throttle idle, mixture rich", "Throttle full, mixture rich", "Throttle idle, mixture idle cutoff"],
+          why: "Full throttle and idle cutoff clear the fuel out while cranking; then fuel shutoff, pump and mags off, stby batt and master off." },
+        { q: "Engine fire in flight. The first group?", o: ["Mixture idle cutoff, fuel shutoff off, fuel pump off — then master off", "Master off, then extinguisher", "Cabin heat on", "Dive at 100+ KIAS first"],
+          why: "Starve the fire of fuel, then kill the electrics." },
+        { q: "Smoke and the smell of burning insulation in flight. First two items?", o: ["STBY BATT off and MASTER off", "Cabin vents open", "Fire extinguisher", "Avionics off only"],
+          why: "Electrical fire: remove the power, then close the vents and use the extinguisher as required." },
+        { q: "Wing fire. The memory items?", o: ["Lights off, pitot heat off, sideslip as necessary", "Master off, mixture idle cutoff", "Fuel selector to the other tank", "Pitot heat on, cabin heat on"],
+          why: "Kill the electrical circuits in the wing, then slip to keep the flames away from the tank and cabin." },
+        { q: "You fly into icing. The first group?", o: ["Pitot heat ON and autopilot DISCONNECT — then exit the icing", "Cabin heat on", "Climb at Vy", "Alternate static air on"],
+          why: "Protect the airspeed and hand-fly; then turn back or change altitude; then cabin heat and defrost to clear the windshield." },
+        { q: "Static port iced over. The memory item?", o: ["Alternate static air — PULL ON", "Pitot heat on", "Break the VSI glass", "Cabin heat off"],
+          why: "The alternate static source is in the cabin; expect the altimeter and airspeed to read slightly high on it." },
+        { q: "Max flap extended speed for 10° of flaps in the C172S?", o: ["110 KIAS", "85 KIAS", "129 KIAS", "100 KIAS"], why: "110 for 10°; 85 for 20° and 30°." },
       ] },
     ],
   },

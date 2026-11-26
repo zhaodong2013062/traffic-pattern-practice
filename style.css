@@ -547,6 +547,8 @@ body.study-mode .btn.mode.active { border-color: #2ed573; color: #8ff0bd; }
 .s1-slot.ok { border: 1px solid var(--ok); background: #0f2e1d; }
 .s1-slot.bad { border: 1px solid var(--bad); background: #34151a; }
 .s1-slot-w { flex: 1; font-weight: 600; }
+/* a checklist's branch heading ("If the engine starts:") between its numbered slots */
+.s1-slot-h { margin: 8px 0 0; color: var(--muted); font-style: italic; font-size: 13px; }
 .s1-slot-w input {
   width: 100%; background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
   border-radius: 6px; padding: 7px 9px; font-size: 14px;
