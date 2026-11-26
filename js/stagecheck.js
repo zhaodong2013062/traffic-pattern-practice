@@ -71,6 +71,8 @@ const STAGE1_SECTIONS = [
     topics: ["lightgun", "untowered", "signs"] },
   { id: "school", name: "School quizzes", sub: "The memory-items sheet and the pre-solo quiz",
     topics: ["memory", "presolo", "kbfi"] },
+  { id: "chairfly", name: "Chair flying", sub: "Talk-through checklists for every maneuver",
+    topics: ["chairfly"] },
 ];
 
 /* -------------------------------- helpers -------------------------------- */
@@ -95,6 +97,110 @@ const MEM = {
   vents: ["vent", "cabin air", "cabin heat", "heat"],
 };
 const memStep = (w, all, o) => Object.assign({ w, all }, o || {});
+/* ------------------------------ chair flying ------------------------------
+   Talk-through checklists for each phase-check maneuver: the setup flow before
+   any maneuver, then entry → maneuver → recovery, ending with the cruise
+   checklist. Numbers are the Maneuvers drill's (js/maneuvers.js — its header
+   lists the sources); the ACS standards are read from MANEUVERS itself so the
+   two can't drift. `say` lines are spoken aloud while chair flying. */
+const CF_SETUP = [
+  { w: "CLEARING TURNS — two 90° turns (or one 180°)", say: "\"Clear left… clear right… clear above and below.\"" },
+  { w: "ALTITUDE CHECK — recovery no lower than 1,500 AGL (ground reference: 600–1,000 AGL)" },
+  { w: "HEADING — pick it, and a landmark on the nose" },
+  { w: "ALTITUDE — pick the entry altitude and note it" },
+  { w: "EMERGENCY LANDING SPOT — a field within gliding distance" },
+  { w: "INTENTIONS — area call, then tell the examiner", say: "\"[Area] traffic, Cessna 123AB, [position] at 3,500, maneuvering, [area].\" — \"Entering [maneuver] to the left, 3,500, heading 360.\"" },
+];
+const CF_CRUISE = [
+  { w: "POWER — 2100–2700 RPM (no more than 75% recommended)" },
+  { w: "ELEVATOR TRIM — ADJUST" },
+  { w: "MIXTURE — LEAN" },
+];
+const CF_MANEUVERS = [
+  { id: "slow-flight", ref: "AFH ch. 5; FAA-S-ACS-6C PA.VII.A", steps: [
+    { p: "Entry", w: "POWER — 1500 RPM; raise the nose to hold altitude" },
+    { p: "Entry", w: "FLAPS — 10° below 110, 20° then 30° below 85" },
+    { p: "Entry", w: "POWER — add to hold altitude at the target speed (a few knots above the stall horn)" },
+    { p: "Entry", w: "TRIM — nose-up; RIGHT RUDDER — ball centered" },
+    { p: "Maneuver", w: "HOLD — altitude ±100 · heading ±10° · airspeed +10/−0 · no stall horn", say: "\"Slow flight, holding 3,500, heading 360.\"" },
+    { p: "Maneuver", w: "TURNS / CLIMBS / DESCENTS — as assigned; power for altitude, pitch for airspeed" },
+    { p: "Recovery", w: "FULL POWER (2500) · nose down to hold altitude · FLAPS 20° immediately" },
+    { p: "Recovery", w: "FLAPS — 10° past Vx (62), up past Vy (74)" },
+    { p: "Recovery", w: "CRUISE POWER — then the cruise checklist" },
+  ] },
+  { id: "power-off-stall", ref: "AFH ch. 5; FAA-S-ACS-6C PA.VII.B", steps: [
+    { p: "Entry", w: "POWER — 1500 RPM; hold altitude while slowing" },
+    { p: "Entry", w: "FLAPS — 10° below 110, 20° then 30° below 85 (landing configuration)" },
+    { p: "Entry", w: "PITCH — 65 KIAS, stabilized descent, as on final" },
+    { p: "Maneuver", w: "THROTTLE — IDLE" },
+    { p: "Maneuver", w: "PITCH — smoothly to the landing attitude and keep raising it; stay coordinated" },
+    { p: "Maneuver", w: "RECOGNIZE THE STALL", say: "\"Horn… buffet… stall — recovering.\"" },
+    { p: "Recovery", w: "NOSE DOWN (reduce AOA) · WINGS LEVEL · FULL POWER" },
+    { p: "Recovery", w: "FLAPS — 20°" },
+    { p: "Recovery", w: "PITCH — Vy (74), positive rate" },
+    { p: "Recovery", w: "FLAPS — 10°, then up" },
+    { p: "Recovery", w: "LEVEL OFF at the entry altitude · CRUISE POWER — then the cruise checklist" },
+  ] },
+  { id: "power-on-stall", ref: "AFH ch. 5; FAA-S-ACS-6C PA.VII.C", steps: [
+    { p: "Entry", w: "POWER — 1500 RPM; raise the nose to hold altitude" },
+    { p: "Entry", w: "SLOW — to about rotation speed (≈ 60 KIAS)" },
+    { p: "Entry", w: "POWER — FULL (2500; at least 65%, as assigned)" },
+    { p: "Maneuver", w: "PITCH — smoothly to the stall attitude; RIGHT RUDDER — ball centered" },
+    { p: "Maneuver", w: "RECOGNIZE THE STALL", say: "\"Horn… buffet… stall — recovering.\"" },
+    { p: "Recovery", w: "NOSE DOWN (reduce AOA) · WINGS LEVEL (coordinated) · VERIFY FULL POWER" },
+    { p: "Recovery", w: "PITCH — Vy (74), positive rate" },
+    { p: "Recovery", w: "LEVEL OFF at the entry altitude · CRUISE POWER — then the cruise checklist" },
+  ] },
+  { id: "steep-turns", ref: "AFH ch. 10; FAA-S-ACS-6C PA.V.A", steps: [
+    { p: "Entry", w: "POWER — for 95 KIAS (at or below Va: 105 @ 2,550 · 98 @ 2,200 · 90 @ 1,900 lb)" },
+    { p: "Maneuver", w: "ROLL — to 45°, coordinated", say: "\"Steep turn to the left, 3,500, heading 360.\"" },
+    { p: "Maneuver", w: "THROUGH 30° — add back pressure and a little power; nose on the horizon" },
+    { p: "Maneuver", w: "HOLD — 45° ±5 · altitude ±100 · airspeed ±10; small corrections" },
+    { p: "Maneuver", w: "ROLL OUT — lead the entry heading by about half the bank (≈ 20°)" },
+    { p: "Maneuver", w: "REVERSE — the same to the other side, as asked" },
+    { p: "Recovery", w: "WINGS LEVEL on the entry heading ±10° · ENTRY POWER — then the cruise checklist" },
+  ] },
+  { id: "turns-point", ref: "AFH ch. 7; FAA-S-ACS-6C PA.V.B", steps: [
+    { p: "Entry", w: "POINT — a prominent one, with emergency fields around it; 600–1,000 AGL" },
+    { p: "Entry", w: "ENTER DOWNWIND — the point off the wing, at the chosen distance", say: "\"Turns around the point, left, 1,000 AGL.\"" },
+    { p: "Maneuver", w: "DOWNWIND — steepest bank (highest groundspeed, ≤ 45°)" },
+    { p: "Maneuver", w: "GRADUALLY SHALLOW — through crosswind to the shallowest bank upwind" },
+    { p: "Maneuver", w: "GRADUALLY STEEPEN — back toward downwind; constant radius" },
+    { p: "Maneuver", w: "DIVIDE ATTENTION — altitude ±100 · airspeed ±10 · traffic" },
+    { p: "Recovery", w: "EXIT on downwind, on the entry heading — then the cruise checklist" },
+  ] },
+  { id: "s-turns", ref: "AFH ch. 7; FAA-S-ACS-6C PA.V.B", steps: [
+    { p: "Entry", w: "ROAD — straight, perpendicular to the wind; 600–1,000 AGL" },
+    { p: "Entry", w: "CROSS THE ROAD — wings level, downwind", say: "\"S-turns across the road, 1,000 AGL.\"" },
+    { p: "Maneuver", w: "STEEPEST BANK first (downwind), then GRADUALLY SHALLOW" },
+    { p: "Maneuver", w: "WINGS LEVEL — exactly over the road, heading upwind" },
+    { p: "Maneuver", w: "REVERSE — shallow bank first, GRADUALLY STEEPEN; equal half-circles" },
+    { p: "Maneuver", w: "HOLD — altitude ±100 · airspeed ±10" },
+    { p: "Recovery", w: "WINGS LEVEL over the road — then the cruise checklist" },
+  ] },
+  { id: "rectangular", ref: "AFH ch. 7; FAA-S-ACS-6C PA.V.B", steps: [
+    { p: "Entry", w: "FIELD — pick one with roads for edges; 600–1,000 AGL" },
+    { p: "Entry", w: "ENTER — 45° to the downwind leg", say: "\"Rectangular course, left-hand, 1,000 AGL.\"" },
+    { p: "Maneuver", w: "CORNERS — steeper bank where the groundspeed is high, shallower where it's low" },
+    { p: "Maneuver", w: "LEGS — crab into the wind to keep a constant distance from the edge" },
+    { p: "Maneuver", w: "HOLD — altitude ±100 · airspeed ±10 · traffic" },
+    { p: "Recovery", w: "EXIT — on downwind (or 45° away) — then the cruise checklist" },
+  ] },
+  { id: "emergency-descent", ref: "AFH ch. 18; FAA-S-ACS-6C PA.IX.A", steps: [
+    { p: "Entry", w: "THROTTLE — IDLE · MIXTURE — RICH" },
+    { p: "Entry", w: "ROLL — into a 30–45° bank (to see below and keep positive G)" },
+    { p: "Entry", w: "FLAPS — 10° below 110, full below 85 (the school's configuration)" },
+    { p: "Maneuver", w: "PITCH — 80 KIAS (the school's speed; +0/−10)" },
+    { p: "Maneuver", w: "CALL — (simulated) mayday", say: "\"Simulated: Mayday, mayday, mayday, Cessna 123AB, [position], emergency descent…\"" },
+    { p: "Recovery", w: "LEVEL OFF at the assigned altitude ±100 · wings level · FULL POWER · FLAPS 20°" },
+    { p: "Recovery", w: "FLAPS — 10°, then up · CRUISE POWER — then the cruise checklist" },
+  ] },
+];
+const cfMan = (id) => (typeof MANEUVERS !== "undefined" ? MANEUVERS.find((m) => m.id === id) : null) || { name: id, standards: [] };
+// a tickable checklist — ticks are for the chair-flying run only, nothing is saved
+const cfList = (steps) => `<ol class="s1-cl">${steps.map((st) => `<li><label><input type="checkbox">
+  <span>${st.p ? `<em>${st.p}</em> ` : ""}<b>${st.w}</b>${st.say ? `<small>Say: ${st.say}</small>` : ""}</span></label></li>`).join("")}</ol>`;
+
 const MEMORY_CARDS = [
   { id: "ef-takeoff", name: "Engine failure — during takeoff", group: "ENGINE FAILURE", steps: [
     memStep("THROTTLE — IDLE", [MEM.thr, ["idle", "close"]]),
@@ -1479,6 +1585,33 @@ const STAGE1_TOPICS = {
         { q: "Tacoma Tower (KTIW)?", ref: "Chart Supplement (TIW); 14 CFR 91.129(c)", a: "118.5", alt: ["118.5", "118.50"] },
         { q: "Visibility needed in Class D and E below 10,000 ft (SM)?", ref: "14 CFR 91.155; AIM 3-1-4", a: "3 SM", alt: ["3"] },
       ] },
+    ],
+  },
+
+  /* =========================== CHAIR FLYING ============================= */
+  chairfly: {
+    name: "Chair-fly checklists", tag: "CF", color: "#706fd3", sub: "Setup flow, every maneuver, cruise checklist",
+    learn: [
+      { h: "How to chair fly", html: `
+        <p>Sit with the checklist, eyes closed where you can, hands on imaginary controls. Say every call out loud,
+        touch every control, and tick each line as you do it. Then do it again without the list.</p>
+        <p class="s1-note">Numbers are the Maneuvers drill's (C172S POH, AFH, ACS-6C). RPM settings, the slow-flight
+        target and the emergency-descent configuration are school choices — fly your school's.</p>`, ref: "AFH ch. 1" },
+      { h: "Before every maneuver", html: cfList(CF_SETUP), ref: "AFH ch. 1; FAA-S-ACS-6C" },
+      ...CF_MANEUVERS.map((m) => ({ h: `${cfMan(m.id).name}${cfMan(m.id).acs ? ` <span class="s1-muted">${cfMan(m.id).acs}</span>` : ""}`, ref: m.ref,
+        html: `<p class="s1-muted">Setup flow first (above).</p>${cfList(m.steps)}
+          ${cfMan(m.id).standards.length ? `<p class="s1-note"><b>ACS standards:</b> ${cfMan(m.id).standards.join(" · ")}</p>` : ""}
+          <p class="s1-muted">Then the cruise checklist (below).</p>` })),
+      { h: "Cruise checklist (after every maneuver)", html: `${cfList(CF_CRUISE)}
+        <p class="s1-note">The C172S POH cruise checklist — your school's checklist governs if it adds items.</p>`, ref: "C172S POH section 4" },
+    ],
+    drill: [
+      { type: "acronym", word: "Setup flow", title: "<b>Before every maneuver</b> — in order", ref: "AFH ch. 1",
+        items: CF_SETUP.map((st, k) => ({ l: String(k + 1), w: st.w })) },
+      ...CF_MANEUVERS.map((m) => ({ type: "acronym", word: cfMan(m.id).name, title: `<b>${cfMan(m.id).name}</b> — the flow, in order`, ref: m.ref,
+        items: m.steps.map((st, k) => ({ l: String(k + 1), w: st.w, h: k && m.steps[k - 1].p !== st.p ? st.p + ":" : !k ? st.p + ":" : undefined })) })),
+      { type: "acronym", word: "Cruise checklist", title: "<b>Cruise checklist</b> — in order", ref: "C172S POH section 4",
+        items: CF_CRUISE.map((st, k) => ({ l: String(k + 1), w: st.w })) },
     ],
   },
 };

@@ -420,6 +420,7 @@ body.maneuver-mode .btn.mode.active { border-color: #9c9bf0; color: #c4c3ff; }
 .btn.man-opt em { margin-left: auto; font-style: normal; font-size: 11px; color: var(--muted); letter-spacing: .5px; }
 .man-swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
 .btn.man-random { width: 100%; margin-top: 4px; }
+.btn.man-chairfly { width: 100%; margin-top: 8px; }
 .man-pre { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; font-size: 12px;
   color: var(--muted); line-height: 1.4; cursor: pointer; }
 .man-pre input { accent-color: var(--accent); margin-top: 2px; }
@@ -1414,3 +1415,15 @@ a.ref:has(i)::after { content: none; }
 .ref-text { font-weight: 600; color: var(--muted); }
 .s1-msg-ref { margin: -4px 0 6px 40px; }
 .cr-missed li .refs { margin-top: 4px; }
+
+/* ---------- chair-fly checklists (Stage 1 "Chair flying"): big, tickable lines ---------- */
+.s1-cl { list-style: none; margin: 8px 0; padding: 0; counter-reset: cl; }
+.s1-cl li { counter-increment: cl; border-bottom: 1px solid var(--line); }
+.s1-cl label { display: flex; align-items: flex-start; gap: 12px; padding: 10px 4px; cursor: pointer; min-height: 44px; }
+.s1-cl label::before { content: counter(cl); min-width: 22px; font-weight: 800; color: var(--c, #706fd3); text-align: right; }
+.s1-cl input { width: 22px; height: 22px; margin: 0; flex: none; accent-color: #2ed573; }
+.s1-cl span { display: flex; flex-direction: column; gap: 3px; font-size: 15px; line-height: 1.35; }
+.s1-cl em { font-style: normal; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.s1-cl small { font-size: 13px; color: #8ff0bd; }
+.s1-cl input:checked + span { opacity: .45; }
+.s1-cl input:checked + span b { text-decoration: line-through; }

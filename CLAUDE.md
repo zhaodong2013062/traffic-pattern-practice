@@ -205,6 +205,13 @@ Any new control needs a menu in `EMER_CONTROL_OPTIONS`, a display name in
   nearby airspace) come from the FAA Chart Supplement and King County's VFR
   routes sheet of 25 Sep 2026 — re-verify when those change. Topic `recall`
   sets also feed the mock oral.
+- **Chair flying** section (`chairfly`): talk-through checklists — the setup
+  flow (clearing turns, altitude, heading, altitude, landing spot, intentions),
+  each maneuver's entry → maneuver → recovery with `say` lines, and the POH
+  cruise checklist. Data is `CF_SETUP` / `CF_MANEUVERS` / `CF_CRUISE`; numbers
+  must match `js/maneuvers.js`, and ACS standards are read from `MANEUVERS`.
+  Tick boxes aren't saved. The Maneuvers menu links here via
+  `StudyDrill.openTopic("chairfly")`.
 - Diagrams are illustrative. Mind handedness: the prop turns clockwise from
   the cockpit; in a top view with the nose left, the pilot's left is DOWN.
 

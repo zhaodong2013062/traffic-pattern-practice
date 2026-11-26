@@ -1986,7 +1986,9 @@ const StudyDrill = (() => {
   }
 
   const noop = () => {};
-  return { init, activate, deactivate, start: noop, restart: noop, showHint: noop };
+  // other modes can deep-link a topic (Maneuvers → the chair-fly checklists)
+  const openTopic = (id) => { if (STAGE1_TOPICS[id]) topic(id); };
+  return { init, activate, deactivate, start: noop, restart: noop, showHint: noop, openTopic };
 })();
 
 window.StudyDrill = StudyDrill;
